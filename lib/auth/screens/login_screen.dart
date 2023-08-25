@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
             BlocConsumer<AuthCubit, BaseBlocState>(
               listener: (context, state) {
                 if (state is CompletedState) {
-                  context.goNamed('dashboard');
+                  context.goNamed('projects');
                 } else if (state is FailureState) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

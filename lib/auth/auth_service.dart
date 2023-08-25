@@ -6,8 +6,9 @@ class AuthService {
 
   bool get isUserAuthenticated => _auth.currentUser != null;
 
-  UserData? get user =>
-      isUserAuthenticated ? UserData(email: _auth.currentUser!.email!) : null;
+  UserData? get user => isUserAuthenticated
+      ? UserData.fromFirebaseUser(_auth.currentUser!)
+      : null;
 
   Future<void> logIn(String email, String password) async {
     await _auth.signInWithEmailAndPassword(email: email, password: password);

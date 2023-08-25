@@ -3,10 +3,14 @@ import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/screens/register_screen.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
-import 'package:band_space/dashboard/presentation/dashboard_screen.dart';
+import 'package:band_space/project/screens/project_details_screen.dart';
+import 'package:band_space/project/screens/projects_screen.dart';
+import 'package:band_space/song/screens/song_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final router = GoRouter(
+  debugLogDiagnostics: true,
+  initialLocation: '/projects',
   routes: [
     ShellRoute(
       builder: (context, state, child) {
@@ -14,9 +18,9 @@ final router = GoRouter(
       },
       routes: [
         GoRoute(
-          path: '/',
-          name: 'dashboard',
-          builder: (context, state) => const DashboardScreen(),
+          path: '/projects',
+          name: 'projects',
+          builder: (context, state) => const ProjectsScreen(),
           redirect: (context, state) async {
             final isLoggedIn = sl.get<AuthService>().isUserAuthenticated;
 
@@ -24,44 +28,28 @@ final router = GoRouter(
 
             return null;
           },
-          // routes: [
-          //   GoRoute(
-          //     path: 'projects',
-          //     name: 'projects',
-          //     builder: (context, state) => const ProjectsScreen(),
-          //     routes: [
-          //       GoRoute(
-          //         path: 'new',
-          //         name: 'new-project',
-          //         builder: (context, state) => const NewProjectScreen(),
-          //       ),
-          //       GoRoute(
-          //         path: ':name',
-          //         name: 'songs',
-          //         builder: (context, state) => SongsScreen(
-          //           projectPathName: state.pathParameters['name']!,
-          //         ),
-          //         routes: [
-          //           GoRoute(
-          //             path: 'new-song',
-          //             name: 'new-song',
-          //             builder: (context, state) => NewSongScreen(
-          //               projectName: state.pathParameters['name']!,
-          //             ),
-          //           ),
-          //           GoRoute(
-          //             path: ':songName',
-          //             name: 'song',
-          //             builder: (context, state) => SongScreen(
-          //               projectPathName: state.pathParameters['name']!,
-          //               songPathName: state.pathParameters['songName']!,
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ],
-          //   ),
-          // ],
+          routes: [
+            GoRoute(
+              path: ':project_id',
+              name: 'project_details',
+              builder: (context, state) {
+                return ProjectDetailsScreen(
+                  projectId: state.pathParameters['project_id']!,
+                );
+              },
+              routes: [
+                GoRoute(
+                  path: ':song_id',
+                  name: 'song',
+                  builder: (context, state) {
+                    return SongScreen(
+                      songId: state.pathParameters['song_id']!,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     ),
@@ -74,20 +62,6 @@ final router = GoRouter(
       path: '/register',
       name: 'register',
       builder: (context, state) => const RegisterScreen(),
-      // routes: [
-      //   GoRoute(
-      //     path: 'verification-code',
-      //     builder: (context, state) {
-      //       final email = state.extra as String;
-      //       return VerificationCodeScreen(email: email);
-      //     },
-      //     redirect: (context, state) {
-      //       if (state.extra == null) return '/register';
-
-      //       return null;
-      //     },
-      //   ),
-      // ],
     ),
   ],
 );

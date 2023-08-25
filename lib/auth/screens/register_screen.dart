@@ -45,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             BlocConsumer<AuthCubit, BaseBlocState>(
               listener: (context, state) {
                 if (state is CompletedState) {
-                  context.goNamed('dashboard');
+                  context.goNamed('projects');
                 }
               },
               builder: (context, state) {
