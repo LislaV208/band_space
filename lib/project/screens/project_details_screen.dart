@@ -40,8 +40,6 @@ class ProjectDetailsScreen extends StatelessWidget {
                         'song_id': song.id,
                       },
                     );
-
-                    // setState(() {});
                   },
                   leading: const Icon(Icons.music_note),
                   title: Text(
@@ -56,6 +54,18 @@ class ProjectDetailsScreen extends StatelessWidget {
             ).toList(),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.pushNamed(
+            'add_song',
+            pathParameters: {
+              'project_id': projectId,
+            },
+          );
+        },
+        label: const Text('Nowy utwór'),
+        icon: const Icon(Icons.add),
       ),
     );
   }

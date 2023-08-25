@@ -2,12 +2,15 @@ import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/project/model/project.dart';
 import 'package:band_space/song/model/song.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseDataSource {
-  FirebaseDataSource(this.auth, this.db);
+  FirebaseDataSource(this.auth, this.db, this.storage);
 
   final AuthService auth;
   final FirebaseFirestore db;
+  final FirebaseStorage storage;
 
   late final userRef = db.collection('users').doc(auth.user!.id);
   late final projectsRef = db.collection('projects');
@@ -62,5 +65,32 @@ class FirebaseDataSource {
 
     final song = Song.fromMap(data);
     return song;
+  }
+
+  Future<String> addSong(
+    String projectId,
+    String title,
+    PlatformFile file,
+  ) async {
+    final timestamp = DateTime.timestamp().toIso8601String();
+
+    final newSongRef = await songsRef.add({
+      'created_at': timestamp,
+      'modified_at': timestamp,
+      'project': projectsRef.doc(projectId),
+      'title': title,
+    });
+
+    final storagePath = '/songs/$projectId/${newSongRef.id}/${file.name}';
+    final storageRef = storage.ref(storagePath);
+    final taskSnapshot =
+        await storageRef.putData(file.bytes!, SettableMetadata());
+    final url = await taskSnapshot.ref.getDownloadURL();
+
+    await newSongRef.update({
+      'file_url': url,
+    });
+
+    return newSongRef.id;
   }
 }

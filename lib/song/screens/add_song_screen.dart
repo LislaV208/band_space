@@ -2,21 +2,29 @@ import 'dart:developer';
 
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AddSongScreen extends StatefulWidget {
-  const AddSongScreen({super.key});
+  const AddSongScreen({super.key, required this.projectId});
+
+  final String projectId;
 
   @override
   State<AddSongScreen> createState() => _AddSongScreenState();
 }
 
 class _AddSongScreenState extends State<AddSongScreen> {
-  final _nameController = TextEditingController();
+  final _titleController = TextEditingController();
+
+  PlatformFile? _selectedFile;
+
+  var _isAdding = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _titleController.dispose();
 
     super.dispose();
   }
@@ -25,29 +33,57 @@ class _AddSongScreenState extends State<AddSongScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nowy utwór'),
+        title: const Text('Nowy utwór'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 800),
+            constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   children: [
                     TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Nazwa',
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tytuł',
                       ),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {},
-                      child: Text('Wybierz plik'),
+                      onPressed: () async {
+                        final result = await FilePicker.platform.pickFiles(
+                          withData: true,
+                          type: FileType.audio,
+                          initialDirectory: _selectedFile != null
+                              ? _selectedFile!.path
+                              : null,
+                        );
+                        if (result != null && result.files.isNotEmpty) {
+                          final file = result.files.first;
+
+                          if (file.bytes == null || file.bytes!.isEmpty) {
+                            log('BRAK BYTESÓW');
+                          }
+
+                          setState(() {
+                            _selectedFile = file;
+                          });
+                        }
+                      },
+                      child: Text(
+                        _selectedFile == null
+                            ? 'Wybierz plik'
+                            : 'Wybierz inny plik',
+                      ),
                     ),
+                    if (_selectedFile != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Text(_selectedFile!.name),
+                      ),
                   ],
                 ),
                 Padding(
@@ -56,26 +92,46 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     width: double.infinity,
                     height: 40,
                     child: FilledButton.icon(
-                      onPressed: () async {
-                        final name = _nameController.text;
-                        if (name.isNotEmpty) {
-                          // final song =
-                          //     await sl.get<SongRepository>().createSong(name);
+                      onPressed: _isAdding
+                          ? null
+                          : () async {
+                              final title = _titleController.text;
+                              if (title.isNotEmpty && _selectedFile != null) {
+                                setState(() {
+                                  _isAdding = true;
+                                });
 
-                          // if (!mounted) return;
+                                final songId = await sl
+                                    .get<SongRepository>()
+                                    .addSong(widget.projectId, title,
+                                        _selectedFile!);
 
-                          // if (song != null) {
-                          //   log('Dodano nowy utwór: ${song.name}');
-                          //   Navigator.of(context).pop();
-                          // } else {
-                          //   log('Wystąpił błąd podczas dodawania utwory');
-                          // }
-                        }
-                      },
+                                if (!mounted) return;
+
+                                context.pushReplacementNamed(
+                                  'song',
+                                  pathParameters: {
+                                    'project_id': widget.projectId,
+                                    'song_id': songId,
+                                  },
+                                );
+                              }
+                            },
                       label: Text(
-                        'Dodaj utwór',
+                        _isAdding ? 'Trwa dodawanie utworu' : 'Dodaj utwór',
                       ),
-                      icon: Icon(Icons.add),
+                      icon: _isAdding
+                          ? const SizedBox(
+                              height: 20,
+                              width: 30,
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3.0,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.add),
                     ),
                   ),
                 ),
