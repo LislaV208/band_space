@@ -10,6 +10,7 @@ class Song extends Equatable {
   final String title;
   final DateTime created_at;
   final DateTime modified_at;
+  final String file_url;
 
   const Song({
     required this.id,
@@ -17,6 +18,7 @@ class Song extends Equatable {
     required this.title,
     required this.created_at,
     required this.modified_at,
+    required this.file_url,
   });
 
   @override
@@ -29,6 +31,7 @@ class Song extends Equatable {
       title: map['title'] ?? '',
       created_at: DateTime.parse(map['created_at']).toLocal(),
       modified_at: DateTime.parse(map['modified_at']).toLocal(),
+      file_url: map['file_url'] ?? '',
     );
   }
 

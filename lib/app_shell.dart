@@ -30,11 +30,11 @@ class AppShell extends StatelessWidget {
                     user?.email ?? '',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  const SizedBox(height: 8.0),
-                  SelectableText(
-                    user?.id ?? '',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  // const SizedBox(height: 8.0),
+                  // SelectableText(
+                  //   user?.id ?? '',
+                  //   style: Theme.of(context).textTheme.bodySmall,
+                  // ),
                 ],
               ),
             ),
