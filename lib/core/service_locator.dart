@@ -1,6 +1,5 @@
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/cubit/auth_cubit.dart';
-import 'package:band_space/data_sources/firebase_data_source.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,18 +12,11 @@ void setupServiceLocator() {
   // services
   sl.registerSingleton<AuthService>(AuthService());
 
-  // data sources
-  sl.registerSingleton<FirebaseDataSource>(
-    FirebaseDataSource(
-      sl(),
-      FirebaseFirestore.instance,
-      FirebaseStorage.instance,
-    ),
-  );
-
   // repositories
-  sl.registerSingleton<ProjectRepository>(ProjectRepository(sl()));
-  sl.registerSingleton<SongRepository>(SongRepository(sl()));
+  sl.registerSingleton<ProjectRepository>(
+      ProjectRepository(sl(), FirebaseFirestore.instance));
+  sl.registerSingleton<SongRepository>(
+      SongRepository(FirebaseFirestore.instance, FirebaseStorage.instance));
 
   // cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
