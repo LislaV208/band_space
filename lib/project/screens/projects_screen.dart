@@ -1,12 +1,18 @@
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/project/screens/add_project_screen.dart';
 import 'package:band_space/project/widgets/project_card.dart';
 import 'package:band_space/widgets/app_future_builder.dart';
 import 'package:flutter/material.dart';
 
-class ProjectsScreen extends StatelessWidget {
+class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
 
+  @override
+  State<ProjectsScreen> createState() => _ProjectsScreenState();
+}
+
+class _ProjectsScreenState extends State<ProjectsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,6 +35,20 @@ class ProjectsScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          await showModalBottomSheet(
+            context: context,
+            builder: (context) => const AddProjectScreen(),
+          );
+
+          setState(() {
+            // print('BOINK!');
+          });
+        },
+        label: const Text('Nowy projekt'),
+        icon: const Icon(Icons.add),
       ),
     );
   }

@@ -41,6 +41,18 @@ class FirebaseDataSource {
     return project;
   }
 
+  Future<String> addProject(String name) async {
+    final timestamp = DateTime.timestamp().toIso8601String();
+
+    final newProjectRef = await projectsRef.add({
+      'created_at': timestamp,
+      'name': name,
+      'owners': [userRef],
+    });
+
+    return newProjectRef.id;
+  }
+
   Future<List<Song>> fetchSongs(String projectId) async {
     final snapshot = await songsRef
         .where('project', isEqualTo: projectsRef.doc(projectId))

@@ -1,6 +1,7 @@
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/screens/add_song_screen.dart';
 import 'package:band_space/widgets/app_future_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -56,15 +57,15 @@ class ProjectDetailsScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.pushNamed(
-            'add_song',
-            pathParameters: {
-              'project_id': projectId,
+        onPressed: () async {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return AddSongScreen(projectId: projectId);
             },
           );
         },
-        label: const Text('Nowy utwór'),
+        label: const Text('Dodaj utwór'),
         icon: const Icon(Icons.add),
       ),
     );

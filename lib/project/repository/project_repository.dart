@@ -7,10 +7,14 @@ class ProjectRepository {
   final FirebaseDataSource dataSource;
 
   Future<List<Project>> fetchProjects() async {
-    return await dataSource.fetchProjects();
+    return dataSource.fetchProjects();
   }
 
   Future<Project> fetchProject(String projectId) async {
-    return await dataSource.fetchProject(projectId);
+    return dataSource.fetchProject(projectId);
+  }
+
+  Future<String> addProject(String name) async {
+    return dataSource.addProject(name);
   }
 }

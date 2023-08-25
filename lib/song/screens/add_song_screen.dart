@@ -31,111 +31,113 @@ class _AddSongScreenState extends State<AddSongScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nowy utwór'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  children: [
-                    TextField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tytuł',
+    return WillPopScope(
+      onWillPop: () async => !_isAdding,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Dodaj utwór'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      TextField(
+                        autofocus: true,
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tytuł',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final result = await FilePicker.platform.pickFiles(
-                          withData: true,
-                          type: FileType.audio,
-                          initialDirectory: _selectedFile != null
-                              ? _selectedFile!.path
-                              : null,
-                        );
-                        if (result != null && result.files.isNotEmpty) {
-                          final file = result.files.first;
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final result = await FilePicker.platform.pickFiles(
+                            withData: true,
+                            type: FileType.audio,
+                            initialDirectory: _selectedFile != null
+                                ? _selectedFile!.path
+                                : null,
+                          );
+                          if (result != null && result.files.isNotEmpty) {
+                            final file = result.files.first;
 
-                          if (file.bytes == null || file.bytes!.isEmpty) {
-                            log('BRAK BYTESÓW');
+                            if (file.bytes == null || file.bytes!.isEmpty) {
+                              log('BRAK BYTESÓW');
+                            }
+
+                            setState(() {
+                              _selectedFile = file;
+                            });
                           }
-
-                          setState(() {
-                            _selectedFile = file;
-                          });
-                        }
-                      },
-                      child: Text(
-                        _selectedFile == null
-                            ? 'Wybierz plik'
-                            : 'Wybierz inny plik',
+                        },
+                        child: Text(
+                          _selectedFile == null
+                              ? 'Wybierz plik'
+                              : 'Wybierz inny plik',
+                        ),
                       ),
-                    ),
-                    if (_selectedFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Text(_selectedFile!.name),
-                      ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 40,
-                    child: FilledButton.icon(
-                      onPressed: _isAdding
-                          ? null
-                          : () async {
-                              final title = _titleController.text;
-                              if (title.isNotEmpty && _selectedFile != null) {
-                                setState(() {
-                                  _isAdding = true;
-                                });
+                      if (_selectedFile != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Text(_selectedFile!.name),
+                        ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 40,
+                      child: FilledButton(
+                        onPressed: _isAdding
+                            ? null
+                            : () async {
+                                final title = _titleController.text;
+                                if (title.isNotEmpty && _selectedFile != null) {
+                                  setState(() {
+                                    _isAdding = true;
+                                  });
 
-                                final songId = await sl
-                                    .get<SongRepository>()
-                                    .addSong(widget.projectId, title,
-                                        _selectedFile!);
+                                  final songId = await sl
+                                      .get<SongRepository>()
+                                      .addSong(widget.projectId, title,
+                                          _selectedFile!);
 
-                                if (!mounted) return;
+                                  if (!mounted) return;
 
-                                context.pushReplacementNamed(
-                                  'song',
-                                  pathParameters: {
-                                    'project_id': widget.projectId,
-                                    'song_id': songId,
-                                  },
-                                );
-                              }
-                            },
-                      label: Text(
-                        _isAdding ? 'Trwa dodawanie utworu' : 'Dodaj utwór',
-                      ),
-                      icon: _isAdding
-                          ? const SizedBox(
-                              height: 20,
-                              width: 30,
-                              child: Padding(
-                                padding: EdgeInsets.only(right: 10.0),
+                                  context.pop();
+
+                                  context.pushNamed(
+                                    'song',
+                                    pathParameters: {
+                                      'project_id': widget.projectId,
+                                      'song_id': songId,
+                                    },
+                                  );
+                                }
+                              },
+                        child: _isAdding
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 3.0,
                                 ),
+                              )
+                            : Text(
+                                'Dodaj',
                               ),
-                            )
-                          : const Icon(Icons.add),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

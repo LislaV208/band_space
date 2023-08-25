@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/widgets/song_player.dart';
