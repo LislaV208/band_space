@@ -12,7 +12,7 @@ class ProjectCard extends StatelessWidget {
     return Card(
       child: InkWell(
         onTap: () {
-          context.pushNamed(
+          context.goNamed(
             'project_details',
             pathParameters: {'project_id': project.id},
           );

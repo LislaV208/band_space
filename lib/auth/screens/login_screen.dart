@@ -13,11 +13,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController(
-    text: 'lislav.hms@gmail.com',
-  );
+      // text: 'lislav.hms@gmail.com',
+      );
   final _passwordController = TextEditingController(
-    text: '@rbuz0Hol',
-  );
+      // text: '@rbuz0Hol',
+      );
 
   @override
   void dispose() {
@@ -30,94 +30,104 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Logowanie'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+      body: Column(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                'BandSpace',
+                style: Theme.of(context).textTheme.displayLarge,
               ),
             ),
-            const SizedBox(height: 16.0),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Hasło',
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-            const SizedBox(height: 32.0),
-            BlocConsumer<AuthCubit, BaseBlocState>(
-              listener: (context, state) {
-                if (state is CompletedState) {
-                  context.goNamed('projects');
-                } else if (state is FailureState) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${state.error}'),
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                return FilledButton(
-                  onPressed: state is LoadingState
-                      ? null
-                      : () async {
-                          context.read<AuthCubit>().logIn(
-                                _emailController.text,
-                                _passwordController.text,
-                              );
+          ),
+          Center(
+            child: Card(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints.tightFor(width: 440),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Logowanie',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Hasło',
+                          prefixIcon: Icon(Icons.lock),
+                        ),
+                      ),
+                      const SizedBox(height: 32.0),
+                      BlocConsumer<AuthCubit, BaseBlocState>(
+                        listener: (context, state) {
+                          if (state is CompletedState) {
+                            context.goNamed('projects');
+                          } else if (state is FailureState) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${state.error}'),
+                              ),
+                            );
+                          }
                         },
-                  child: state is LoadingState
-                      ? const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
+                        builder: (context, state) {
+                          return SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: FilledButton(
+                              onPressed: state is LoadingState
+                                  ? null
+                                  : () async {
+                                      context.read<AuthCubit>().logIn(
+                                            _emailController.text,
+                                            _passwordController.text,
+                                          );
+                                    },
+                              child: state is LoadingState
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        height: 16,
+                                        width: 16,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text('Zaloguj'),
                             ),
-                          ),
-                        )
-                      : const Text('Zaloguj'),
-                );
-              },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20.0),
+                      TextButton(
+                        onPressed: () {
+                          context.goNamed('register');
+                        },
+                        child: const Text('Zarejestruj się'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 16.0),
-            const Text('lub'),
-            const SizedBox(height: 8.0),
-            TextButton(
-              onPressed: () {
-                context.goNamed('register');
-              },
-              child: const Text('Utwórz konto'),
-            ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     Text('Nie masz konta? '),
-            //     TextButton(
-            //       onPressed: () {
-            //         Navigator.of(context).pushReplacement(
-            //           MaterialPageRoute(
-            //             builder: (context) => const RegistrationScreen(),
-            //           ),
-            //         );
-            //       },
-            //       child: Text('Zarejestruj się'),
-            //     ),
-            //   ],
-            // ),
-          ],
-        ),
+          ),
+          const Spacer(),
+        ],
       ),
     );
   }

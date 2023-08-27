@@ -18,76 +18,104 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rejestracja'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+      body: Column(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                'BandSpace',
+                style: Theme.of(context).textTheme.displayLarge,
               ),
             ),
-            const SizedBox(height: 16.0),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Hasło',
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-            const SizedBox(height: 32.0),
-            BlocConsumer<AuthCubit, BaseBlocState>(
-              listener: (context, state) {
-                if (state is CompletedState) {
-                  context.goNamed('projects');
-                }
-              },
-              builder: (context, state) {
-                return FilledButton(
-                  onPressed: state is LoadingState || state is CompletedState
-                      ? null
-                      : () async {
-                          context.read<AuthCubit>().signUp(
-                                _emailController.text,
-                                _passwordController.text,
-                              );
+          ),
+          Center(
+            child: Card(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints.tightFor(width: 440),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Rejestracja',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Hasło',
+                          prefixIcon: Icon(Icons.lock),
+                        ),
+                      ),
+                      const SizedBox(height: 32.0),
+                      BlocConsumer<AuthCubit, BaseBlocState>(
+                        listener: (context, state) {
+                          if (state is CompletedState) {
+                            context.goNamed('projects');
+                          } else if (state is FailureState) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${state.error}'),
+                              ),
+                            );
+                          }
                         },
-                  child: state is LoadingState || state is CompletedState
-                      ? const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
+                        builder: (context, state) {
+                          return SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: FilledButton(
+                              onPressed: state is LoadingState
+                                  ? null
+                                  : () async {
+                                      context.read<AuthCubit>().signUp(
+                                            _emailController.text,
+                                            _passwordController.text,
+                                          );
+                                    },
+                              child: state is LoadingState
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        height: 16,
+                                        width: 16,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text('Utwórz konto'),
                             ),
-                          ),
-                        )
-                      : const Text('Utwórz konto'),
-                );
-              },
-            ),
-            const SizedBox(height: 32.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Masz już konto? '),
-                TextButton(
-                  onPressed: () {
-                    context.goNamed('login');
-                  },
-                  child: const Text('Zaloguj się'),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20.0),
+                      TextButton(
+                        onPressed: () {
+                          context.goNamed('login');
+                        },
+                        child: const Text('Zaloguj się'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ],
-        ),
+          ),
+          const Spacer(),
+        ],
       ),
     );
   }

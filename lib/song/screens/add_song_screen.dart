@@ -113,7 +113,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
 
                                   context.pop();
 
-                                  context.pushNamed(
+                                  context.goNamed(
                                     'song',
                                     pathParameters: {
                                       'project_id': widget.projectId,

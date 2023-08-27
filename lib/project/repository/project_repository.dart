@@ -8,7 +8,7 @@ class ProjectRepository {
   final AuthService _auth;
   final FirebaseFirestore _db;
 
-  late final _userRef = _db.collection('users').doc(_auth.user!.id);
+  DocumentReference get _userRef => _db.collection('users').doc(_auth.user!.id);
   late final _projectsRef = _db.collection('projects');
 
   Future<List<Project>> fetchProjects() async {
