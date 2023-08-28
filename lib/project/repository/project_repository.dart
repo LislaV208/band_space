@@ -45,6 +45,10 @@ class ProjectRepository {
       'owners': [_userRef],
     });
 
+    newProjectRef.update({
+      'id': newProjectRef.id,
+    });
+
     return newProjectRef.id;
   }
 }

@@ -14,13 +14,10 @@ class SongRepository {
 
   Future<List<Song>> fetchSongs(String projectId) async {
     final snapshot = await _songsRef
-        .where('project', isEqualTo: _projectsRef.doc(projectId))
+        .where('project_ref', isEqualTo: _projectsRef.doc(projectId))
         .get();
     final songs = snapshot.docs.map((doc) {
       final data = doc.data();
-      data['id'] = doc.id;
-      data['project_id'] = projectId;
-
       return Song.fromMap(data);
     }).toList();
 
@@ -50,10 +47,14 @@ class SongRepository {
     final newSongRef = await _songsRef.add({
       'created_at': timestamp,
       'modified_at': timestamp,
-      'project': _projectsRef.doc(projectId),
+      'project_ref': _projectsRef.doc(projectId),
       'title': title,
       'tempo': tempo,
       'lyrics': lyrics,
+    });
+
+    newSongRef.update({
+      'id': newSongRef.id,
     });
 
     if (file != null) {
@@ -94,5 +95,14 @@ class SongRepository {
     }
 
     return newSongRef.id;
+  }
+
+  Future<void> deleteSong(Song song) async {
+    if (song.file != null) {
+      final storagePath = song.file!.storage_path;
+      await _storage.ref(storagePath).delete();
+    }
+
+    await _songsRef.doc(song.id).delete();
   }
 }

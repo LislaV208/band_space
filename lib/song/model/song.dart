@@ -7,7 +7,7 @@ import 'package:equatable/equatable.dart';
 
 class Song extends Equatable {
   final String id;
-  final String project_id;
+  final String project_ref;
   final String title;
   final DateTime created_at;
   final DateTime modified_at;
@@ -15,7 +15,7 @@ class Song extends Equatable {
 
   const Song({
     required this.id,
-    required this.project_id,
+    required this.project_ref,
     required this.title,
     required this.created_at,
     required this.modified_at,
@@ -28,7 +28,7 @@ class Song extends Equatable {
   factory Song.fromMap(Map<String, dynamic> map) {
     return Song(
       id: map['id'] ?? '',
-      project_id: map['project_id'] ?? '',
+      project_ref: map['project_ref'].path ?? '',
       title: map['title'] ?? '',
       created_at: DateTime.parse(map['created_at']).toLocal(),
       modified_at: DateTime.parse(map['modified_at']).toLocal(),
