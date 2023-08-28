@@ -24,7 +24,9 @@ class _SongScreenState extends State<SongScreen> {
             title: Text(song.title),
           ),
           body: Center(
-            child: SongPlayer(fileUrl: song.file_url),
+            child: song.file != null
+                ? SongPlayer(fileUrl: song.file!.download_url)
+                : const Text('Brak pliku muzycznego'),
           ),
         );
       },

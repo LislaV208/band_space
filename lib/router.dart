@@ -5,7 +5,6 @@ import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
 import 'package:band_space/project/screens/project_details_screen.dart';
 import 'package:band_space/project/screens/projects_screen.dart';
-import 'package:band_space/song/screens/add_song_screen.dart';
 import 'package:band_space/song/screens/song_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -39,15 +38,6 @@ final router = GoRouter(
                 );
               },
               routes: [
-                GoRoute(
-                  path: 'newSong',
-                  name: 'add_song',
-                  builder: (context, state) {
-                    return AddSongScreen(
-                      projectId: state.pathParameters['project_id']!,
-                    );
-                  },
-                ),
                 GoRoute(
                   path: ':song_id',
                   name: 'song',

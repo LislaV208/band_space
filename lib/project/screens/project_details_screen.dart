@@ -1,11 +1,13 @@
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
-import 'package:band_space/song/screens/add_song_screen.dart';
+import 'package:band_space/song/screens/add_song/add_song_screen.dart';
+import 'package:band_space/song/screens/add_song/add_song_state.dart';
 import 'package:band_space/widgets/app_future_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key, required this.projectId});
@@ -59,9 +61,14 @@ class ProjectDetailsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           showModalBottomSheet(
+            isDismissible: false,
+            isScrollControlled: true,
             context: context,
             builder: (context) {
-              return AddSongScreen(projectId: projectId);
+              return ChangeNotifierProvider(
+                create: (context) => sl.get<AddSongState>(),
+                child: AddSongScreen(projectId: projectId),
+              );
             },
           );
         },

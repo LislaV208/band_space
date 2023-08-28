@@ -41,7 +41,9 @@ class SongRepository {
   Future<String> addSong(
     String projectId,
     String title,
-    PlatformFile file,
+    PlatformFile? file,
+    String? tempo,
+    String? lyrics,
   ) async {
     final timestamp = DateTime.timestamp().toIso8601String();
 
@@ -50,17 +52,46 @@ class SongRepository {
       'modified_at': timestamp,
       'project': _projectsRef.doc(projectId),
       'title': title,
+      'tempo': tempo,
+      'lyrics': lyrics,
     });
 
-    final storagePath = '/songs/$projectId/${newSongRef.id}/${file.name}';
-    final storageRef = _storage.ref(storagePath);
-    final taskSnapshot =
-        await storageRef.putData(file.bytes!, SettableMetadata());
-    final url = await taskSnapshot.ref.getDownloadURL();
+    if (file != null) {
+      Exception? uploadException;
+      try {
+        final mimeType = 'audio/mpeg'; //TODO: get actual mime type from file
 
-    await newSongRef.update({
-      'file_url': url,
-    });
+        final storagePath =
+            '/projects/$projectId/${newSongRef.id}/${file.name}';
+        final storageRef = _storage.ref(storagePath);
+        final taskSnapshot = await storageRef.putData(
+          file.bytes!,
+          SettableMetadata(
+            contentType: mimeType,
+          ),
+        );
+        final downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+        await newSongRef.update({
+          'file': {
+            'name': file.name,
+            'size': file.size,
+            'mime_type': mimeType,
+            'storage_path': storagePath,
+            'download_url': downloadUrl,
+            //TODO: add duration
+          },
+        });
+      } on Exception catch (e) {
+        uploadException = e;
+      }
+
+      if (uploadException != null) {
+        newSongRef.delete();
+
+        throw uploadException;
+      }
+    }
 
     return newSongRef.id;
   }

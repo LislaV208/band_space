@@ -38,6 +38,12 @@ class MainApp extends StatelessWidget {
           useMaterial3: true,
           brightness: Brightness.dark,
           colorSchemeSeed: Colors.lightBlue,
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
+            hintStyle: TextStyle(
+              fontWeight: FontWeight.w300,
+            ),
+          ),
         ),
         routerConfig: router,
       ),
