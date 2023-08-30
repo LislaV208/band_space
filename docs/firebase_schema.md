@@ -38,7 +38,7 @@
 # Firebase Storage Schema
 
 ## File Naming Convention
-- {projectId}_{songId}_{versionNumber}.mp3
+- ```{projectId}_{songId}_{versionNumber}.mp3```
 
 ## Example
 - proj_123_song_456_1.mp3
