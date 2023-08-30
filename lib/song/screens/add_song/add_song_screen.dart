@@ -20,13 +20,11 @@ class _AddSongScreenState extends State<AddSongScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _tempoController = TextEditingController();
-  final _lyricsController = TextEditingController();
 
   @override
   void dispose() {
     _titleController.dispose();
     _tempoController.dispose();
-    _lyricsController.dispose();
 
     super.dispose();
   }
@@ -101,17 +99,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _lyricsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tekst',
-                        hintText: 'Wprowadź tekst utworu',
-                        alignLabelWithHint: true,
-                      ),
-                      minLines: 10,
-                      maxLines: 10,
-                    )
                   ],
                 ),
                 AppButtonPrimary(
@@ -121,7 +108,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
                         widget.projectId,
                         _titleController.text,
                         _tempoController.text,
-                        _lyricsController.text,
                       );
 
                       if (!mounted) return;

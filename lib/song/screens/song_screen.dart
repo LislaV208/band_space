@@ -3,7 +3,6 @@ import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
 import 'package:band_space/song/widgets/song_player.dart';
-import 'package:band_space/widgets/app_future_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -15,9 +14,23 @@ class SongScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppFutureBuilder(
-      future: sl.get<SongRepository>().fetchSong(songId),
-      builder: (context, song) {
+    return StreamBuilder(
+      stream: sl.get<SongRepository>().getSong(songId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.active) {
+          return const Center(
+            child: SizedBox(),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Wystąpił błąd'),
+          );
+        }
+
+        final song = snapshot.data!;
+
         return Scaffold(
           appBar: AppBar(
             title: Text(song.title),
@@ -48,11 +61,11 @@ class SongScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: Center(
-            child: song.file != null
-                ? SongPlayer(fileUrl: song.file!.download_url)
-                : const Text('Brak pliku muzycznego'),
-          ),
+          // body: Center(
+          //   child: song.file != null
+          //       ? SongPlayer(fileUrl: song.file!.download_url)
+          //       : const Text('Brak pliku muzycznego'),
+          // ),
         );
       },
     );

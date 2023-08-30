@@ -1,6 +1,7 @@
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/cubit/auth_cubit.dart';
 import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/project/screens/delete_project/delete_project_dialog_state.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
@@ -21,8 +22,8 @@ void setupServiceLocator() {
   sl.registerSingleton<AuthService>(AuthService(FirebaseAuth.instance, sl()));
 
   // repositories
-  sl.registerSingleton<ProjectRepository>(
-      ProjectRepository(sl(), FirebaseFirestore.instance));
+  sl.registerSingleton<ProjectRepository>(ProjectRepository(
+      sl(), FirebaseFirestore.instance, FirebaseStorage.instance));
   sl.registerSingleton<SongRepository>(
       SongRepository(FirebaseFirestore.instance, FirebaseStorage.instance));
 
@@ -32,4 +33,6 @@ void setupServiceLocator() {
   // state
   sl.registerFactory<AddSongState>(() => AddSongState(sl()));
   sl.registerFactory<DeleteSongDialogState>(() => DeleteSongDialogState(sl()));
+  sl.registerFactory<DeleteProjectDialogState>(
+      () => DeleteProjectDialogState(sl()));
 }

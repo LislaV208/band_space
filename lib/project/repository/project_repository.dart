@@ -1,39 +1,67 @@
+import 'dart:developer';
+
 import 'package:band_space/auth/auth_service.dart';
-import 'package:band_space/project/model/project.dart';
+import 'package:band_space/project/exceptions/project_exceptions.dart';
+import 'package:band_space/project/model/firebase_project_model.dart';
+import 'package:band_space/project/model/project_model.dart';
+import 'package:band_space/user/model/firebase_user_model.dart';
+import 'package:band_space/user/model/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ProjectRepository {
-  ProjectRepository(this._auth, this._db);
+  ProjectRepository(this._auth, this._db, this._storage);
 
   final AuthService _auth;
   final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
   DocumentReference get _userRef => _db.collection('users').doc(_auth.user!.id);
   late final _projectsRef = _db.collection('projects');
 
-  Future<List<Project>> fetchProjects() async {
-    final snapshot =
-        await _projectsRef.where('owners', arrayContains: _userRef).get();
-    final projects = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return Project.fromMap(data);
-    }).toList();
+  Stream<List<ProjectModel>> getProjects() {
+    return _projectsRef
+        .where('owners', arrayContains: _userRef)
+        .snapshots()
+        .asyncMap(
+      (snapshot) async {
+        return await Future.wait(
+          snapshot.docs.map(
+            (doc) async {
+              UserModel creator = FirebaseUserModel.fromDocument(
+                await doc['created_by'].get(),
+              );
+              List<UserModel> owners = await _fetchOwners(
+                List<DocumentReference>.from(doc['owners']),
+              );
 
-    return projects;
+              return FirebaseProjectModel.fromDocument(doc, creator, owners);
+            },
+          ).toList(),
+        );
+      },
+    );
   }
 
-  Future<Project> fetchProject(String projectId) async {
-    final snapshot = await _projectsRef.doc(projectId).get();
+  Stream<ProjectModel> getProject(String projectId) {
+    return _db
+        .collection('projects')
+        .doc(projectId)
+        .snapshots()
+        .asyncMap((doc) async {
+      if (!doc.exists) {
+        throw ProjectNotFoundException();
+      }
 
-    final data = snapshot.data();
-    if (data == null) {
-      throw Exception('Nie ma takiego projektu');
-    }
+      UserModel creator = FirebaseUserModel.fromDocument(
+        await doc['created_by'].get(),
+      );
+      List<UserModel> owners = await _fetchOwners(
+        List<DocumentReference>.from(doc['owners']),
+      );
 
-    final project = Project.fromMap(data);
-
-    return project;
+      return FirebaseProjectModel.fromDocument(doc, creator, owners);
+    });
   }
 
   Future<String> addProject(String name) async {
@@ -42,13 +70,44 @@ class ProjectRepository {
     final newProjectRef = await _projectsRef.add({
       'created_at': timestamp,
       'name': name,
+      'created_by': _userRef,
       'owners': [_userRef],
     });
 
-    newProjectRef.update({
-      'id': newProjectRef.id,
-    });
-
     return newProjectRef.id;
+  }
+
+  Future<void> deleteProject(ProjectModel project) async {
+    final projectRef = _projectsRef.doc(project.id);
+
+    final projectSongs = await _db
+        .collection('songs')
+        .where('project_id', isEqualTo: projectRef)
+        .get();
+
+    for (final doc in projectSongs.docs) {
+      await doc.reference.delete();
+      log('Deleted song ${doc.id}');
+    }
+
+    await projectRef.delete();
+
+    log('Deleted project ${projectRef.id}');
+  }
+
+  Future<List<UserModel>> _fetchOwners(
+    List<DocumentReference> ownerRefs,
+  ) async {
+    final owners = await Future.wait(
+      ownerRefs.map(
+        (ownerRef) async {
+          final ownerDoc = await ownerRef.get();
+
+          return FirebaseUserModel.fromDocument(ownerDoc);
+        },
+      ).toList(),
+    );
+
+    return owners;
   }
 }

@@ -39,7 +39,6 @@ class AddSongState with ChangeNotifier {
     String projectId,
     String title,
     String tempo,
-    String lyrics,
   ) async {
     _addingSong = true;
     notifyListeners();
@@ -52,7 +51,6 @@ class AddSongState with ChangeNotifier {
         title,
         _selectedFile,
         tempo.isNotEmpty ? tempo : null,
-        lyrics.isNotEmpty ? lyrics : null,
       );
     } on Exception catch (_) {
       // do nothing

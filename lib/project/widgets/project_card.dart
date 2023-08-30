@@ -1,11 +1,11 @@
-import 'package:band_space/project/model/project.dart';
+import 'package:band_space/project/model/project_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class ProjectCard extends StatelessWidget {
   const ProjectCard({super.key, required this.project});
 
-  final Project project;
+  final ProjectModel project;
 
   @override
   Widget build(BuildContext context) {
