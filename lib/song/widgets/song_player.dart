@@ -4,9 +4,10 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 class SongPlayer extends StatefulWidget {
-  const SongPlayer({super.key, required this.fileUrl});
+  const SongPlayer({super.key, required this.fileUrl, required this.duration});
 
   final String fileUrl;
+  final int duration;
 
   @override
   State createState() => _SongPlayerState();
@@ -14,7 +15,6 @@ class SongPlayer extends StatefulWidget {
 
 class _SongPlayerState extends State<SongPlayer> {
   int _currentPosition = 0;
-  int _totalDuration = 0;
 
   final _player = AudioPlayer();
 
@@ -44,17 +44,12 @@ class _SongPlayerState extends State<SongPlayer> {
       setState(() {
         _currentPosition = position.inSeconds;
 
-        if (_isPlaying && _currentPosition == _totalDuration) {
+        if (_isPlaying && _currentPosition == widget.duration) {
           _isPlaying = false;
 
           _player.pause();
         }
       });
-    });
-
-    final duration = await _player.getDuration();
-    setState(() {
-      _totalDuration = duration?.inSeconds ?? 0;
     });
   }
 
@@ -67,7 +62,7 @@ class _SongPlayerState extends State<SongPlayer> {
           Slider(
             value: _currentPosition.toDouble(),
             min: 0,
-            max: _totalDuration.toDouble(),
+            max: widget.duration.toDouble(),
             onChanged: (value) {
               _player.seek(Duration(seconds: value.toInt()));
             },
@@ -86,7 +81,7 @@ class _SongPlayerState extends State<SongPlayer> {
                   if (_isPlaying) {
                     _player.pause();
                   } else {
-                    if (_currentPosition == _totalDuration) {
+                    if (_currentPosition == widget.duration) {
                       await _player.seek(Duration.zero);
                     }
 
@@ -99,7 +94,7 @@ class _SongPlayerState extends State<SongPlayer> {
                 },
               ),
               Text(
-                _formatDuration(_totalDuration),
+                _formatDuration(widget.duration),
               ),
             ],
           ),

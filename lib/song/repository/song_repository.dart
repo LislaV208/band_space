@@ -4,10 +4,10 @@ import 'package:band_space/song/exceptions/song_exceptions.dart';
 import 'package:band_space/song/model/firebase_song_model.dart';
 import 'package:band_space/song/model/firebase_song_version_model.dart';
 import 'package:band_space/song/model/song_model.dart';
+import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_file_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class SongRepository {
@@ -52,9 +52,10 @@ class SongRepository {
 
   Future<String> addSong(
     String projectId,
-    String title,
-    PlatformFile? file,
-    String? tempo,
+    SongUploadData uploadData,
+    // String title,
+    // PlatformFile? file,
+    // String? tempo,
   ) async {
     const versionNumber = 1;
     final timestamp = DateTime.timestamp().toIso8601String();
@@ -68,15 +69,16 @@ class SongRepository {
         'file': null,
       };
 
-      if (file != null) {
-        const mimeType = 'audio/mpeg'; //TODO: get actual mime type from file
+      if (uploadData.file != null) {
+        final file = uploadData.file!;
+
         final storageFileName =
             '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}';
         final storageRef = _storage.ref().child(storageFileName);
         final uploadSnapshot = await storageRef.putData(
-          file.bytes!,
+          file.data,
           SettableMetadata(
-            contentType: mimeType,
+            contentType: file.mimeType,
           ),
         );
         final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
@@ -86,8 +88,8 @@ class SongRepository {
           'storage_name':
               '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}',
           'size': file.size,
-          'duration': 0, // TODO: get actual duration
-          'mime_type': mimeType,
+          'duration': file.duration,
+          'mime_type': file.mimeType,
           'download_url': downloadUrl,
         };
       }
@@ -96,8 +98,8 @@ class SongRepository {
         transaction.set(newSongRef, {
           'created_at': timestamp,
           'project_id': _projectsRef.doc(projectId),
-          'title': title,
-          'tempo': tempo,
+          'title': uploadData.title,
+          'tempo': uploadData.tempo,
         });
 
         transaction.set(newSongRef.collection('versions').doc(), versionData);

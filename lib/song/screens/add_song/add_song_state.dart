@@ -1,6 +1,9 @@
+import 'package:audioplayers/audioplayers.dart';
+import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
 
 class AddSongState with ChangeNotifier {
   AddSongState(this.songRepository);
@@ -44,13 +47,37 @@ class AddSongState with ChangeNotifier {
     notifyListeners();
 
     String? songId;
+    SongUploadFile? uploadFile;
+
+    if (_selectedFile != null) {
+      final path = _selectedFile?.path;
+
+      if (path != null) {
+        final player = AudioPlayer();
+        await player.setSourceDeviceFile(path);
+        final duration = await player.getDuration();
+
+        final mimeType = lookupMimeType(path);
+
+        uploadFile = SongUploadFile(
+          name: _selectedFile!.name,
+          extension: _selectedFile!.extension ?? '',
+          data: _selectedFile!.bytes!,
+          size: _selectedFile!.size,
+          mimeType: mimeType!,
+          duration: duration!.inSeconds,
+        );
+      }
+    }
 
     try {
       songId = await songRepository.addSong(
         projectId,
-        title,
-        _selectedFile,
-        tempo.isNotEmpty ? tempo : null,
+        SongUploadData(
+          title: title,
+          tempo: tempo.isNotEmpty ? tempo : null,
+          file: uploadFile,
+        ),
       );
     } on Exception catch (_) {
       // do nothing

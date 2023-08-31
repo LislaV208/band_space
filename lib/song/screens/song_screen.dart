@@ -72,7 +72,10 @@ class SongScreen extends StatelessWidget {
 
               return Center(
                 child: version.file != null
-                    ? SongPlayer(fileUrl: version.file!.download_url)
+                    ? SongPlayer(
+                        fileUrl: version.file!.download_url,
+                        duration: version.file!.duration,
+                      )
                     : const Text('Brak pliku muzycznego'),
               );
             },
