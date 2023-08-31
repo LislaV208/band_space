@@ -19,6 +19,18 @@
   - title: String
   - project_id: Reference (Projects DocumentID)
   - tempo: Int
+  - versions (Sub-collection)
+    - DocumentID: (Auto-generated)
+      - version_number: Int
+      - lyrics: String
+      - timestamp: String (ISO 8601)
+      - file: 
+        - original_name: String
+        - storage_name: String
+        - size: Int
+        - duration: Tnt
+        - mime_type: String
+        - download_url: String
 
 ### Versions Collection
 - DocumentID (Auto-generated)

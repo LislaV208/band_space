@@ -61,11 +61,22 @@ class SongScreen extends StatelessWidget {
               ),
             ],
           ),
-          // body: Center(
-          //   child: song.file != null
-          //       ? SongPlayer(fileUrl: song.file!.download_url)
-          //       : const Text('Brak pliku muzycznego'),
-          // ),
+          body: FutureBuilder(
+            future: sl.get<SongRepository>().fetchLatestSongVersion(songId),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const SizedBox();
+              }
+
+              final version = snapshot.data!;
+
+              return Center(
+                child: version.file != null
+                    ? SongPlayer(fileUrl: version.file!.download_url)
+                    : const Text('Brak pliku muzycznego'),
+              );
+            },
+          ),
         );
       },
     );

@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/project/exceptions/project_exceptions.dart';
 import 'package:band_space/project/model/firebase_project_model.dart';
 import 'package:band_space/project/model/project_model.dart';
+import 'package:band_space/song/model/version_file_model.dart';
 import 'package:band_space/user/model/firebase_user_model.dart';
 import 'package:band_space/user/model/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -85,14 +84,36 @@ class ProjectRepository {
         .where('project_id', isEqualTo: projectRef)
         .get();
 
-    for (final doc in projectSongs.docs) {
-      await doc.reference.delete();
-      log('Deleted song ${doc.id}');
+    for (final songDoc in projectSongs.docs) {
+      final versions = await songDoc.reference.collection('versions').get();
+
+      for (final versionDoc in versions.docs) {
+        final file = versionDoc['file'] != null
+            ? VersionFileModel.fromMap(
+                versionDoc['file'],
+              )
+            : null;
+        final path = file?.storage_name;
+
+        if (path != null) {
+          await _storage.ref(path).delete();
+        }
+      }
     }
 
-    await projectRef.delete();
+    await _db.runTransaction((transaction) async {
+      for (final songDoc in projectSongs.docs) {
+        final versions = await songDoc.reference.collection('versions').get();
 
-    log('Deleted project ${projectRef.id}');
+        for (final versionDoc in versions.docs) {
+          transaction.delete(versionDoc.reference);
+        }
+
+        transaction.delete(songDoc.reference);
+      }
+
+      transaction.delete(projectRef);
+    });
   }
 
   Future<List<UserModel>> _fetchOwners(
