@@ -53,9 +53,6 @@ class SongRepository {
   Future<String> addSong(
     String projectId,
     SongUploadData uploadData,
-    // String title,
-    // PlatformFile? file,
-    // String? tempo,
   ) async {
     const versionNumber = 1;
     final timestamp = DateTime.timestamp().toIso8601String();
@@ -157,5 +154,83 @@ class SongRepository {
         FirebaseSongVersionModel.fromDocument(querySnapshot.docs.first);
 
     return version;
+  }
+
+  Future<List<SongVersionModel>> fetchSongVersionHistory(String songId) async {
+    final querySnapshot = await _songsRef
+        .doc(songId)
+        .collection('versions')
+        .orderBy('version_number', descending: true)
+        .get();
+
+    final versions = querySnapshot.docs
+        .map((doc) => FirebaseSongVersionModel.fromDocument(doc))
+        .toList();
+
+    return versions;
+  }
+
+  Stream<List<SongVersionModel>> getSongVersionHistory(String songId) {
+    final queryStream = _songsRef
+        .doc(songId)
+        .collection('versions')
+        .orderBy('version_number', descending: true)
+        .snapshots();
+
+    return queryStream.map((query) {
+      return query.docs
+          .map((doc) => FirebaseSongVersionModel.fromDocument(doc))
+          .toList();
+    });
+  }
+
+  Future<void> addSongVersion(
+    String projectId,
+    String songId,
+    SongUploadFile uploadFile,
+  ) async {
+    final versions = _songsRef.doc(songId).collection('versions');
+
+    final versionNumberQuery = await versions
+        .orderBy('version_number', descending: true)
+        .limit(1)
+        .get();
+
+    final lastVersionNumber = versionNumberQuery.docs.isEmpty
+        ? 0
+        : versionNumberQuery.docs.first['version_number'] as int;
+    final newVersionNumber = lastVersionNumber + 1;
+
+    final timestamp = DateTime.timestamp();
+    final storageName =
+        '${projectId}_${songId}_$newVersionNumber.${uploadFile.extension}';
+
+    final storageFileName =
+        '${projectId}_${songId}_$newVersionNumber.${uploadFile.extension}';
+    final storageRef = _storage.ref().child(storageFileName);
+    final uploadSnapshot = await storageRef.putData(
+      uploadFile.data,
+      SettableMetadata(
+        contentType: uploadFile.mimeType,
+      ),
+    );
+
+    final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
+
+    final newVersion = SongVersionModel(
+      version_number: newVersionNumber,
+      lyrics: null,
+      timestamp: timestamp,
+      file: VersionFileModel(
+        original_name: uploadFile.name,
+        storage_name: storageName,
+        size: uploadFile.size,
+        duration: uploadFile.duration,
+        mime_type: uploadFile.mimeType,
+        download_url: downloadUrl,
+      ),
+    );
+
+    await versions.add(newVersion.toMap());
   }
 }

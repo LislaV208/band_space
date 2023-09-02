@@ -1,7 +1,8 @@
+import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
+import 'package:band_space/song/widgets/song_file_picker.dart';
 import 'package:band_space/utils/snackbar_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
-import 'package:band_space/widgets/app_button_secondary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +21,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _tempoController = TextEditingController();
+
+  SongUploadFile? _selectedFile;
 
   @override
   void dispose() {
@@ -59,18 +62,11 @@ class _AddSongScreenState extends State<AddSongScreen> {
                           value!.isEmpty ? 'Podaj tytuł' : null,
                     ),
                     const SizedBox(height: 20),
-                    AppButtonSecondary(
-                      onTap: () => state.selectFile(),
-                      text: state.selectedFile == null
-                          ? 'Wybierz plik'
-                          : 'Zmień plik',
-                      isLoading: state.openingFilePicker,
+                    SongFilePicker(
+                      onFilePicked: (file) {
+                        _selectedFile = file;
+                      },
                     ),
-                    if (state.selectedFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Text(state.selectedFile!.name),
-                      ),
                     const SizedBox(height: 40),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -108,6 +104,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                         widget.projectId,
                         _titleController.text,
                         _tempoController.text,
+                        _selectedFile,
                       );
 
                       if (!mounted) return;

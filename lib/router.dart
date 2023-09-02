@@ -43,6 +43,7 @@ final router = GoRouter(
                   name: 'song',
                   builder: (context, state) {
                     return SongScreen(
+                      projectId: state.pathParameters['project_id']!,
                       songId: state.pathParameters['song_id']!,
                     );
                   },

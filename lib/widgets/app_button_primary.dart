@@ -8,7 +8,7 @@ class AppButtonPrimary extends StatelessWidget {
     this.isLoading = false,
   });
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String text;
   final bool isLoading;
 
