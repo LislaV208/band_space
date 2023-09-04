@@ -103,13 +103,15 @@ class _SongFilePickerState extends State<SongFilePicker> {
   }
 
   Future<Duration?> _getDuration(PlatformFile file) async {
+    // TODO: find a way to get duration on Web
+    if (kIsWeb) return null;
+
     if (file.path != null) {
       final player = AudioPlayer();
       await player.setSourceDeviceFile(file.path!);
 
       return await player.getDuration();
     } else {
-      // TODO: find a way to get duration on Web
       return null;
     }
   }
