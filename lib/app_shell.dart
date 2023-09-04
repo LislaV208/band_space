@@ -45,8 +45,8 @@ class AppShell extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     FilledButton.tonalIcon(
-                      onPressed: () {
-                        sl.get<AuthService>().signOut();
+                      onPressed: () async {
+                        await sl.get<AuthService>().signOut();
 
                         if (context.mounted) {
                           context.goNamed('login');

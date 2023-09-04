@@ -30,7 +30,7 @@ class ProjectRepository {
               UserModel creator = FirebaseUserModel.fromDocument(
                 await doc['created_by'].get(),
               );
-              List<UserModel> owners = await _fetchOwners(
+              List<UserModel> owners = await _fetchMembers(
                 List<DocumentReference>.from(doc['owners']),
               );
 
@@ -55,7 +55,7 @@ class ProjectRepository {
       UserModel creator = FirebaseUserModel.fromDocument(
         await doc['created_by'].get(),
       );
-      List<UserModel> owners = await _fetchOwners(
+      List<UserModel> owners = await _fetchMembers(
         List<DocumentReference>.from(doc['owners']),
       );
 
@@ -116,7 +116,28 @@ class ProjectRepository {
     });
   }
 
-  Future<List<UserModel>> _fetchOwners(
+  Future<List<UserModel>> fetchProjectMembers(String projectId) async {
+    final projectDoc = await _projectsRef.doc(projectId).get();
+    List<UserModel> members = await _fetchMembers(
+      List<DocumentReference>.from(projectDoc['owners']),
+    );
+
+    return members;
+  }
+
+  Future<void> addMemberToProject(String projectId) async {
+    final projectDoc = await _projectsRef.doc(projectId).get();
+    final members = List<DocumentReference>.from(projectDoc['owners']);
+    if (members.contains(_userRef)) {
+      throw DuplicateProjectMemberException();
+    }
+
+    members.add(_userRef);
+
+    await projectDoc.reference.update({'owners': members});
+  }
+
+  Future<List<UserModel>> _fetchMembers(
     List<DocumentReference> ownerRefs,
   ) async {
     final owners = await Future.wait(

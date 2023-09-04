@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 
 extension SnackbarExtension on BuildContext {
+  void showSnackbar(String text) {
+    final snackBar = SnackBar(
+      content: Text(text),
+    );
+
+    ScaffoldMessenger.of(this)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(snackBar);
+  }
+
   void showErrorSnackbar({String? message}) {
     final snackBar = SnackBar(
       backgroundColor: Theme.of(this).colorScheme.error,

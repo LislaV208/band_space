@@ -5,7 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.redirect, this.redirectArg});
+
+  final String? redirect;
+  final String? redirectArg;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -13,11 +16,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController(
-      // text: 'lislav.hms@gmail.com',
-      );
+    text: 'lislav.hms@gmail.com',
+  );
   final _passwordController = TextEditingController(
-      // text: '@rbuz0Hol',
-      );
+    text: '@rbuz0Hol',
+  );
 
   @override
   void dispose() {
@@ -75,7 +78,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       BlocConsumer<AuthCubit, BaseBlocState>(
                         listener: (context, state) {
                           if (state is CompletedState) {
-                            context.goNamed('projects');
+                            if (widget.redirect != null) {
+                              final queryParams = <String, dynamic>{};
+                              if (widget.redirect == 'invite') {
+                                queryParams.addAll({
+                                  'project': widget.redirectArg ?? '',
+                                });
+                              }
+
+                              context.goNamed(
+                                widget.redirect!,
+                                queryParameters: queryParams,
+                              );
+                            } else {
+                              context.goNamed('projects');
+                            }
                           } else if (state is FailureState) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -116,7 +133,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20.0),
                       TextButton(
                         onPressed: () {
-                          context.goNamed('register');
+                          final queryParams = <String, dynamic>{};
+                          if (widget.redirect != null) {
+                            if (widget.redirect == 'invite') {
+                              queryParams.addAll({
+                                'redirect': 'invite',
+                                'project': widget.redirectArg ?? '',
+                              });
+                            }
+                          }
+                          context.goNamed(
+                            'register',
+                            queryParameters: queryParams,
+                          );
                         },
                         child: const Text('Zarejestruj się'),
                       ),

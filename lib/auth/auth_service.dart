@@ -1,4 +1,5 @@
-import 'package:band_space/auth/model/user_data.dart';
+import 'package:band_space/user/model/firebase_user_model.dart';
+import 'package:band_space/user/model/user_model.dart';
 import 'package:band_space/user/repository/user_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -10,8 +11,8 @@ class AuthService {
 
   bool get isUserAuthenticated => _auth.currentUser != null;
 
-  UserData? get user => isUserAuthenticated
-      ? UserData.fromFirebaseUser(_auth.currentUser!)
+  UserModel? get user => isUserAuthenticated
+      ? FirebaseUserModel.fromFirebaseUser(_auth.currentUser!)
       : null;
 
   Future<void> logIn(String email, String password) async {

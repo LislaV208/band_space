@@ -5,7 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.redirect, this.redirectArg});
+
+  final String? redirect;
+  final String? redirectArg;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -63,7 +66,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       BlocConsumer<AuthCubit, BaseBlocState>(
                         listener: (context, state) {
                           if (state is CompletedState) {
-                            context.goNamed('projects');
+                            if (widget.redirect != null) {
+                              final queryParams = <String, dynamic>{};
+                              if (widget.redirect == 'invite') {
+                                queryParams.addAll({
+                                  'project': widget.redirectArg ?? '',
+                                });
+                              }
+
+                              context.goNamed(
+                                widget.redirect!,
+                                queryParameters: queryParams,
+                              );
+                            } else {
+                              context.goNamed('projects');
+                            }
                           } else if (state is FailureState) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -104,7 +121,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const SizedBox(height: 20.0),
                       TextButton(
                         onPressed: () {
-                          context.goNamed('login');
+                          final queryParams = <String, dynamic>{};
+                          if (widget.redirect != null) {
+                            if (widget.redirect == 'invite') {
+                              queryParams.addAll({
+                                'redirect': 'invite',
+                                'project': widget.redirectArg ?? '',
+                              });
+                            }
+                          }
+
+                          context.goNamed(
+                            'login',
+                            queryParameters: queryParams,
+                          );
                         },
                         child: const Text('Zaloguj się'),
                       ),
