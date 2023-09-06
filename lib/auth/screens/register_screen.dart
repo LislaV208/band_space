@@ -34,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           Center(
             child: Card(
+              margin: const EdgeInsets.all(20.0),
               child: ConstrainedBox(
                 constraints: const BoxConstraints.tightFor(width: 440),
                 child: Padding(

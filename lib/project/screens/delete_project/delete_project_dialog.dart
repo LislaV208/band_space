@@ -1,6 +1,6 @@
 import 'package:band_space/project/model/project_model.dart';
 import 'package:band_space/project/screens/delete_project/delete_project_dialog_state.dart';
-import 'package:band_space/utils/snackbar_extensions.dart';
+import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

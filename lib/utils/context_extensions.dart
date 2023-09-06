@@ -22,3 +22,7 @@ extension SnackbarExtension on BuildContext {
       ..showSnackBar(snackBar);
   }
 }
+
+extension MediaQueryExtension on BuildContext {
+  bool get useBottomNavigation => MediaQuery.of(this).size.width < 900;
+}

@@ -1,7 +1,7 @@
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
 import 'package:band_space/song/widgets/song_file_picker.dart';
-import 'package:band_space/utils/snackbar_extensions.dart';
+import 'package:band_space/utils/context_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

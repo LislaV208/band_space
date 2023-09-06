@@ -3,6 +3,7 @@ import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/screens/register_screen.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
+import 'package:band_space/profile/profile_screen.dart';
 import 'package:band_space/project/screens/confirm_invitation_screen.dart';
 import 'package:band_space/project/screens/project_details_screen.dart';
 import 'package:band_space/project/screens/projects_screen.dart';
@@ -52,6 +53,11 @@ final router = GoRouter(
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/profile',
+          name: 'profile',
+          builder: (context, state) => const ProfileScreen(),
         ),
       ],
     ),

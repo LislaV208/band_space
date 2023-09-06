@@ -1,6 +1,6 @@
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
-import 'package:band_space/utils/snackbar_extensions.dart';
+import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

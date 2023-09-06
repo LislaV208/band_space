@@ -2,9 +2,7 @@ import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
-import 'package:band_space/song/screens/new_song_version_screen.dart';
-import 'package:band_space/song/screens/views/song_versions_page_view.dart';
-import 'package:band_space/widgets/app_button_primary.dart';
+import 'package:band_space/song/widgets/song_player.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -92,39 +90,28 @@ class _SongScreenState extends State<SongScreen> {
 
               final versions = snapshot.data!;
 
+              final currentVersion = versions.first;
+
               return Column(
                 children: [
-                  Expanded(
-                    child: SongVersionsPageView(
-                      controller: _versionsPageController,
-                      versions: versions,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: SizedBox(
-                      width: 400,
-                      child: AppButtonPrimary(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (context) => NewSongVersionScreen(
-                              projectId: widget.projectId,
-                              songId: widget.songId,
-                              onFinished: () {
-                                _versionsPageController.animateToPage(
-                                  0,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.linear,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        text: 'Nowa wersja',
+                  const Spacer(),
+                  if (currentVersion.file != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 24,
+                      ),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: 800,
+                          child: SongPlayer(
+                            fileUrl: currentVersion.file!.download_url,
+                            duration: currentVersion.file!.duration,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               );
             },

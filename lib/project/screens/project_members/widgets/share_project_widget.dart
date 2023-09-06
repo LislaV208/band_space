@@ -1,4 +1,4 @@
-import 'package:band_space/utils/snackbar_extensions.dart';
+import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

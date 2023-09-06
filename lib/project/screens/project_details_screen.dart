@@ -32,8 +32,8 @@ class ProjectDetailsScreen extends StatelessWidget {
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
+                          useSafeArea: true,
                           isScrollControlled: true,
-                          enableDrag: false,
                           builder: (context) => ProjectMembersScreen(
                             projectId: projectId,
                           ),
@@ -128,6 +128,8 @@ class ProjectDetailsScreen extends StatelessWidget {
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
               showModalBottomSheet(
+                isScrollControlled: true,
+                useSafeArea: true,
                 isDismissible: false,
                 context: context,
                 builder: (context) {

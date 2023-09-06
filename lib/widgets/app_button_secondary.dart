@@ -6,31 +6,47 @@ class AppButtonSecondary extends StatelessWidget {
     required this.onTap,
     required this.text,
     this.isLoading = false,
+    this.icon,
+    this.color,
   });
 
   final VoidCallback onTap;
   final String text;
   final bool isLoading;
+  final Icon? icon;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final onPressed = isLoading ? null : onTap;
+    final child = isLoading
+        ? const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 3.0,
+            ),
+          )
+        : Text(
+            text,
+            style: TextStyle(color: color),
+          );
+
     return ConstrainedBox(
       constraints: const BoxConstraints(
-        minWidth: 200,
-        minHeight: 34,
+        minWidth: 210,
+        minHeight: 40,
       ),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onTap,
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3.0,
-                ),
-              )
-            : Text(text),
-      ),
+      child: icon != null
+          ? ElevatedButton.icon(
+              onPressed: onPressed,
+              icon: icon!,
+              label: child,
+            )
+          : ElevatedButton(
+              onPressed: onPressed,
+              child: child,
+            ),
     );
   }
 }

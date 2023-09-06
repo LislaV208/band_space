@@ -43,9 +43,8 @@ class _SongPlayerState extends State<SongPlayer> {
   }
 
   void init() async {
-    await _player.setSourceUrl(widget.fileUrl);
-
     if (_duration == 0) {
+      await _player.setSourceUrl(widget.fileUrl);
       final duration = await _player.getDuration();
       if (duration != null) {
         setState(() {
@@ -69,52 +68,80 @@ class _SongPlayerState extends State<SongPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Slider(
-            value: _currentPosition.toDouble(),
-            min: 0,
-            max: _duration.toDouble(),
-            onChanged: (value) {
-              _player.seek(Duration(seconds: value.toInt()));
-            },
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatDuration(_currentPosition),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          children: [
+            Slider(
+              value: _currentPosition.toDouble(),
+              min: 0,
+              max: _duration.toDouble(),
+              onChanged: (value) {
+                _player.seek(Duration(seconds: value.toInt()));
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDuration(_currentPosition),
+                  ),
+                  Text(
+                    _formatDuration(_duration),
+                  ),
+                ],
               ),
-              IconButton(
-                icon: Icon(
-                  _isPlaying ? Icons.pause : Icons.play_arrow,
-                ),
-                onPressed: () async {
-                  if (_isPlaying) {
-                    _player.pause();
-                  } else {
-                    if (_currentPosition == _duration) {
-                      await _player.seek(Duration.zero);
-                    }
-
-                    _player.play(UrlSource(widget.fileUrl));
+            )
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(
+                Icons.fast_rewind,
+              ),
+              iconSize: 40,
+            ),
+            IconButton(
+              icon: Icon(
+                _isPlaying ? Icons.pause : Icons.play_arrow,
+              ),
+              color: Theme.of(context).primaryColor,
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+              iconSize: 40,
+              onPressed: () async {
+                if (_isPlaying) {
+                  _player.pause();
+                } else {
+                  if (_currentPosition == _duration) {
+                    await _player.seek(Duration.zero);
                   }
 
-                  setState(() {
-                    _isPlaying = !_isPlaying;
-                  });
-                },
+                  _player.play(UrlSource(widget.fileUrl));
+                }
+
+                setState(() {
+                  _isPlaying = !_isPlaying;
+                });
+              },
+            ),
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(
+                Icons.fast_forward,
               ),
-              Text(
-                _formatDuration(_duration),
-              ),
-            ],
-          ),
-        ],
-      ),
+              iconSize: 40,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
