@@ -1,5 +1,6 @@
 import 'package:band_space/core/base_bloc_state.dart';
 import 'package:band_space/auth/cubit/auth_cubit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -16,10 +17,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController(
-    text: 'lislav.hms@gmail.com',
+    text: kDebugMode ? 'lislav.hms@gmail.com' : null,
   );
   final _passwordController = TextEditingController(
-    text: '@rbuz0Hol',
+    text: kDebugMode ? '@rbuz0Hol' : null,
   );
 
   @override

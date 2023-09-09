@@ -1,4 +1,4 @@
-package com.example.band_space
+package lislav.bandspace
 
 import io.flutter.embedding.android.FlutterActivity
 
