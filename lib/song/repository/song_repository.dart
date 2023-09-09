@@ -21,7 +21,11 @@ class SongRepository {
 
   Stream<List<SongModel>> getSongs(String projectId) {
     final queryStream = _songsRef
-        .where('project_id', isEqualTo: _projectsRef.doc(projectId))
+        .where(
+          'project_id',
+          isEqualTo: _projectsRef.doc(projectId),
+        )
+        .orderBy('created_at', descending: true)
         .snapshots();
 
     return queryStream.map(
@@ -59,12 +63,7 @@ class SongRepository {
 
     try {
       final newSongRef = _songsRef.doc();
-      final versionData = {
-        'version_number': versionNumber,
-        'timestamp': timestamp,
-        'lyrics': null,
-        'file': null,
-      };
+      Map<String, dynamic>? versionData;
 
       if (uploadData.file != null) {
         final file = uploadData.file!;
@@ -80,14 +79,18 @@ class SongRepository {
         );
         final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
-        versionData['file'] = {
-          'original_name': file.name,
-          'storage_name':
-              '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}',
-          'size': file.size,
-          'duration': file.duration,
-          'mime_type': file.mimeType,
-          'download_url': downloadUrl,
+        versionData = {
+          'version_number': versionNumber,
+          'timestamp': timestamp,
+          'file': {
+            'original_name': file.name,
+            'storage_name':
+                '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}',
+            'size': file.size,
+            'duration': file.duration,
+            'mime_type': file.mimeType,
+            'download_url': downloadUrl,
+          }
         };
       }
 
@@ -96,10 +99,12 @@ class SongRepository {
           'created_at': timestamp,
           'project_id': _projectsRef.doc(projectId),
           'title': uploadData.title,
-          'tempo': uploadData.tempo,
+          'state': uploadData.state.value,
         });
 
-        transaction.set(newSongRef.collection('versions').doc(), versionData);
+        if (versionData != null) {
+          transaction.set(newSongRef.collection('versions').doc(), versionData);
+        }
       });
 
       return newSongRef.id;
@@ -219,7 +224,6 @@ class SongRepository {
 
     final newVersion = SongVersionModel(
       version_number: newVersionNumber,
-      lyrics: null,
       timestamp: timestamp,
       file: VersionFileModel(
         original_name: uploadFile.name,

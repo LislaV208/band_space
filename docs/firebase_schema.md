@@ -18,11 +18,10 @@
   - created_at: String (ISO 8601)
   - title: String
   - project_id: Reference (Projects DocumentID)
-  - tempo: Int
+  - state: String ('draft', 'demo', 'final_version')
   - versions (Sub-collection)
     - DocumentID: (Auto-generated)
       - version_number: Int
-      - lyrics: String
       - timestamp: String (ISO 8601)
       - file: 
         - original_name: String

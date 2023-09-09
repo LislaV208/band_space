@@ -90,29 +90,39 @@ class _SongScreenState extends State<SongScreen> {
 
               final versions = snapshot.data!;
 
-              final currentVersion = versions.first;
+              final currentVersion =
+                  versions.isNotEmpty ? versions.first : null;
 
-              return Column(
-                children: [
-                  const Spacer(),
-                  if (currentVersion.file != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 24,
-                      ),
+              return SizedBox(
+                width: double.infinity,
+                child: Column(
+                  children: [
+                    Expanded(
                       child: Align(
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          width: 800,
-                          child: SongPlayer(
-                            fileUrl: currentVersion.file!.download_url,
-                            duration: currentVersion.file!.duration,
-                          ),
+                        child: Text(
+                          song.state.toString(),
                         ),
                       ),
                     ),
-                ],
+                    if (currentVersion != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 24,
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: 800,
+                            child: SongPlayer(
+                              fileUrl: currentVersion.file.download_url,
+                              duration: currentVersion.file.duration,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           ),

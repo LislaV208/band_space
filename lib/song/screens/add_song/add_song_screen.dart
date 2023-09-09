@@ -1,12 +1,12 @@
-import 'package:band_space/song/model/song_upload_data.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
+import 'package:band_space/song/song_state.dart';
 import 'package:band_space/song/widgets/song_file_picker.dart';
 import 'package:band_space/utils/context_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class AddSongScreen extends StatefulWidget {
   const AddSongScreen({super.key, required this.projectId});
@@ -20,14 +20,10 @@ class AddSongScreen extends StatefulWidget {
 class _AddSongScreenState extends State<AddSongScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _tempoController = TextEditingController();
-
-  SongUploadFile? _selectedFile;
 
   @override
   void dispose() {
     _titleController.dispose();
-    _tempoController.dispose();
 
     super.dispose();
   }
@@ -64,36 +60,33 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     const SizedBox(height: 20),
                     SongFilePicker(
                       onFilePicked: (file) {
-                        _selectedFile = file;
+                        state.onFileSelected(file);
                       },
                     ),
                     const SizedBox(height: 40),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Dodatkowe informacje',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    const Divider(
-                      height: 20,
-                    ),
-                    TextFormField(
-                      controller: _tempoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tempo (BPM)',
-                        hintText: 'Wprowadź wartość od 40 do 240 BPM',
-                        counter: SizedBox(),
-                      ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      maxLength: 3,
-                      validator: (value) {
-                        final tempo = int.tryParse(value!);
-                        if (tempo != null && (tempo < 40 || tempo > 240)) {
-                          return 'Podaj wartość między 40 BPM a 240 BPM';
-                        }
-                        return null;
-                      },
+                    const Divider(),
+                    const SizedBox(height: 20),
+                    Text('Określ stan utworu'),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 20,
+                      children: [
+                        _buildChoiceChip(
+                          label: 'Szkic',
+                          state: state,
+                          songState: SongState.draft,
+                        ),
+                        _buildChoiceChip(
+                          label: 'Demo',
+                          state: state,
+                          songState: SongState.demo,
+                        ),
+                        _buildChoiceChip(
+                          label: 'Finalny',
+                          state: state,
+                          songState: SongState.finalVersion,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -103,8 +96,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
                       final songId = await state.addSong(
                         widget.projectId,
                         _titleController.text,
-                        _tempoController.text,
-                        _selectedFile,
                       );
 
                       if (!mounted) return;
@@ -131,6 +122,22 @@ class _AddSongScreenState extends State<AddSongScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildChoiceChip({
+    required String label,
+    required AddSongState state,
+    required SongState songState,
+  }) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: state.songState == songState,
+      onSelected: (isSelected) {
+        if (isSelected) {
+          state.onSongStateSelected(songState);
+        }
+      },
     );
   }
 }

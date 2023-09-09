@@ -130,7 +130,6 @@ class ProjectDetailsScreen extends StatelessWidget {
               showModalBottomSheet(
                 isScrollControlled: true,
                 useSafeArea: true,
-                isDismissible: false,
                 context: context,
                 builder: (context) {
                   return ChangeNotifierProvider(

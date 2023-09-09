@@ -7,17 +7,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirebaseSongVersionModel extends SongVersionModel {
   const FirebaseSongVersionModel({
     required super.version_number,
-    required super.lyrics,
     required super.timestamp,
     required super.file,
   });
 
   factory FirebaseSongVersionModel.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return FirebaseSongVersionModel(
-      version_number: doc['version_number'] ?? 0,
-      lyrics: doc['lyrics'],
-      timestamp: DateTime.parse(doc['timestamp']).toLocal(),
-      file: doc['file'] != null ? VersionFileModel.fromMap(doc['file']) : null,
+      version_number: data['version_number'] ?? 0,
+      timestamp: DateTime.parse(data['timestamp']).toLocal(),
+      file: VersionFileModel.fromMap(doc['file']),
     );
   }
 }

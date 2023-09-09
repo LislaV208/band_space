@@ -1,46 +1,39 @@
+import 'package:flutter/material.dart';
+
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/repository/song_repository.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:band_space/song/song_state.dart';
 
 class AddSongState with ChangeNotifier {
   AddSongState(this.songRepository);
 
   final SongRepository songRepository;
 
-  PlatformFile? _selectedFile;
-  bool _openingFilePicker = false;
+  SongUploadFile? _selectedFile;
   bool _addingSong = false;
+  SongState? _state;
 
-  PlatformFile? get selectedFile => _selectedFile;
-  bool get openingFilePicker => _openingFilePicker;
+  SongUploadFile? get selectedFile => _selectedFile;
   bool get addingSong => _addingSong;
+  SongState? get songState => _state;
 
-  bool get canPop => !_openingFilePicker && !_addingSong;
+  bool get canPop => !_addingSong;
 
-  Future<void> selectFile() async {
-    _openingFilePicker = true;
+  Future<void> onFileSelected(SongUploadFile file) async {
+    _selectedFile = file;
+
     notifyListeners();
+  }
 
-    final result = await FilePicker.platform.pickFiles(
-      withData: true,
-      type: FileType.audio,
-      initialDirectory: _selectedFile != null ? _selectedFile!.path : null,
-    );
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.first;
-      _selectedFile = file;
-    }
+  void onSongStateSelected(SongState state) {
+    _state = state;
 
-    _openingFilePicker = false;
     notifyListeners();
   }
 
   Future<String?> addSong(
     String projectId,
     String title,
-    String tempo,
-    SongUploadFile? uploadFile,
   ) async {
     _addingSong = true;
     notifyListeners();
@@ -52,8 +45,8 @@ class AddSongState with ChangeNotifier {
         projectId,
         SongUploadData(
           title: title,
-          tempo: tempo.isNotEmpty ? tempo : null,
-          file: uploadFile,
+          file: _selectedFile,
+          state: _state ?? SongState.draft, // TODO: dodać walidacje
         ),
       );
     } on Exception catch (_) {

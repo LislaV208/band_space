@@ -1,14 +1,16 @@
 import 'dart:typed_data';
 
+import 'package:band_space/song/song_state.dart';
+
 class SongUploadData {
   final String title;
-  final String? tempo;
   final SongUploadFile? file;
+  final SongState state;
 
   const SongUploadData({
     required this.title,
-    required this.tempo,
     required this.file,
+    required this.state,
   });
 }
 

@@ -10,12 +10,6 @@ class SongVersionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (version.file == null) {
-      return const Center(
-        child: Text('Brak wersji utworu'),
-      );
-    }
-
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints.tightFor(width: 600),
@@ -31,8 +25,8 @@ class SongVersionView extends StatelessWidget {
             ),
             Card(
               child: SongPlayer(
-                fileUrl: version.file!.download_url,
-                duration: version.file!.duration,
+                fileUrl: version.file.download_url,
+                duration: version.file.duration,
               ),
             ),
             Align(
