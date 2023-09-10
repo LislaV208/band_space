@@ -15,12 +15,12 @@ class ProjectModel extends Equatable {
 
   final String id;
   final String name;
-  final DateTime created_at;
+  final DateTime? created_at;
   final UserModel created_by;
   final List<UserModel> owners;
 
   @override
-  List<Object> get props {
+  List<Object?> get props {
     return [
       id,
       name,

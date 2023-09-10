@@ -59,7 +59,7 @@ class SongRepository {
     SongUploadData uploadData,
   ) async {
     const versionNumber = 1;
-    final timestamp = DateTime.timestamp().toIso8601String();
+    final timestamp = Timestamp.now();
 
     try {
       final newSongRef = _songsRef.doc();

@@ -64,10 +64,8 @@ class ProjectRepository {
   }
 
   Future<String> addProject(String name) async {
-    final timestamp = DateTime.timestamp().toIso8601String();
-
     final newProjectRef = await _projectsRef.add({
-      'created_at': timestamp,
+      'created_at': Timestamp.now(),
       'name': name,
       'created_by': _userRef,
       'owners': [_userRef],

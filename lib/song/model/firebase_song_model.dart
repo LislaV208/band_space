@@ -17,7 +17,9 @@ class FirebaseSongModel extends SongModel {
 
     return FirebaseSongModel(
       id: doc.id,
-      created_at: DateTime.parse(data['created_at']).toLocal(),
+      created_at: data['created_at'] != null
+          ? (data['created_at'] as Timestamp).toDate()
+          : null,
       title: data['title'] ?? '',
       state: SongState.fromString(data['state'] ?? ''),
     );

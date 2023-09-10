@@ -6,7 +6,7 @@ import 'package:band_space/song/song_state.dart';
 
 class SongModel extends Equatable {
   final String id;
-  final DateTime created_at;
+  final DateTime? created_at;
   final String title;
   final SongState state;
 

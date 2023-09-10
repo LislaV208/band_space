@@ -25,8 +25,8 @@ class SongVersionView extends StatelessWidget {
             ),
             Card(
               child: SongPlayer(
-                fileUrl: version.file.download_url,
-                duration: version.file.duration,
+                fileUrl: version.file!.download_url,
+                duration: version.file!.duration,
               ),
             ),
             Align(
@@ -34,7 +34,7 @@ class SongVersionView extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  DateFormat('HH:mm dd.MM.yyyy').format(version.timestamp),
+                  DateFormat('HH:mm dd.MM.yyyy').format(version.timestamp!),
                 ),
               ),
             ),

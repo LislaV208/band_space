@@ -113,12 +113,14 @@ class _SongScreenState extends State<SongScreen> {
                         child: Align(
                           alignment: Alignment.center,
                           child: SizedBox(
-                            width: 800,
-                            child: SongPlayer(
-                              fileUrl: currentVersion.file.download_url,
-                              duration: currentVersion.file.duration,
-                            ),
-                          ),
+                              width: 800,
+                              child: currentVersion.file != null
+                                  ? SongPlayer(
+                                      fileUrl:
+                                          currentVersion.file!.download_url,
+                                      duration: currentVersion.file!.duration,
+                                    )
+                                  : const Text('Nie można odtworzyć pliku')),
                         ),
                       ),
                   ],

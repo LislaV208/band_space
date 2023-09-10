@@ -18,10 +18,14 @@ class FirebaseProjectModel extends ProjectModel {
     UserModel creator,
     List<UserModel> owners,
   ) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return FirebaseProjectModel(
       id: doc.id,
-      name: doc['name'] ?? '',
-      created_at: DateTime.parse(doc['created_at']).toLocal(),
+      name: data['name'] ?? '',
+      created_at: data['created_at'] != null
+          ? (data['created_at'] as Timestamp).toDate()
+          : null,
       created_by: creator,
       owners: owners,
     );

@@ -9,13 +9,13 @@
 ### Projects Collection
 - DocumentID (Auto-generated)
   - name: String
-  - created_at: String (ISO 8601)
+  - created_at: Timestamp
   - created_by: Reference (Users DocumentID)
   - owners: Array (References to Users DocumentIDs)
 
 ### Songs Collection
 - DocumentID (Auto-generated)
-  - created_at: String (ISO 8601)
+  - created_at: Timestamp
   - title: String
   - project_id: Reference (Projects DocumentID)
   - state: String ('draft', 'demo', 'final_version')
@@ -36,7 +36,7 @@
   - song_id: Reference (Songs DocumentID)
   - version_number: String
   - lyrics: String
-  - timestamp: String (ISO 8601)
+  - timestamp: Timestamp
   - file: Map
     - name: String
     - size: Int

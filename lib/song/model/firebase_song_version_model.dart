@@ -16,8 +16,14 @@ class FirebaseSongVersionModel extends SongVersionModel {
 
     return FirebaseSongVersionModel(
       version_number: data['version_number'] ?? 0,
-      timestamp: DateTime.parse(data['timestamp']).toLocal(),
-      file: VersionFileModel.fromMap(doc['file']),
+      timestamp: data['timestamp'] != null
+          ? (data['timestamp'] as Timestamp).toDate()
+          : null,
+      file: data['file'] != null
+          ? VersionFileModel.fromMap(
+              data['file'],
+            )
+          : null,
     );
   }
 }

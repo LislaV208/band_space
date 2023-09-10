@@ -115,8 +115,10 @@ class ProjectDetailsScreen extends StatelessWidget {
                               song.title,
                             ),
                             subtitle: Text(
-                              DateFormat('dd-MM-yyyy HH:mm')
-                                  .format(song.created_at),
+                              song.created_at != null
+                                  ? DateFormat('dd-MM-yyyy HH:mm')
+                                      .format(song.created_at!)
+                                  : '-',
                             ),
                             trailing: const Icon(Icons.arrow_forward_ios),
                           );
