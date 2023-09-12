@@ -19,6 +19,7 @@
   - title: String
   - project_id: Reference (Projects DocumentID)
   - state: String ('draft', 'demo', 'final_version')
+  - active_version: Reference (Version DocumentID)
   - versions (Sub-collection)
     - DocumentID: (Auto-generated)
       - version_number: Int

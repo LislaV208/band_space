@@ -27,7 +27,10 @@ class AppButtonPrimary extends StatelessWidget {
                   strokeWidth: 3.0,
                 ),
               )
-            : Text(text),
+            : Text(
+                text,
+                textAlign: TextAlign.center,
+              ),
       ),
     );
   }

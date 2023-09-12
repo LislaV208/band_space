@@ -1,11 +1,15 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
+import 'package:band_space/song/screens/new_song_version_screen.dart';
+import 'package:band_space/song/screens/song_version_history_screen.dart';
 import 'package:band_space/song/widgets/song_player.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:band_space/widgets/app_button_primary.dart';
 
 class SongScreen extends StatefulWidget {
   const SongScreen({
@@ -50,9 +54,13 @@ class _SongScreenState extends State<SongScreen> {
 
         final song = snapshot.data!;
 
+        final versionText = song.active_version != null
+            ? 'v${song.active_version!.version_number}'
+            : '';
+
         return Scaffold(
           appBar: AppBar(
-            title: Text(song.title),
+            title: Text('${song.title} $versionText'),
             actions: [
               IconButton(
                 onPressed: () async {
@@ -113,16 +121,78 @@ class _SongScreenState extends State<SongScreen> {
                         child: Align(
                           alignment: Alignment.center,
                           child: SizedBox(
-                              width: 800,
-                              child: currentVersion.file != null
-                                  ? SongPlayer(
-                                      fileUrl:
-                                          currentVersion.file!.download_url,
-                                      duration: currentVersion.file!.duration,
-                                    )
-                                  : const Text('Nie można odtworzyć pliku')),
+                            width: 800,
+                            child: currentVersion.file != null
+                                ? SongPlayer(
+                                    fileUrl: currentVersion.file!.download_url,
+                                    duration: currentVersion.file!.duration,
+                                  )
+                                : const Text('Nie można odtworzyć pliku'),
+                          ),
                         ),
                       ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 20.0, horizontal: 40),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Visibility.maintain(
+                            visible: false,
+                            child: IconButton.filledTonal(
+                              onPressed: () {},
+                              icon: Icon(Icons.history),
+                            ),
+                          ),
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20.0,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: 500),
+                                child: AppButtonPrimary(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return NewSongVersionScreen(
+                                          projectId: widget.projectId,
+                                          songId: song.id,
+                                          onFinished: () {},
+                                        );
+                                      },
+                                    );
+                                  },
+                                  text: 'Dodaj wersję',
+                                ),
+                              ),
+                            ),
+                          ),
+                          Visibility.maintain(
+                            visible: song.active_version != null,
+                            child: IconButton.filledTonal(
+                              tooltip: 'Poprzednie wersje',
+                              onPressed: () {
+                                if (song.active_version == null) return;
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  useSafeArea: true,
+                                  enableDrag: false,
+                                  builder: (context) =>
+                                      SongVersionHistoryScreen(
+                                    songId: widget.songId,
+                                    currentVersion: song.active_version!,
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.history),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   ],
                 ),
               );

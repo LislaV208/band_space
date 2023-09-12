@@ -6,18 +6,20 @@ import 'package:equatable/equatable.dart';
 import 'package:band_space/song/model/version_file_model.dart';
 
 class SongVersionModel extends Equatable {
+  final String id;
   final int version_number;
   final DateTime? timestamp;
   final VersionFileModel? file;
 
   const SongVersionModel({
+    required this.id,
     required this.version_number,
     required this.timestamp,
     required this.file,
   });
 
   @override
-  List<Object?> get props => [version_number, timestamp, file];
+  List<Object?> get props => [id, version_number, timestamp, file];
 
   Map<String, dynamic> toMap() {
     return {
