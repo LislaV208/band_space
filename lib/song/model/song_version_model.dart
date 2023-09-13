@@ -10,22 +10,25 @@ class SongVersionModel extends Equatable {
   final int version_number;
   final DateTime? timestamp;
   final VersionFileModel? file;
+  final String comment;
 
   const SongVersionModel({
     required this.id,
     required this.version_number,
     required this.timestamp,
     required this.file,
+    required this.comment,
   });
 
   @override
-  List<Object?> get props => [id, version_number, timestamp, file];
+  List<Object?> get props => [id, version_number, timestamp, file, comment];
 
   Map<String, dynamic> toMap() {
     return {
       'version_number': version_number,
       'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : null,
       'file': file?.toMap(),
+      'comment': comment,
     };
   }
 }

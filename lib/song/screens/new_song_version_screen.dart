@@ -23,8 +23,17 @@ class NewSongVersionScreen extends StatefulWidget {
 }
 
 class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
+  final _commentController = TextEditingController();
+
   SongUploadFile? _uploadFile;
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +47,23 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
           children: [
             Expanded(
               child: Align(
-                alignment: Alignment.center,
                 child: SongFilePicker(
                   onFilePicked: (file) {
                     setState(() {
                       _uploadFile = file;
                     });
                   },
+                ),
+              ),
+            ),
+            Expanded(
+              child: Align(
+                child: TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Komentarz',
+                    hintText: 'Dodaj krótki opis co zmieniło się w nowej wersji',
+                  ),
                 ),
               ),
             ),
@@ -60,6 +79,7 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
                             widget.projectId,
                             widget.songId,
                             _uploadFile!,
+                            _commentController.text,
                           );
 
                       widget.onFinished();

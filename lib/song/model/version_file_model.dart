@@ -57,6 +57,5 @@ class VersionFileModel extends Equatable {
 
   String toJson() => json.encode(toMap());
 
-  factory VersionFileModel.fromJson(String source) =>
-      VersionFileModel.fromMap(json.decode(source));
+  factory VersionFileModel.fromJson(String source) => VersionFileModel.fromMap(json.decode(source));
 }

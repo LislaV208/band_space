@@ -11,6 +11,7 @@ class FirebaseSongVersionModel extends SongVersionModel {
     required super.version_number,
     required super.timestamp,
     required super.file,
+    required super.comment,
   });
 
   factory FirebaseSongVersionModel.fromDocument(DocumentSnapshot doc) {
@@ -19,14 +20,13 @@ class FirebaseSongVersionModel extends SongVersionModel {
     return FirebaseSongVersionModel(
       id: doc.id,
       version_number: data['version_number'] ?? 0,
-      timestamp: data['timestamp'] != null
-          ? (data['timestamp'] as Timestamp).toDate()
-          : null,
+      timestamp: data['timestamp'] != null ? (data['timestamp'] as Timestamp).toDate() : null,
       file: data['file'] != null
           ? VersionFileModel.fromMap(
               data['file'],
             )
           : null,
+      comment: data['comment'] ?? '',
     );
   }
 }

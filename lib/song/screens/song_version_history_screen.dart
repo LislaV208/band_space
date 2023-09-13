@@ -19,7 +19,7 @@ class SongVersionHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Poprzednie wersje'),
+        title: const Text('Poprzednie wersje'),
       ),
       body: StreamBuilder(
         stream: sl.get<SongRepository>().getSongVersionHistory(songId),
@@ -44,40 +44,94 @@ class SongVersionHistoryScreen extends StatelessWidget {
 
               final isCurrent = version.id == currentVersion.id;
 
-              return ListTile(
-                title: Text('Wersja ${version.version_number}'),
-                subtitle: version.timestamp != null
-                    ? Text(
-                        DateFormat('HH:mm dd/MM/yyyy').format(
-                          version.timestamp!,
-                        ),
-                      )
-                    : null,
-                leading: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.info_outline),
-                  tooltip: 'Informacje',
-                ),
-                trailing: ElevatedButton(
-                  onPressed: isCurrent
-                      ? null
-                      : () async {
-                          final navigator = Navigator.of(context);
-
-                          await sl
-                              .get<SongRepository>()
-                              .setSongActiveVersion(songId, version.id);
-
-                          navigator.pop();
-                        },
-                  child: Text(isCurrent ? 'Aktywna' : 'Ustaw jako aktywną'),
-                ),
+              return _VersionHistoryListTile(
+                version: version,
+                songId: songId,
+                isCurrent: isCurrent,
               );
             },
             separatorBuilder: (context, index) => const Divider(),
             itemCount: versions.length,
           );
         },
+      ),
+    );
+  }
+}
+
+class _VersionHistoryListTile extends StatelessWidget {
+  const _VersionHistoryListTile({
+    required this.version,
+    required this.songId,
+    required this.isCurrent,
+  });
+
+  final String songId;
+  final SongVersionModel version;
+  final bool isCurrent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Informacje',
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Wersja ${version.version_number}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (version.timestamp != null)
+                    Text(
+                      DateFormat('HH:mm dd/MM/yyyy').format(
+                        version.timestamp!,
+                      ),
+                    ),
+                  if (version.comment.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Komentarz: ',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          children: [
+                            TextSpan(
+                              text: version.comment,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                ],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: isCurrent
+                ? null
+                : () async {
+                    final navigator = Navigator.of(context);
+
+                    await sl.get<SongRepository>().setSongActiveVersion(songId, version.id);
+
+                    navigator.pop();
+                  },
+            child: Text(isCurrent ? 'Aktywna' : 'Ustaw jako aktywną'),
+          )
+        ],
       ),
     );
   }
