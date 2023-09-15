@@ -26,7 +26,6 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
   final _commentController = TextEditingController();
 
   SongUploadFile? _uploadFile;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -68,13 +67,9 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
               ),
             ),
             AppButtonPrimary(
-              onTap: _uploadFile == null
+              onPressed: _uploadFile == null
                   ? null
                   : () async {
-                      setState(() {
-                        _isLoading = true;
-                      });
-
                       await sl.get<SongRepository>().addSongVersion(
                             widget.projectId,
                             widget.songId,
@@ -89,7 +84,6 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
                       context.pop();
                     },
               text: 'Dodaj',
-              isLoading: _isLoading,
             ),
           ],
         ),

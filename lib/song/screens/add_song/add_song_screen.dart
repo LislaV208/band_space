@@ -54,8 +54,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                         labelText: 'Tytuł',
                         hintText: 'Jak nazywa się nowy utwór?',
                       ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Podaj tytuł' : null,
+                      validator: (value) => value!.isEmpty ? 'Podaj tytuł' : null,
                     ),
                     const SizedBox(height: 20),
                     SongFilePicker(
@@ -91,7 +90,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                   ],
                 ),
                 AppButtonPrimary(
-                  onTap: () async {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       final songId = await state.addSong(
                         widget.projectId,
@@ -115,7 +114,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     }
                   },
                   text: 'Dodaj',
-                  isLoading: state.addingSong,
                 ),
               ],
             ),

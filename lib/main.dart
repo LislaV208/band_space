@@ -40,6 +40,7 @@ class MainApp extends StatelessWidget {
           colorSchemeSeed: Colors.lightBlue,
           inputDecorationTheme: const InputDecorationTheme(
             border: OutlineInputBorder(),
+            floatingLabelBehavior: FloatingLabelBehavior.always,
             hintStyle: TextStyle(
               fontWeight: FontWeight.w300,
             ),

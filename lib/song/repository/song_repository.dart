@@ -1,11 +1,12 @@
 import 'dart:developer';
 
+import 'package:band_space/song/model/firebase/firebase_song_model.dart';
+import 'package:band_space/song/model/firebase/firebase_song_version_model.dart';
+import 'package:band_space/song/model/marker_dto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:band_space/song/exceptions/song_exceptions.dart';
-import 'package:band_space/song/model/firebase_song_model.dart';
-import 'package:band_space/song/model/firebase_song_version_model.dart';
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
@@ -243,6 +244,18 @@ class SongRepository {
 
     _songsRef.doc(songId).update({
       'active_version': versionRef,
+    });
+  }
+
+  Future<void> addMarker(
+    String songId,
+    String versionId,
+    MarkerDTO markerData,
+  ) async {
+    final newMarkerDoc = _songsRef.doc(songId).collection('versions').doc(versionId).collection('markers').doc();
+    await newMarkerDoc.set({
+      'name': markerData.name,
+      'position': markerData.position,
     });
   }
 }

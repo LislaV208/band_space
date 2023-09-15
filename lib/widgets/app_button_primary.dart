@@ -1,16 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-class AppButtonPrimary extends StatelessWidget {
+class AppButtonPrimary extends StatefulWidget {
   const AppButtonPrimary({
     super.key,
-    required this.onTap,
+    required this.onPressed,
     required this.text,
-    this.isLoading = false,
   });
 
-  final VoidCallback? onTap;
+  final FutureOr<void> Function()? onPressed;
   final String text;
-  final bool isLoading;
+
+  @override
+  State<AppButtonPrimary> createState() => _AppButtonPrimaryState();
+}
+
+class _AppButtonPrimaryState extends State<AppButtonPrimary> {
+  var _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +25,24 @@ class AppButtonPrimary extends StatelessWidget {
       width: double.infinity,
       height: 40,
       child: FilledButton(
-        onPressed: isLoading ? null : onTap,
-        child: isLoading
+        onPressed: _isLoading
+            ? null
+            : widget.onPressed != null
+                ? () async {
+                    setState(() {
+                      _isLoading = true;
+                    });
+
+                    await widget.onPressed?.call();
+
+                    // await Future.delayed(const Duration(milliseconds: 300));
+
+                    setState(() {
+                      _isLoading = false;
+                    });
+                  }
+                : null,
+        child: _isLoading
             ? const SizedBox(
                 height: 20,
                 width: 20,
@@ -28,7 +51,7 @@ class AppButtonPrimary extends StatelessWidget {
                 ),
               )
             : Text(
-                text,
+                widget.text,
                 textAlign: TextAlign.center,
               ),
       ),
