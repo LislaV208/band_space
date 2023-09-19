@@ -1,7 +1,7 @@
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/marker_dto.dart';
 import 'package:band_space/song/model/song_version_model.dart';
-import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -86,8 +86,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
               AppButtonPrimary(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    await sl<SongRepository>(param1: widget.songId).addMarker(
-                      widget.version.id,
+                    await sl<VersionRepository>(param1: widget.version.id).addMarker(
                       MarkerDTO(
                         name: _nameController.text,
                         position: int.parse(_positionController.text),

@@ -1,3 +1,4 @@
+import 'package:band_space/song/repository/version_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -57,6 +58,13 @@ void setupServiceLocator() {
       storage: FirebaseStorage.instance,
     );
   });
+
+  sl.registerFactoryParam<VersionRepository, String, void>(
+    (versionId, _) => VersionRepository(
+      versionId: versionId,
+      db: FirebaseFirestore.instance,
+    ),
+  );
 
   // cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));

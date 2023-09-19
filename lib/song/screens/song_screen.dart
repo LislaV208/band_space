@@ -1,4 +1,5 @@
 import 'package:band_space/song/screens/add_marker_screen.dart';
+import 'package:band_space/song/screens/views/markers_list_view.dart';
 import 'package:band_space/widgets/app_button_secondary.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -91,47 +92,44 @@ class SongScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Expanded(
-                      child: Align(
-                        child: Text(
-                          song.state.toString(),
-                        ),
-                      ),
-                    ),
-                    if (currentVersion != null)
-                      Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 24,
-                            ),
-                            child: Align(
-                              alignment: Alignment.center,
+                      child: currentVersion != null
+                          ? Align(
                               child: SizedBox(
                                 width: 800,
-                                child: currentVersion.file != null
-                                    ? SongPlayer(
-                                        fileUrl: currentVersion.file!.download_url,
-                                        duration: currentVersion.file!.duration,
-                                      )
-                                    : const Text('Nie można odtworzyć pliku'),
-                              ),
-                            ),
-                          ),
-                          AppButtonSecondary(
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (context) => AddMarkerScreen(
-                                  songId: songId,
-                                  version: currentVersion,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    MarkersListView(version: currentVersion),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 24,
+                                      ),
+                                      child: currentVersion.file != null
+                                          ? SongPlayer(
+                                              fileUrl: currentVersion.file!.download_url,
+                                              duration: currentVersion.file!.duration,
+                                            )
+                                          : const Text('Nie można odtworzyć pliku'),
+                                    ),
+                                    AppButtonSecondary(
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          builder: (context) => AddMarkerScreen(
+                                            songId: songId,
+                                            version: currentVersion,
+                                          ),
+                                        );
+                                      },
+                                      text: 'Dodaj znacznik',
+                                    ),
+                                  ],
                                 ),
-                              );
-                            },
-                            text: 'Dodaj znacznik',
-                          ),
-                        ],
-                      ),
+                              ),
+                            )
+                          : const SizedBox(),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40),
                       child: Row(
