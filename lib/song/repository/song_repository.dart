@@ -12,8 +12,6 @@ import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_file_model.dart';
 
-//TODO: przejść na flat structure w firebase i dostosować w aplikacji
-
 class SongRepository {
   final String songId;
   final FirebaseFirestore db;
@@ -25,10 +23,14 @@ class SongRepository {
     required this.storage,
   });
 
-  late final _songsRef = db.collection('songs');
+  DocumentReference get _songRef => db.collection('songs').doc(songId);
+  Query<Map<String, dynamic>> get _versionsQuery => db.collection('versions').where(
+        'song',
+        isEqualTo: _songRef,
+      );
 
   Stream<SongModel> get() {
-    final docSnapshot = _songsRef.doc(songId).snapshots();
+    final docSnapshot = _songRef.snapshots();
 
     return docSnapshot.asyncMap(
       (doc) async {
@@ -37,7 +39,8 @@ class SongRepository {
           throw SongNotFoundException();
         }
 
-        final versionRef = doc.data()?['active_version'] as DocumentReference?;
+        final data = doc.data() as Map<String, dynamic>?;
+        final versionRef = data?['active_version'] as DocumentReference?;
 
         SongVersionModel? activeVersion;
         if (versionRef != null) {
@@ -51,8 +54,7 @@ class SongRepository {
   }
 
   Future<void> delete() async {
-    final versionsRef = _songsRef.doc(songId).collection('versions');
-    final versions = await versionsRef.get();
+    final versions = await _versionsQuery.get();
 
     for (final doc in versions.docs) {
       final file = doc['file'] != null
@@ -73,15 +75,13 @@ class SongRepository {
           transaction.delete(doc.reference);
         }
 
-        transaction.delete(_songsRef.doc(songId));
+        transaction.delete(_songRef);
       },
     );
   }
 
   Future<SongVersionModel> fetchLatestVersion() async {
-    final querySnapshot = await _songsRef
-        .doc(songId)
-        .collection('versions')
+    final querySnapshot = await _versionsQuery
         .orderBy(
           'version_number',
           descending: true,
@@ -99,9 +99,7 @@ class SongRepository {
   }
 
   Future<List<SongVersionModel>> fetchVersionHistory() async {
-    final querySnapshot = await _songsRef
-        .doc(songId)
-        .collection('versions')
+    final querySnapshot = await _versionsQuery
         .orderBy(
           'version_number',
           descending: true,
@@ -114,9 +112,7 @@ class SongRepository {
   }
 
   Stream<List<SongVersionModel>> getVersionHistory() {
-    final queryStream = _songsRef
-        .doc(songId)
-        .collection('versions')
+    final queryStream = _versionsQuery
         .orderBy(
           'version_number',
           descending: true,
@@ -128,14 +124,12 @@ class SongRepository {
     });
   }
 
-  Future<void> addSVersion(
+  Future<void> addVersion(
     String projectId,
     SongUploadFile uploadFile,
     String comment,
   ) async {
-    final versions = _songsRef.doc(songId).collection('versions');
-
-    final versionNumberQuery = await versions.orderBy('version_number', descending: true).limit(1).get();
+    final versionNumberQuery = await _versionsQuery.orderBy('version_number', descending: true).limit(1).get();
 
     final lastVersionNumber =
         versionNumberQuery.docs.isEmpty ? 0 : versionNumberQuery.docs.first['version_number'] as int;
@@ -152,36 +146,32 @@ class SongRepository {
 
     final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
-    final newVersion = SongVersionModel(
-      id: '', // troche średnio XD
-      version_number: newVersionNumber,
-      timestamp: DateTime.timestamp(),
-      comment: comment,
-      file: VersionFileModel(
-        original_name: uploadFile.name,
-        storage_name: storageName,
-        size: uploadFile.size,
-        duration: uploadFile.duration,
-        mime_type: uploadFile.mimeType,
-        download_url: downloadUrl,
-      ),
-    );
+    final newVersionData = {
+      'song': _songRef,
+      'version_number': newVersionNumber,
+      'timestamp': Timestamp.now(),
+      'comment': comment,
+      'file': {
+        'original_name': uploadFile.name,
+        'storage_name': storageName,
+        'size': uploadFile.size,
+        'duration': uploadFile.duration,
+        'mime_type': uploadFile.mimeType,
+        'download_url': downloadUrl,
+      },
+    };
 
-    await versions.add(newVersion.toMap());
+    final newVersionRef = await db.collection('versions').add(newVersionData);
 
-    final lastVersionQuery = await versions.orderBy('version_number', descending: true).limit(1).get();
-
-    final lastVersionRef = lastVersionQuery.docs.isEmpty ? null : lastVersionQuery.docs.first.reference;
-
-    _songsRef.doc(songId).update({
-      'active_version': lastVersionRef,
+    _songRef.update({
+      'active_version': newVersionRef,
     });
   }
 
   Future<void> setActiveVersion(String versionId) async {
-    final versionRef = _songsRef.doc(songId).collection('versions').doc(versionId);
+    final versionRef = _songRef.collection('versions').doc(versionId);
 
-    _songsRef.doc(songId).update({
+    _songRef.update({
       'active_version': versionRef,
     });
   }
@@ -190,8 +180,11 @@ class SongRepository {
     String versionId,
     MarkerDTO markerData,
   ) async {
-    final newMarkerDoc = _songsRef.doc(songId).collection('versions').doc(versionId).collection('markers').doc();
+    final newMarkerDoc = db.collection('markers').doc();
+    final versionRef = db.collection('versions').doc(versionId);
+
     await newMarkerDoc.set({
+      'version': versionRef,
       'name': markerData.name,
       'position': markerData.position,
     });

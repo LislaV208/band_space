@@ -42,15 +42,23 @@ class ProjectRepository {
     final projectSongs = await db
         .collection('songs')
         .where(
-          'project_id',
+          'project',
           isEqualTo: _projectRef,
         )
         .get();
 
-    for (final songDoc in projectSongs.docs) {
-      final versions = await songDoc.reference.collection('versions').get();
+    //TODO: zoptymalizowac zeby nie pobierac 2 razy wersji songow
 
-      for (final versionDoc in versions.docs) {
+    for (final songDoc in projectSongs.docs) {
+      final songVersions = await db
+          .collection('versions')
+          .where(
+            'song',
+            isEqualTo: songDoc.reference,
+          )
+          .get();
+
+      for (final versionDoc in songVersions.docs) {
         final file = versionDoc['file'] != null
             ? VersionFileModel.fromMap(
                 versionDoc['file'],
@@ -66,9 +74,15 @@ class ProjectRepository {
 
     await db.runTransaction((transaction) async {
       for (final songDoc in projectSongs.docs) {
-        final versions = await songDoc.reference.collection('versions').get();
+        final songVersions = await db
+            .collection('versions')
+            .where(
+              'song',
+              isEqualTo: songDoc.reference,
+            )
+            .get();
 
-        for (final versionDoc in versions.docs) {
+        for (final versionDoc in songVersions.docs) {
           transaction.delete(versionDoc.reference);
         }
 
@@ -104,7 +118,7 @@ class ProjectRepository {
     final queryStream = db
         .collection('songs')
         .where(
-          'project_id',
+          'project',
           isEqualTo: _projectRef,
         )
         .orderBy('created_at', descending: true)
@@ -145,6 +159,7 @@ class ProjectRepository {
         final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
         versionData = {
+          'song': newSongRef,
           'version_number': versionNumber,
           'timestamp': timestamp,
           'file': {
@@ -162,7 +177,7 @@ class ProjectRepository {
         DocumentReference? versionRef;
 
         if (versionData != null) {
-          final versionDoc = newSongRef.collection('versions').doc();
+          final versionDoc = db.collection('versions').doc();
           transaction.set(versionDoc, versionData);
 
           versionRef = (await versionDoc.get()).reference;
@@ -170,7 +185,7 @@ class ProjectRepository {
 
         transaction.set(newSongRef, {
           'created_at': timestamp,
-          'project_id': _projectRef,
+          'project': _projectRef,
           'title': uploadData.title,
           'state': uploadData.state.value,
           'active_version': versionRef,
