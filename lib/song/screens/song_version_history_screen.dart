@@ -22,7 +22,7 @@ class SongVersionHistoryScreen extends StatelessWidget {
         title: const Text('Poprzednie wersje'),
       ),
       body: StreamBuilder(
-        stream: sl.get<SongRepository>().getSongVersionHistory(songId),
+        stream: sl<SongRepository>(param1: songId).getVersionHistory(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.active) {
             return const Center(
@@ -125,7 +125,7 @@ class _VersionHistoryListTile extends StatelessWidget {
                 : () async {
                     final navigator = Navigator.of(context);
 
-                    await sl.get<SongRepository>().setSongActiveVersion(songId, version.id);
+                    await sl<SongRepository>(param1: songId).setActiveVersion(version.id);
 
                     navigator.pop();
                   },

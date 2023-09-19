@@ -1,5 +1,5 @@
 import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:band_space/project/screens/add_project_screen.dart';
 import 'package:band_space/project/widgets/project_card.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class ProjectsScreen extends StatelessWidget {
         title: const Text('Projekty'),
       ),
       body: StreamBuilder(
-        stream: sl.get<ProjectRepository>().getProjects(),
+        stream: sl<UserProjectsRepository>().getProjects(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.active) {
             return const Center(child: SizedBox());
@@ -40,9 +40,7 @@ class ProjectsScreen extends StatelessWidget {
               child: Wrap(
                 spacing: 20,
                 runSpacing: 20,
-                children: projects
-                    .map((project) => ProjectCard(project: project))
-                    .toList(),
+                children: projects.map((project) => ProjectCard(project: project)).toList(),
               ),
             ),
           );

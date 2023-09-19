@@ -1,5 +1,5 @@
 import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -64,9 +64,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                     _isAdding = true;
                                   });
 
-                                  await sl
-                                      .get<ProjectRepository>()
-                                      .addProject(name);
+                                  await sl<UserProjectsRepository>().addProject(name);
 
                                   if (!mounted) return;
 
@@ -81,9 +79,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   strokeWidth: 3.0,
                                 ),
                               )
-                            : Text(
-                                'Utwórz',
-                              ),
+                            : Text('Utwórz'),
                       ),
                     ),
                   ),

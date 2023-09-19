@@ -1,13 +1,10 @@
-import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
 import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DeleteSongDialog extends StatelessWidget {
-  const DeleteSongDialog({super.key, required this.song});
-
-  final SongModel song;
+  const DeleteSongDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +16,7 @@ class DeleteSongDialog extends StatelessWidget {
       content: const Text(
         'Usunięcie utworu spowoduje usunięcie wszystkich powiązanych z nim plików',
       ),
-      actionsAlignment:
-          loading ? MainAxisAlignment.center : MainAxisAlignment.end,
+      actionsAlignment: loading ? MainAxisAlignment.center : MainAxisAlignment.end,
       actions: loading
           ? [
               const SizedBox(
@@ -40,7 +36,7 @@ class DeleteSongDialog extends StatelessWidget {
                 onPressed: loading
                     ? null
                     : () async {
-                        final isDeleted = await state.deleteSong(song);
+                        final isDeleted = await state.deleteSong();
                         if (context.mounted) {
                           if (!isDeleted) {
                             context.showErrorSnackbar();

@@ -70,12 +70,11 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
               onPressed: _uploadFile == null
                   ? null
                   : () async {
-                      await sl.get<SongRepository>().addSongVersion(
-                            widget.projectId,
-                            widget.songId,
-                            _uploadFile!,
-                            _commentController.text,
-                          );
+                      await sl<SongRepository>(param1: widget.songId).addSVersion(
+                        widget.projectId,
+                        _uploadFile!,
+                        _commentController.text,
+                      );
 
                       widget.onFinished();
 

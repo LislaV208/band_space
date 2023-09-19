@@ -86,14 +86,13 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
               AppButtonPrimary(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    await sl.get<SongRepository>().addMarker(
-                          widget.songId,
-                          widget.version.id,
-                          MarkerDTO(
-                            name: _nameController.text,
-                            position: int.parse(_positionController.text),
-                          ),
-                        );
+                    await sl<SongRepository>(param1: widget.songId).addMarker(
+                      widget.version.id,
+                      MarkerDTO(
+                        name: _nameController.text,
+                        position: int.parse(_positionController.text),
+                      ),
+                    );
 
                     if (!mounted) return;
 

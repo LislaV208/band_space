@@ -1,13 +1,13 @@
+import 'package:band_space/project/repository/project_repository.dart';
 import 'package:flutter/material.dart';
 
 import 'package:band_space/song/model/song_upload_data.dart';
-import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/song_state.dart';
 
 class AddSongState with ChangeNotifier {
-  AddSongState(this.songRepository);
+  AddSongState(this.projectRepository);
 
-  final SongRepository songRepository;
+  final ProjectRepository projectRepository;
 
   SongUploadFile? _selectedFile;
   bool _addingSong = false;
@@ -32,7 +32,6 @@ class AddSongState with ChangeNotifier {
   }
 
   Future<String?> addSong(
-    String projectId,
     String title,
   ) async {
     _addingSong = true;
@@ -41,8 +40,7 @@ class AddSongState with ChangeNotifier {
     String? songId;
 
     try {
-      songId = await songRepository.addSong(
-        projectId,
+      songId = await projectRepository.addSong(
         SongUploadData(
           title: title,
           file: _selectedFile,

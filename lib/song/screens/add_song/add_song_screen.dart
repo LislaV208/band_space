@@ -93,7 +93,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       final songId = await state.addSong(
-                        widget.projectId,
                         _titleController.text,
                       );
 

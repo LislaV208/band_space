@@ -1,15 +1,14 @@
-import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/project/repository/project_repository.dart';
-import 'package:band_space/project/screens/delete_project/delete_project_dialog.dart';
-import 'package:band_space/project/screens/delete_project/delete_project_dialog_state.dart';
-import 'package:band_space/project/screens/project_members/project_members_screen.dart';
-import 'package:band_space/song/repository/song_repository.dart';
-import 'package:band_space/song/screens/add_song/add_song_screen.dart';
-import 'package:band_space/song/screens/add_song/add_song_state.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/project/screens/delete_project/delete_project_dialog.dart';
+import 'package:band_space/project/screens/project_members/project_members_screen.dart';
+import 'package:band_space/song/screens/add_song/add_song_screen.dart';
+import 'package:band_space/song/screens/add_song/add_song_state.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key, required this.projectId});
@@ -19,7 +18,7 @@ class ProjectDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sl.get<ProjectRepository>().getProject(projectId),
+      stream: sl<ProjectRepository>(param1: projectId).getProject(),
       builder: (context, snapshot) {
         final project = snapshot.data;
 
@@ -48,13 +47,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                       onPressed: () async {
                         final isDeleted = await showDialog(
                               context: context,
-                              builder: (context) {
-                                return ChangeNotifierProvider(
-                                  create: (context) =>
-                                      sl.get<DeleteProjectDialogState>(),
-                                  child: DeleteProjectDialog(project: project),
-                                );
-                              },
+                              builder: (context) => DeleteProjectDialog(projectId: project.id),
                             ) ??
                             false;
 
@@ -75,7 +68,7 @@ class ProjectDetailsScreen extends StatelessWidget {
           body: project == null
               ? const SizedBox()
               : StreamBuilder(
-                  stream: sl.get<SongRepository>().getSongs(projectId),
+                  stream: sl<ProjectRepository>(param1: projectId).getSongs(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.active) {
                       return const Center(
@@ -115,10 +108,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                               song.title,
                             ),
                             subtitle: Text(
-                              song.created_at != null
-                                  ? DateFormat('dd-MM-yyyy HH:mm')
-                                      .format(song.created_at!)
-                                  : '-',
+                              song.created_at != null ? DateFormat('dd-MM-yyyy HH:mm').format(song.created_at!) : '-',
                             ),
                             trailing: const Icon(Icons.arrow_forward_ios),
                           );
@@ -135,7 +125,9 @@ class ProjectDetailsScreen extends StatelessWidget {
                 context: context,
                 builder: (context) {
                   return ChangeNotifierProvider(
-                    create: (context) => sl.get<AddSongState>(),
+                    create: (context) => AddSongState(
+                      sl<ProjectRepository>(param1: projectId),
+                    ),
                     child: AddSongScreen(projectId: projectId),
                   );
                 },

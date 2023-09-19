@@ -12,36 +12,22 @@ import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_file_model.dart';
 
+//TODO: przejść na flat structure w firebase i dostosować w aplikacji
+
 class SongRepository {
-  SongRepository(this._db, this._storage);
+  final String songId;
+  final FirebaseFirestore db;
+  final FirebaseStorage storage;
 
-  final FirebaseFirestore _db;
-  final FirebaseStorage _storage;
+  SongRepository({
+    required this.songId,
+    required this.db,
+    required this.storage,
+  });
 
-  late final _projectsRef = _db.collection('projects');
-  late final _songsRef = _db.collection('songs');
+  late final _songsRef = db.collection('songs');
 
-  Stream<List<SongModel>> getSongs(String projectId) {
-    final queryStream = _songsRef
-        .where(
-          'project_id',
-          isEqualTo: _projectsRef.doc(projectId),
-        )
-        .orderBy('created_at', descending: true)
-        .snapshots();
-
-    return queryStream.map(
-      (query) {
-        return query.docs
-            .map(
-              (doc) => FirebaseSongModel.fromDocument(doc, null),
-            )
-            .toList();
-      },
-    );
-  }
-
-  Stream<SongModel> getSong(String songId) {
+  Stream<SongModel> get() {
     final docSnapshot = _songsRef.doc(songId).snapshots();
 
     return docSnapshot.asyncMap(
@@ -64,73 +50,8 @@ class SongRepository {
     );
   }
 
-  Future<String> addSong(
-    String projectId,
-    SongUploadData uploadData,
-  ) async {
-    const versionNumber = 1;
-    final timestamp = Timestamp.now();
-
-    try {
-      final newSongRef = _songsRef.doc();
-      Map<String, dynamic>? versionData;
-
-      if (uploadData.file != null) {
-        final file = uploadData.file!;
-
-        final storageFileName = '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}';
-        final storageRef = _storage.ref().child(storageFileName);
-        final uploadSnapshot = await storageRef.putData(
-          file.data,
-          SettableMetadata(
-            contentType: file.mimeType,
-          ),
-        );
-        final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
-
-        versionData = {
-          'version_number': versionNumber,
-          'timestamp': timestamp,
-          'file': {
-            'original_name': file.name,
-            'storage_name': '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}',
-            'size': file.size,
-            'duration': file.duration,
-            'mime_type': file.mimeType,
-            'download_url': downloadUrl,
-          }
-        };
-      }
-
-      await _db.runTransaction((transaction) async {
-        DocumentReference? versionRef;
-
-        if (versionData != null) {
-          final versionDoc = newSongRef.collection('versions').doc();
-          transaction.set(versionDoc, versionData);
-
-          versionRef = (await versionDoc.get()).reference;
-        }
-
-        transaction.set(newSongRef, {
-          'created_at': timestamp,
-          'project_id': _projectsRef.doc(projectId),
-          'title': uploadData.title,
-          'state': uploadData.state.value,
-          'active_version': versionRef,
-        });
-      });
-
-      return newSongRef.id;
-    } catch (e) {
-      print("Error occurred: $e");
-
-      throw Exception("Failed to add song: $e");
-    }
-  }
-
-  Future<void> deleteSong(SongModel song) async {
-    final versionsRef = _songsRef.doc(song.id).collection('versions');
+  Future<void> delete() async {
+    final versionsRef = _songsRef.doc(songId).collection('versions');
     final versions = await versionsRef.get();
 
     for (final doc in versions.docs) {
@@ -142,24 +63,31 @@ class SongRepository {
       final path = file?.storage_name;
 
       if (path != null) {
-        await _storage.ref(path).delete();
+        await storage.ref(path).delete();
       }
     }
 
-    await _db.runTransaction(
+    await db.runTransaction(
       (transaction) async {
         for (final doc in versions.docs) {
           transaction.delete(doc.reference);
         }
 
-        transaction.delete(_songsRef.doc(song.id));
+        transaction.delete(_songsRef.doc(songId));
       },
     );
   }
 
-  Future<SongVersionModel> fetchLatestSongVersion(String songId) async {
-    final querySnapshot =
-        await _songsRef.doc(songId).collection('versions').orderBy('version_number', descending: true).limit(1).get();
+  Future<SongVersionModel> fetchLatestVersion() async {
+    final querySnapshot = await _songsRef
+        .doc(songId)
+        .collection('versions')
+        .orderBy(
+          'version_number',
+          descending: true,
+        )
+        .limit(1)
+        .get();
 
     if (querySnapshot.docs.isEmpty) {
       throw Exception('No versions found for this song.');
@@ -170,27 +98,38 @@ class SongRepository {
     return version;
   }
 
-  Future<List<SongVersionModel>> fetchSongVersionHistory(String songId) async {
-    final querySnapshot =
-        await _songsRef.doc(songId).collection('versions').orderBy('version_number', descending: true).get();
+  Future<List<SongVersionModel>> fetchVersionHistory() async {
+    final querySnapshot = await _songsRef
+        .doc(songId)
+        .collection('versions')
+        .orderBy(
+          'version_number',
+          descending: true,
+        )
+        .get();
 
     final versions = querySnapshot.docs.map((doc) => FirebaseSongVersionModel.fromDocument(doc)).toList();
 
     return versions;
   }
 
-  Stream<List<SongVersionModel>> getSongVersionHistory(String songId) {
-    final queryStream =
-        _songsRef.doc(songId).collection('versions').orderBy('version_number', descending: true).snapshots();
+  Stream<List<SongVersionModel>> getVersionHistory() {
+    final queryStream = _songsRef
+        .doc(songId)
+        .collection('versions')
+        .orderBy(
+          'version_number',
+          descending: true,
+        )
+        .snapshots();
 
     return queryStream.map((query) {
       return query.docs.map((doc) => FirebaseSongVersionModel.fromDocument(doc)).toList();
     });
   }
 
-  Future<void> addSongVersion(
+  Future<void> addSVersion(
     String projectId,
-    String songId,
     SongUploadFile uploadFile,
     String comment,
   ) async {
@@ -203,7 +142,7 @@ class SongRepository {
     final newVersionNumber = lastVersionNumber + 1;
 
     final storageName = '${projectId}_${songId}_$newVersionNumber.${uploadFile.extension}';
-    final storageRef = _storage.ref().child(storageName);
+    final storageRef = storage.ref().child(storageName);
     final uploadSnapshot = await storageRef.putData(
       uploadFile.data,
       SettableMetadata(
@@ -239,7 +178,7 @@ class SongRepository {
     });
   }
 
-  Future<void> setSongActiveVersion(String songId, String versionId) async {
+  Future<void> setActiveVersion(String versionId) async {
     final versionRef = _songsRef.doc(songId).collection('versions').doc(versionId);
 
     _songsRef.doc(songId).update({
@@ -248,7 +187,6 @@ class SongRepository {
   }
 
   Future<void> addMarker(
-    String songId,
     String versionId,
     MarkerDTO markerData,
   ) async {

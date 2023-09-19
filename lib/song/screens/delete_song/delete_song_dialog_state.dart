@@ -1,4 +1,3 @@
-import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:flutter/material.dart';
 
@@ -11,14 +10,14 @@ class DeleteSongDialogState with ChangeNotifier {
 
   bool get deleteInProgress => _deleteInProgress;
 
-  Future<bool> deleteSong(SongModel song) async {
+  Future<bool> deleteSong() async {
     _deleteInProgress = true;
     notifyListeners();
 
     var isFail = false;
 
     try {
-      await songRepository.deleteSong(song);
+      await songRepository.delete();
     } on Exception catch (_) {
       isFail = true;
     }

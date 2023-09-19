@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
+
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/screens/project_members/widgets/share_project_widget.dart';
-import 'package:flutter/material.dart';
 
 class ProjectMembersScreen extends StatelessWidget {
   const ProjectMembersScreen({
@@ -20,7 +21,7 @@ class ProjectMembersScreen extends StatelessWidget {
       body: Column(
         children: [
           FutureBuilder(
-            future: sl.get<ProjectRepository>().fetchProjectMembers(projectId),
+            future: sl<ProjectRepository>(param1: projectId).fetchProjectMembers(),
             builder: (context, snapshot) {
               final members = snapshot.data ?? [];
 

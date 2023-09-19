@@ -1,21 +1,25 @@
-import 'package:band_space/project/model/project_model.dart';
-import 'package:band_space/project/screens/delete_project/delete_project_dialog_state.dart';
-import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-class DeleteProjectDialog extends StatelessWidget {
-  const DeleteProjectDialog({super.key, required this.project});
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/project/repository/project_repository.dart';
+import 'package:band_space/utils/context_extensions.dart';
 
-  final ProjectModel project;
+class DeleteProjectDialog extends StatefulWidget {
+  const DeleteProjectDialog({super.key, required this.projectId});
+
+  final String projectId;
+
+  @override
+  State<DeleteProjectDialog> createState() => _DeleteProjectDialogState();
+}
+
+class _DeleteProjectDialogState extends State<DeleteProjectDialog> {
+  var _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<DeleteProjectDialogState>();
-    final loading = state.deleteInProgress;
-
     return WillPopScope(
-      onWillPop: () async => !loading,
+      onWillPop: () async => !_isLoading,
       child: AlertDialog(
         title: const Text('Czy na pewno chcesz usunąć projekt?'),
         content: ConstrainedBox(
@@ -24,9 +28,8 @@ class DeleteProjectDialog extends StatelessWidget {
             'Usunięcie projektu spowoduje usunięcie wszystkich utworzonych w ramach jego utworów oraz wszystkich danych powiązanych z nimi',
           ),
         ),
-        actionsAlignment:
-            loading ? MainAxisAlignment.center : MainAxisAlignment.end,
-        actions: loading
+        actionsAlignment: _isLoading ? MainAxisAlignment.center : MainAxisAlignment.end,
+        actions: _isLoading
             ? [
                 const SizedBox(
                   width: 32,
@@ -42,10 +45,20 @@ class DeleteProjectDialog extends StatelessWidget {
                   child: const Text('Anuluj'),
                 ),
                 FilledButton(
-                  onPressed: loading
+                  onPressed: _isLoading
                       ? null
                       : () async {
-                          final isDeleted = await state.deleteProject(project);
+                          setState(() {
+                            _isLoading = true;
+                          });
+
+                          var isDeleted = true;
+                          try {
+                            await sl<ProjectRepository>(param1: widget.projectId).deleteProject();
+                          } on Exception catch (_) {
+                            isDeleted = false;
+                          }
+
                           if (context.mounted) {
                             if (!isDeleted) {
                               context.showErrorSnackbar();

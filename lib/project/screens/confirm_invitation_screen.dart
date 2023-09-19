@@ -15,8 +15,7 @@ class ConfirmInvitationScreen extends StatefulWidget {
   final String projectId;
 
   @override
-  State<ConfirmInvitationScreen> createState() =>
-      _ConfirmInvitationScreenState();
+  State<ConfirmInvitationScreen> createState() => _ConfirmInvitationScreenState();
 }
 
 class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
@@ -28,8 +27,7 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
   void initState() {
     super.initState();
 
-    _projectFuture =
-        sl.get<ProjectRepository>().getProject(widget.projectId).first;
+    _projectFuture = sl<ProjectRepository>(param1: widget.projectId).getProject().first;
   }
 
   @override
@@ -74,12 +72,9 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
                               _loading = true;
                             });
 
-                            var message =
-                                'Dołączono do projektu ${project.name}';
+                            var message = 'Dołączono do projektu ${project.name}';
                             try {
-                              await sl
-                                  .get<ProjectRepository>()
-                                  .addMemberToProject(project.id);
+                              await sl<ProjectRepository>(param1: project.id).addMemberToProject();
                             } on DuplicateProjectMemberException catch (_) {
                               message = 'Jesteś już członkiem tego projektu';
                             }
@@ -101,8 +96,7 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
                           onPressed: () {
                             context.goNamed('projects');
                             context.showErrorSnackbar(
-                              message:
-                                  'Odrzucono zaproszenie do projektu ${project.name}',
+                              message: 'Odrzucono zaproszenie do projektu ${project.name}',
                             );
                           },
                           child: const Text('Odrzuć'),

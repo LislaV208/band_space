@@ -26,7 +26,7 @@ class SongScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sl.get<SongRepository>().getSong(songId),
+      stream: sl<SongRepository>(param1: songId).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.active) {
           return const Center(
@@ -54,8 +54,10 @@ class SongScreen extends StatelessWidget {
                         context: context,
                         builder: (context) {
                           return ChangeNotifierProvider(
-                            create: (context) => sl.get<DeleteSongDialogState>(),
-                            child: DeleteSongDialog(song: song),
+                            create: (context) => DeleteSongDialogState(
+                              sl<SongRepository>(param1: songId),
+                            ),
+                            child: const DeleteSongDialog(),
                           );
                         },
                       ) ??
@@ -74,7 +76,7 @@ class SongScreen extends StatelessWidget {
             ],
           ),
           body: StreamBuilder(
-            stream: sl.get<SongRepository>().getSongVersionHistory(songId),
+            stream: sl<SongRepository>(param1: songId).getVersionHistory(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const SizedBox();
