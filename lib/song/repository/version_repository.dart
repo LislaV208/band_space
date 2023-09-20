@@ -39,6 +39,7 @@ class VersionRepository {
       return query.docs.map((doc) {
         final data = doc.data();
         return Marker(
+          id: doc.id,
           name: data['name'],
           position: data['position'],
         );

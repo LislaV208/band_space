@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:band_space/audio/audio_player_service.dart';
 import 'package:flutter/material.dart';
 
 class SongPlayer extends StatefulWidget {
   const SongPlayer({
     super.key,
-    required this.fileUrl,
+    required this.audioPlayer,
     required this.duration,
   });
 
-  final String fileUrl;
+  final AudioPlayerService audioPlayer;
   final int duration;
 
   @override
@@ -18,10 +18,9 @@ class SongPlayer extends StatefulWidget {
 }
 
 class _SongPlayerState extends State<SongPlayer> {
+  late final audioPlayer = widget.audioPlayer;
   int _currentPosition = 0;
   late int _duration = widget.duration;
-
-  final _player = AudioPlayer();
 
   var _isPlaying = false;
 
@@ -37,30 +36,29 @@ class _SongPlayerState extends State<SongPlayer> {
   @override
   void dispose() {
     _positionSub?.cancel();
-    _player.dispose();
 
     super.dispose();
   }
 
   void init() async {
-    if (_duration == 0) {
-      await _player.setSourceUrl(widget.fileUrl);
-      final duration = await _player.getDuration();
-      if (duration != null) {
-        setState(() {
-          _duration = duration.inSeconds;
-        });
-      }
-    }
+    // if (_duration == 0) {
+    //   await _player.setSourceUrl(widget.fileUrl);
+    //   final duration = await _player.getDuration();
+    //   if (duration != null) {
+    //     setState(() {
+    //       _duration = duration.inSeconds;
+    //     });
+    //   }
+    // }
 
-    _positionSub = _player.onPositionChanged.listen((position) {
+    _positionSub = audioPlayer.positionChanges.listen((position) {
       setState(() {
         _currentPosition = position.inSeconds;
 
         if (_isPlaying && _currentPosition == _duration) {
           _isPlaying = false;
 
-          _player.pause();
+          audioPlayer.pause();
         }
       });
     });
@@ -78,7 +76,7 @@ class _SongPlayerState extends State<SongPlayer> {
               min: 0,
               max: _duration.toDouble(),
               onChanged: (value) {
-                _player.seek(Duration(seconds: value.toInt()));
+                audioPlayer.seek(Duration(seconds: value.toInt()));
               },
             ),
             Padding(
@@ -118,13 +116,13 @@ class _SongPlayerState extends State<SongPlayer> {
               iconSize: 40,
               onPressed: () async {
                 if (_isPlaying) {
-                  _player.pause();
+                  audioPlayer.pause();
                 } else {
                   if (_currentPosition == _duration) {
-                    await _player.seek(Duration.zero);
+                    await audioPlayer.seek(Duration.zero);
                   }
 
-                  _player.play(UrlSource(widget.fileUrl));
+                  audioPlayer.play();
                 }
 
                 setState(() {

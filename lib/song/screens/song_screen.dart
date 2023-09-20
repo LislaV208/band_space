@@ -1,3 +1,7 @@
+import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/comments/comments_screen.dart';
+import 'package:band_space/comments/repository/comments_repository.dart';
+import 'package:band_space/comments/repository/song_comments_repository.dart';
 import 'package:band_space/song/screens/add_marker_screen.dart';
 import 'package:band_space/song/screens/views/markers_list_view.dart';
 import 'package:band_space/widgets/app_button_secondary.dart';
@@ -14,7 +18,7 @@ import 'package:band_space/song/screens/song_version_history_screen.dart';
 import 'package:band_space/song/widgets/song_player.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 
-class SongScreen extends StatelessWidget {
+class SongScreen extends StatefulWidget {
   const SongScreen({
     super.key,
     required this.projectId,
@@ -25,9 +29,23 @@ class SongScreen extends StatelessWidget {
   final String songId;
 
   @override
+  State<SongScreen> createState() => _SongScreenState();
+}
+
+class _SongScreenState extends State<SongScreen> {
+  final _audioPlayer = AudioPlayerService();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sl<SongRepository>(param1: songId).get(),
+      stream: sl<SongRepository>(param1: widget.songId).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.active) {
           return const Center(
@@ -50,13 +68,29 @@ class SongScreen extends StatelessWidget {
             title: Text('${song.title} $versionText'),
             actions: [
               IconButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) {
+                      return Provider<CommentsRepository>(
+                        create: (context) => sl<SongCommentsRepository>(param1: song.id),
+                        child: const CommentsScreen(),
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.message),
+              ),
+              IconButton(
                 onPressed: () async {
                   final isDeleted = await showDialog(
                         context: context,
                         builder: (context) {
                           return ChangeNotifierProvider(
                             create: (context) => DeleteSongDialogState(
-                              sl<SongRepository>(param1: songId),
+                              sl<SongRepository>(param1: widget.songId),
                             ),
                             child: const DeleteSongDialog(),
                           );
@@ -77,7 +111,7 @@ class SongScreen extends StatelessWidget {
             ],
           ),
           body: StreamBuilder(
-            stream: sl<SongRepository>(param1: songId).getVersionHistory(),
+            stream: sl<SongRepository>(param1: widget.songId).getVersionHistory(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const SizedBox();
@@ -86,6 +120,10 @@ class SongScreen extends StatelessWidget {
               final versions = snapshot.data!;
 
               final currentVersion = versions.isNotEmpty ? versions.first : null;
+
+              if (currentVersion != null && currentVersion.file != null) {
+                _audioPlayer.initialize(currentVersion.file!.download_url);
+              }
 
               return SizedBox(
                 width: double.infinity,
@@ -99,7 +137,12 @@ class SongScreen extends StatelessWidget {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    MarkersListView(version: currentVersion),
+                                    MarkersListView(
+                                      version: currentVersion,
+                                      onSelected: (marker) {
+                                        _audioPlayer.seek(Duration(seconds: marker.position));
+                                      },
+                                    ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -107,7 +150,7 @@ class SongScreen extends StatelessWidget {
                                       ),
                                       child: currentVersion.file != null
                                           ? SongPlayer(
-                                              fileUrl: currentVersion.file!.download_url,
+                                              audioPlayer: _audioPlayer,
                                               duration: currentVersion.file!.duration,
                                             )
                                           : const Text('Nie można odtworzyć pliku'),
@@ -117,7 +160,7 @@ class SongScreen extends StatelessWidget {
                                         showModalBottomSheet(
                                           context: context,
                                           builder: (context) => AddMarkerScreen(
-                                            songId: songId,
+                                            songId: widget.songId,
                                             version: currentVersion,
                                           ),
                                         );
@@ -155,7 +198,7 @@ class SongScreen extends StatelessWidget {
                                       context: context,
                                       builder: (context) {
                                         return NewSongVersionScreen(
-                                          projectId: projectId,
+                                          projectId: widget.projectId,
                                           songId: song.id,
                                           onFinished: () {},
                                         );
@@ -179,7 +222,7 @@ class SongScreen extends StatelessWidget {
                                   useSafeArea: true,
                                   enableDrag: false,
                                   builder: (context) => SongVersionHistoryScreen(
-                                    songId: songId,
+                                    songId: widget.songId,
                                     currentVersion: song.active_version!,
                                   ),
                                 );

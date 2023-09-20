@@ -1,3 +1,5 @@
+import 'package:band_space/comments/repository/marker_comments_repository.dart';
+import 'package:band_space/comments/repository/song_comments_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,42 +24,26 @@ void setupServiceLocator() {
 
   // repositories
 
-  sl.registerFactory<UserProjectsRepository>(() {
-    final auth = sl<AuthService>();
-    final user = auth.user;
-
-    if (user == null) {
-      throw Exception('User not authenticated');
-    }
-
-    return UserProjectsRepository(userId: user.id, db: FirebaseFirestore.instance);
-  });
-
-  sl.registerFactoryParam<ProjectRepository, String, void>(
-    (projectId, _) {
-      final auth = sl<AuthService>();
-      final user = auth.user;
-
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      return ProjectRepository(
-        projectId: projectId,
-        userId: user.id,
-        db: FirebaseFirestore.instance,
-        storage: FirebaseStorage.instance,
-      );
-    },
+  sl.registerFactory<UserProjectsRepository>(
+    () => UserProjectsRepository(userId: _getUserId(), db: FirebaseFirestore.instance),
   );
 
-  sl.registerFactoryParam<SongRepository, String, void>((songId, _) {
-    return SongRepository(
+  sl.registerFactoryParam<ProjectRepository, String, void>(
+    (projectId, _) => ProjectRepository(
+      projectId: projectId,
+      userId: _getUserId(),
+      db: FirebaseFirestore.instance,
+      storage: FirebaseStorage.instance,
+    ),
+  );
+
+  sl.registerFactoryParam<SongRepository, String, void>(
+    (songId, _) => SongRepository(
       songId: songId,
       db: FirebaseFirestore.instance,
       storage: FirebaseStorage.instance,
-    );
-  });
+    ),
+  );
 
   sl.registerFactoryParam<VersionRepository, String, void>(
     (versionId, _) => VersionRepository(
@@ -66,6 +52,33 @@ void setupServiceLocator() {
     ),
   );
 
+  sl.registerFactoryParam<SongCommentsRepository, String, void>(
+    (songId, userId) => SongCommentsRepository(
+      songId: songId,
+      userId: _getUserId(),
+      db: FirebaseFirestore.instance,
+    ),
+  );
+
+  sl.registerFactoryParam<MarkerCommentsRepository, String, void>(
+    (markerId, userId) => MarkerCommentsRepository(
+      markerId: markerId,
+      userId: _getUserId(),
+      db: FirebaseFirestore.instance,
+    ),
+  );
+
   // cubits
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
+}
+
+String _getUserId() {
+  final auth = sl<AuthService>();
+  final user = auth.user;
+
+  if (user == null) {
+    throw Exception('User not authenticated');
+  }
+
+  return user.id;
 }
