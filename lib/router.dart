@@ -1,14 +1,19 @@
+import 'package:band_space/project/repository/project_repository.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import 'package:band_space/app_shell.dart';
 import 'package:band_space/auth/auth_service.dart';
-import 'package:band_space/auth/screens/register_screen.dart';
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
+import 'package:band_space/auth/screens/register_screen.dart';
+import 'package:band_space/comments/repository/song_comments_repository.dart';
+import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/profile/profile_screen.dart';
 import 'package:band_space/project/screens/confirm_invitation_screen.dart';
 import 'package:band_space/project/screens/project_details_screen.dart';
 import 'package:band_space/project/screens/projects_screen.dart';
+import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/song_screen.dart';
-import 'package:go_router/go_router.dart';
 
 final router = GoRouter(
   debugLogDiagnostics: true,
@@ -35,8 +40,11 @@ final router = GoRouter(
               path: ':project_id',
               name: 'project_details',
               builder: (context, state) {
-                return ProjectDetailsScreen(
-                  projectId: state.pathParameters['project_id']!,
+                final projectId = state.pathParameters['project_id']!;
+
+                return Provider(
+                  create: (context) => sl<ProjectRepository>(param1: projectId),
+                  child: const ProjectDetailsScreen(),
                 );
               },
               routes: [
@@ -44,9 +52,18 @@ final router = GoRouter(
                   path: ':song_id',
                   name: 'song',
                   builder: (context, state) {
-                    return SongScreen(
-                      projectId: state.pathParameters['project_id']!,
-                      songId: state.pathParameters['song_id']!,
+                    final songId = state.pathParameters['song_id']!;
+
+                    return MultiProvider(
+                      providers: [
+                        Provider(
+                          create: (context) => sl<SongRepository>(param1: songId),
+                        ),
+                        Provider(
+                          create: (context) => sl<SongCommentsRepository>(param1: songId),
+                        ),
+                      ],
+                      child: const SongScreen(),
                     );
                   },
                 ),
@@ -100,8 +117,9 @@ final router = GoRouter(
       builder: (context, state) {
         final projectId = state.queryParameters['project'] ?? '';
 
-        return ConfirmInvitationScreen(
-          projectId: projectId,
+        return Provider(
+          create: (context) => sl<ProjectRepository>(param1: projectId),
+          child: const ConfirmInvitationScreen(),
         );
       },
       redirect: (context, state) {

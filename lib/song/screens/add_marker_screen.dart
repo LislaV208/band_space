@@ -9,11 +9,9 @@ import 'package:flutter/services.dart';
 class AddMarkerScreen extends StatefulWidget {
   const AddMarkerScreen({
     super.key,
-    required this.songId,
     required this.version,
   });
 
-  final String songId;
   final SongVersionModel version;
 
   @override

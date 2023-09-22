@@ -17,9 +17,9 @@
 - DocumentID (Auto-generated)
   - created_at: Timestamp
   - title: String
-  - project_id: Reference (Projects DocumentID)
+  - project: Reference (Projects)
   - state: String ('draft', 'demo', 'final_version')
-  - active_version: Reference (Version DocumentID)
+  - current_version: Reference (Version)
   - versions (Sub-collection)
     - DocumentID: (Auto-generated)
       - version_number: Int

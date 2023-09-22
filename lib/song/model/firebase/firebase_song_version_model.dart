@@ -14,12 +14,12 @@ class FirebaseSongVersionModel extends SongVersionModel {
     required super.comment,
   });
 
-  factory FirebaseSongVersionModel.fromDocument(DocumentSnapshot doc) {
+  factory FirebaseSongVersionModel.fromDocument(DocumentSnapshot doc, String versionNumber) {
     final data = doc.data() as Map<String, dynamic>;
 
     return FirebaseSongVersionModel(
       id: doc.id,
-      version_number: data['version_number'] ?? 0,
+      version_number: versionNumber,
       timestamp: data['timestamp'] != null ? (data['timestamp'] as Timestamp).toDate() : null,
       file: data['file'] != null
           ? VersionFileModel.fromMap(

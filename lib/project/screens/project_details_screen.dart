@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/screens/delete_project/delete_project_dialog.dart';
 import 'package:band_space/project/screens/project_members/project_members_screen.dart';
@@ -11,14 +10,12 @@ import 'package:band_space/song/screens/add_song/add_song_screen.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
-  const ProjectDetailsScreen({super.key, required this.projectId});
-
-  final String projectId;
+  const ProjectDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sl<ProjectRepository>(param1: projectId).getProject(),
+      stream: context.read<ProjectRepository>().get(),
       builder: (context, snapshot) {
         final project = snapshot.data;
 
@@ -33,8 +30,9 @@ class ProjectDetailsScreen extends StatelessWidget {
                           context: context,
                           useSafeArea: true,
                           isScrollControlled: true,
-                          builder: (context) => ProjectMembersScreen(
-                            projectId: projectId,
+                          builder: (_) => Provider.value(
+                            value: context.read<ProjectRepository>(),
+                            child: const ProjectMembersScreen(),
                           ),
                         );
                       },
@@ -47,7 +45,10 @@ class ProjectDetailsScreen extends StatelessWidget {
                       onPressed: () async {
                         final isDeleted = await showDialog(
                               context: context,
-                              builder: (context) => DeleteProjectDialog(projectId: project.id),
+                              builder: (_) => Provider.value(
+                                value: context.read<ProjectRepository>(),
+                                child: const DeleteProjectDialog(),
+                              ),
                             ) ??
                             false;
 
@@ -68,7 +69,7 @@ class ProjectDetailsScreen extends StatelessWidget {
           body: project == null
               ? const SizedBox()
               : StreamBuilder(
-                  stream: sl<ProjectRepository>(param1: projectId).getSongs(),
+                  stream: context.read<ProjectRepository>().getSongs(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.active) {
                       return const Center(
@@ -98,7 +99,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                               context.goNamed(
                                 'song',
                                 pathParameters: {
-                                  'project_id': projectId,
+                                  'project_id': context.read<ProjectRepository>().projectId,
                                   'song_id': song.id,
                                 },
                               );
@@ -123,12 +124,12 @@ class ProjectDetailsScreen extends StatelessWidget {
                 isScrollControlled: true,
                 useSafeArea: true,
                 context: context,
-                builder: (context) {
+                builder: (_) {
                   return ChangeNotifierProvider(
-                    create: (context) => AddSongState(
-                      sl<ProjectRepository>(param1: projectId),
+                    create: (_) => AddSongState(
+                      context.read<ProjectRepository>(),
                     ),
-                    child: AddSongScreen(projectId: projectId),
+                    child: const AddSongScreen(),
                   );
                 },
               );

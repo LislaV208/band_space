@@ -9,9 +9,7 @@ import 'package:band_space/utils/context_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 
 class AddSongScreen extends StatefulWidget {
-  const AddSongScreen({super.key, required this.projectId});
-
-  final String projectId;
+  const AddSongScreen({super.key});
 
   @override
   State<AddSongScreen> createState() => _AddSongScreenState();
@@ -103,7 +101,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                         context.goNamed(
                           'song',
                           pathParameters: {
-                            'project_id': widget.projectId,
+                            'project_id': state.projectRepository.projectId,
                             'song_id': songId,
                           },
                         );

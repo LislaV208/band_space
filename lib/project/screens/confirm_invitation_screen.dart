@@ -1,18 +1,14 @@
-import 'package:band_space/core/service_locator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:band_space/project/exceptions/project_exceptions.dart';
 import 'package:band_space/project/model/project_model.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/utils/context_extensions.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class ConfirmInvitationScreen extends StatefulWidget {
-  const ConfirmInvitationScreen({
-    super.key,
-    required this.projectId,
-  });
-
-  final String projectId;
+  const ConfirmInvitationScreen({super.key});
 
   @override
   State<ConfirmInvitationScreen> createState() => _ConfirmInvitationScreenState();
@@ -27,7 +23,7 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
   void initState() {
     super.initState();
 
-    _projectFuture = sl<ProjectRepository>(param1: widget.projectId).getProject().first;
+    _projectFuture = context.read<ProjectRepository>().get().first;
   }
 
   @override
@@ -74,7 +70,7 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
 
                             var message = 'Dołączono do projektu ${project.name}';
                             try {
-                              await sl<ProjectRepository>(param1: project.id).addMemberToProject();
+                              await context.read<ProjectRepository>().addMember();
                             } on DuplicateProjectMemberException catch (_) {
                               message = 'Jesteś już członkiem tego projektu';
                             }

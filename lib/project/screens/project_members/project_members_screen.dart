@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/screens/project_members/widgets/share_project_widget.dart';
 
 class ProjectMembersScreen extends StatelessWidget {
-  const ProjectMembersScreen({
-    super.key,
-    required this.projectId,
-  });
-
-  final String projectId;
+  const ProjectMembersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +16,7 @@ class ProjectMembersScreen extends StatelessWidget {
       body: Column(
         children: [
           FutureBuilder(
-            future: sl<ProjectRepository>(param1: projectId).fetchProjectMembers(),
+            future: context.read<ProjectRepository>().fetchMembers(),
             builder: (context, snapshot) {
               final members = snapshot.data ?? [];
 
@@ -36,11 +31,9 @@ class ProjectMembersScreen extends StatelessWidget {
               );
             },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 42),
-            child: ShareProjectWidget(
-              projectId: projectId,
-            ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 42),
+            child: ShareProjectWidget(),
           ),
         ],
       ),

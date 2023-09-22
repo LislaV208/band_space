@@ -1,18 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:provider/provider.dart';
 
 class SongVersionHistoryScreen extends StatelessWidget {
   const SongVersionHistoryScreen({
     super.key,
-    required this.songId,
     required this.currentVersion,
   });
 
-  final String songId;
   final SongVersionModel currentVersion;
 
   @override
@@ -22,7 +22,7 @@ class SongVersionHistoryScreen extends StatelessWidget {
         title: const Text('Poprzednie wersje'),
       ),
       body: StreamBuilder(
-        stream: sl<SongRepository>(param1: songId).getVersionHistory(),
+        stream: context.read<SongRepository>().getVersionHistory(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.active) {
             return const Center(
@@ -31,6 +31,8 @@ class SongVersionHistoryScreen extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
+            log(snapshot.error.toString());
+
             return const Center(
               child: Text('Wystąpił błąd'),
             );
@@ -46,7 +48,6 @@ class SongVersionHistoryScreen extends StatelessWidget {
 
               return _VersionHistoryListTile(
                 version: version,
-                songId: songId,
                 isCurrent: isCurrent,
               );
             },
@@ -62,11 +63,9 @@ class SongVersionHistoryScreen extends StatelessWidget {
 class _VersionHistoryListTile extends StatelessWidget {
   const _VersionHistoryListTile({
     required this.version,
-    required this.songId,
     required this.isCurrent,
   });
 
-  final String songId;
   final SongVersionModel version;
   final bool isCurrent;
 
@@ -102,8 +101,8 @@ class _VersionHistoryListTile extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: RichText(
                         text: TextSpan(
-                          text: 'Komentarz: ',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          text: 'Co nowego: ',
+                          style: DefaultTextStyle.of(context).style.copyWith(fontWeight: FontWeight.w600),
                           children: [
                             TextSpan(
                               text: version.comment,
@@ -122,12 +121,8 @@ class _VersionHistoryListTile extends StatelessWidget {
           ElevatedButton(
             onPressed: isCurrent
                 ? null
-                : () async {
-                    final navigator = Navigator.of(context);
-
-                    await sl<SongRepository>(param1: songId).setActiveVersion(version.id);
-
-                    navigator.pop();
+                : () {
+                    Navigator.of(context).pop(version);
                   },
             child: Text(isCurrent ? 'Aktywna' : 'Ustaw jako aktywną'),
           )

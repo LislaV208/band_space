@@ -7,7 +7,7 @@ import 'package:band_space/song/model/version_file_model.dart';
 
 class SongVersionModel extends Equatable {
   final String id;
-  final int version_number;
+  final String version_number;
   final DateTime? timestamp;
   final VersionFileModel? file;
   final String comment;
@@ -21,11 +21,10 @@ class SongVersionModel extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, version_number, timestamp, file, comment];
+  List<Object?> get props => [id];
 
   Map<String, dynamic> toMap() {
     return {
-      'version_number': version_number,
       'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : null,
       'file': file?.toMap(),
       'comment': comment,

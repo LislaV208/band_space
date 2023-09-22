@@ -1,243 +1,76 @@
-import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/comments/comments_screen.dart';
-import 'package:band_space/comments/repository/comments_repository.dart';
-import 'package:band_space/comments/repository/song_comments_repository.dart';
-import 'package:band_space/song/screens/add_marker_screen.dart';
-import 'package:band_space/song/screens/views/markers_list_view.dart';
-import 'package:band_space/widgets/app_button_secondary.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/comments/comments_screen.dart';
+import 'package:band_space/comments/repository/comments_repository.dart';
+import 'package:band_space/comments/repository/song_comments_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
-import 'package:band_space/song/screens/delete_song/delete_song_dialog_state.dart';
-import 'package:band_space/song/screens/new_song_version_screen.dart';
-import 'package:band_space/song/screens/song_version_history_screen.dart';
-import 'package:band_space/song/widgets/song_player.dart';
-import 'package:band_space/widgets/app_button_primary.dart';
+import 'package:band_space/song/screens/views/song_view.dart';
 
-class SongScreen extends StatefulWidget {
-  const SongScreen({
-    super.key,
-    required this.projectId,
-    required this.songId,
-  });
-
-  final String projectId;
-  final String songId;
-
-  @override
-  State<SongScreen> createState() => _SongScreenState();
-}
-
-class _SongScreenState extends State<SongScreen> {
-  final _audioPlayer = AudioPlayerService();
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-
-    super.dispose();
-  }
+class SongScreen extends StatelessWidget {
+  const SongScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sl<SongRepository>(param1: widget.songId).get(),
+      stream: context.read<SongRepository>().get(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.active) {
-          return const Center(
-            child: SizedBox(),
-          );
-        }
+        final song = snapshot.data;
 
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text('Wystąpił błąd'),
-          );
-        }
-
-        final song = snapshot.data!;
-
-        final versionText = song.active_version != null ? 'v${song.active_version!.version_number}' : '';
+        print(song?.current_version?.version_number);
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('${song.title} $versionText'),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    builder: (context) {
-                      return Provider<CommentsRepository>(
-                        create: (context) => sl<SongCommentsRepository>(param1: song.id),
-                        child: const CommentsScreen(),
-                      );
-                    },
-                  );
-                },
-                icon: const Icon(Icons.message),
-              ),
-              IconButton(
-                onPressed: () async {
-                  final isDeleted = await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return ChangeNotifierProvider(
-                            create: (context) => DeleteSongDialogState(
-                              sl<SongRepository>(param1: widget.songId),
-                            ),
-                            child: const DeleteSongDialog(),
-                          );
-                        },
-                      ) ??
-                      false;
-
-                  if (context.mounted) {
-                    if (isDeleted) {
-                      context.pop();
-                    }
-                  }
-                },
-                icon: const Icon(
-                  Icons.delete,
-                ),
-              ),
-            ],
-          ),
-          body: StreamBuilder(
-            stream: sl<SongRepository>(param1: widget.songId).getVersionHistory(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const SizedBox();
-              }
-
-              final versions = snapshot.data!;
-
-              final currentVersion = versions.isNotEmpty ? versions.first : null;
-
-              if (currentVersion != null && currentVersion.file != null) {
-                _audioPlayer.initialize(currentVersion.file!.download_url);
-              }
-
-              return SizedBox(
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: currentVersion != null
-                          ? Align(
-                              child: SizedBox(
-                                width: 800,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    MarkersListView(
-                                      version: currentVersion,
-                                      onSelected: (marker) {
-                                        _audioPlayer.seek(Duration(seconds: marker.position));
-                                      },
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 24,
-                                      ),
-                                      child: currentVersion.file != null
-                                          ? SongPlayer(
-                                              audioPlayer: _audioPlayer,
-                                              duration: currentVersion.file!.duration,
-                                            )
-                                          : const Text('Nie można odtworzyć pliku'),
-                                    ),
-                                    AppButtonSecondary(
-                                      onTap: () {
-                                        showModalBottomSheet(
-                                          context: context,
-                                          builder: (context) => AddMarkerScreen(
-                                            songId: widget.songId,
-                                            version: currentVersion,
-                                          ),
-                                        );
-                                      },
-                                      text: 'Dodaj znacznik',
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : const SizedBox(),
+            title: song != null ? Text(song.title) : null,
+            actions: song != null
+                ? [
+                    IconButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          useSafeArea: true,
+                          builder: (_) => Provider<CommentsRepository>.value(
+                            value: context.read<SongCommentsRepository>(),
+                            child: const CommentsScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.message),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Visibility.maintain(
-                            visible: false,
-                            child: IconButton.filledTonal(
-                              onPressed: () {},
-                              icon: Icon(Icons.history),
-                            ),
-                          ),
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20.0,
+                    IconButton(
+                      onPressed: () async {
+                        final isDeleted = await showDialog(
+                              context: context,
+                              builder: (_) => Provider.value(
+                                value: context.read<SongRepository>(),
+                                child: const DeleteSongDialog(),
                               ),
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(maxWidth: 500),
-                                child: AppButtonPrimary(
-                                  onPressed: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      builder: (context) {
-                                        return NewSongVersionScreen(
-                                          projectId: widget.projectId,
-                                          songId: song.id,
-                                          onFinished: () {},
-                                        );
-                                      },
-                                    );
-                                  },
-                                  text: 'Dodaj wersję',
-                                ),
-                              ),
-                            ),
-                          ),
-                          Visibility.maintain(
-                            visible: song.active_version != null,
-                            child: IconButton.filledTonal(
-                              tooltip: 'Poprzednie wersje',
-                              onPressed: () {
-                                if (song.active_version == null) return;
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  enableDrag: false,
-                                  builder: (context) => SongVersionHistoryScreen(
-                                    songId: widget.songId,
-                                    currentVersion: song.active_version!,
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.history),
-                            ),
-                          ),
-                        ],
+                            ) ??
+                            false;
+
+                        if (context.mounted) {
+                          if (isDeleted) {
+                            context.pop();
+                          }
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.delete,
                       ),
-                    )
-                  ],
-                ),
-              );
-            },
+                    ),
+                  ]
+                : null,
           ),
+          body: song == null
+              ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+              : SongView(
+                  currentVersion: song.current_version,
+                ),
         );
       },
     );

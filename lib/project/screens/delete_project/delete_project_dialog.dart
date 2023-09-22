@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/utils/context_extensions.dart';
 
 class DeleteProjectDialog extends StatefulWidget {
-  const DeleteProjectDialog({super.key, required this.projectId});
-
-  final String projectId;
+  const DeleteProjectDialog({super.key});
 
   @override
   State<DeleteProjectDialog> createState() => _DeleteProjectDialogState();
@@ -54,7 +52,7 @@ class _DeleteProjectDialogState extends State<DeleteProjectDialog> {
 
                           var isDeleted = true;
                           try {
-                            await sl<ProjectRepository>(param1: widget.projectId).deleteProject();
+                            await context.read<ProjectRepository>().delete();
                           } on Exception catch (_) {
                             isDeleted = false;
                           }

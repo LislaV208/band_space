@@ -1,22 +1,12 @@
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/widgets/song_file_picker.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class NewSongVersionScreen extends StatefulWidget {
-  const NewSongVersionScreen({
-    super.key,
-    required this.projectId,
-    required this.songId,
-    required this.onFinished,
-  });
-
-  final String projectId;
-  final String songId;
-  final VoidCallback onFinished;
+  const NewSongVersionScreen({super.key});
 
   @override
   State<NewSongVersionScreen> createState() => _NewSongVersionScreenState();
@@ -70,17 +60,14 @@ class _NewSongVersionScreenState extends State<NewSongVersionScreen> {
               onPressed: _uploadFile == null
                   ? null
                   : () async {
-                      await sl<SongRepository>(param1: widget.songId).addVersion(
-                        widget.projectId,
-                        _uploadFile!,
-                        _commentController.text,
-                      );
-
-                      widget.onFinished();
+                      final newVersion = await context.read<SongRepository>().addVersion(
+                            _uploadFile!,
+                            _commentController.text,
+                          );
 
                       if (!mounted) return;
 
-                      context.pop();
+                      Navigator.of(context).pop(newVersion);
                     },
               text: 'Dodaj',
             ),

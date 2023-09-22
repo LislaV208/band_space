@@ -10,16 +10,16 @@ class SongModel extends Equatable {
   final DateTime? created_at;
   final String title;
   final SongState state;
-  final SongVersionModel? active_version;
+  final SongVersionModel? current_version;
 
   const SongModel({
     required this.id,
     required this.created_at,
     required this.title,
     required this.state,
-    required this.active_version,
+    required this.current_version,
   });
 
   @override
-  List<Object?> get props => [id, created_at, title, state, active_version];
+  List<Object?> get props => [id, created_at, title, state, current_version];
 }

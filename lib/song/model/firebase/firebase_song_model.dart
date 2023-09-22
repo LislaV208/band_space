@@ -12,23 +12,21 @@ class FirebaseSongModel extends SongModel {
     required super.created_at,
     required super.title,
     required super.state,
-    required super.active_version,
+    required super.current_version,
   });
 
   factory FirebaseSongModel.fromDocument(
     DocumentSnapshot doc,
-    SongVersionModel? activeVersion,
+    SongVersionModel? currentVersion,
   ) {
     final data = doc.data() as Map<String, dynamic>;
 
     return FirebaseSongModel(
       id: doc.id,
-      created_at: data['created_at'] != null
-          ? (data['created_at'] as Timestamp).toDate()
-          : null,
+      created_at: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
       title: data['title'] ?? '',
       state: SongState.fromString(data['state'] ?? ''),
-      active_version: activeVersion,
+      current_version: currentVersion,
     );
   }
 }

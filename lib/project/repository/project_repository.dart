@@ -26,7 +26,7 @@ class ProjectRepository {
   DocumentReference get _userRef => db.collection('users').doc(userId);
   DocumentReference get _projectRef => db.collection('projects').doc(projectId);
 
-  Stream<ProjectModel> getProject() {
+  Stream<ProjectModel> get() {
     return db.collection('projects').doc(projectId).snapshots().map(
       (doc) {
         if (!doc.exists) {
@@ -38,43 +38,20 @@ class ProjectRepository {
     );
   }
 
-  Future<void> deleteProject() async {
-    final projectSongs = await db
-        .collection('songs')
-        .where(
-          'project',
-          isEqualTo: _projectRef,
-        )
-        .get();
+  Future<void> delete() async {
+    final pathsOfFilesToRemove = <String>[];
 
-    //TODO: zoptymalizowac zeby nie pobierac 2 razy wersji songow
-
-    for (final songDoc in projectSongs.docs) {
-      final songVersions = await db
-          .collection('versions')
+    await db.runTransaction((transaction) async {
+      final songsResult = await db
+          .collection('songs')
           .where(
-            'song',
-            isEqualTo: songDoc.reference,
+            'project',
+            isEqualTo: _projectRef,
           )
           .get();
 
-      for (final versionDoc in songVersions.docs) {
-        final file = versionDoc['file'] != null
-            ? VersionFileModel.fromMap(
-                versionDoc['file'],
-              )
-            : null;
-        final path = file?.storage_name;
-
-        if (path != null) {
-          await storage.ref(path).delete();
-        }
-      }
-    }
-
-    await db.runTransaction((transaction) async {
-      for (final songDoc in projectSongs.docs) {
-        final songVersions = await db
+      for (final songDoc in songsResult.docs) {
+        final versionsResult = await db
             .collection('versions')
             .where(
               'song',
@@ -82,8 +59,55 @@ class ProjectRepository {
             )
             .get();
 
-        for (final versionDoc in songVersions.docs) {
+        for (final versionDoc in versionsResult.docs) {
+          final file = versionDoc['file'] != null
+              ? VersionFileModel.fromMap(
+                  versionDoc['file'],
+                )
+              : null;
+          final path = file?.storage_path;
+
+          if (path != null) {
+            pathsOfFilesToRemove.add(path);
+          }
+
+          final markersResult = await db
+              .collection('markers')
+              .where(
+                'version',
+                isEqualTo: versionDoc.reference,
+              )
+              .get();
+
+          for (final markerDoc in markersResult.docs) {
+            final commentsResult = await db
+                .collection('comments')
+                .where(
+                  'parent',
+                  isEqualTo: markerDoc.reference,
+                )
+                .get();
+
+            for (final commentDoc in commentsResult.docs) {
+              transaction.delete(commentDoc.reference);
+            }
+
+            transaction.delete(markerDoc.reference);
+          }
+
           transaction.delete(versionDoc.reference);
+        }
+
+        final commentsResult = await db
+            .collection('comments')
+            .where(
+              'parent',
+              isEqualTo: songDoc.reference,
+            )
+            .get();
+
+        for (final commentDoc in commentsResult.docs) {
+          transaction.delete(commentDoc.reference);
         }
 
         transaction.delete(songDoc.reference);
@@ -91,9 +115,13 @@ class ProjectRepository {
 
       transaction.delete(_projectRef);
     });
+
+    for (final path in pathsOfFilesToRemove) {
+      await storage.ref(path).delete();
+    }
   }
 
-  Future<List<UserModel>> fetchProjectMembers() async {
+  Future<List<UserModel>> fetchMembers() async {
     final projectDoc = await _projectRef.get();
     List<UserModel> members = await _fetchMembers(
       List<DocumentReference>.from(projectDoc['owners']),
@@ -102,7 +130,7 @@ class ProjectRepository {
     return members;
   }
 
-  Future<void> addMemberToProject() async {
+  Future<void> addMember() async {
     final projectDoc = await _projectRef.get();
     final members = List<DocumentReference>.from(projectDoc['owners']);
     if (members.contains(_userRef)) {
@@ -138,57 +166,51 @@ class ProjectRepository {
   Future<String> addSong(
     SongUploadData uploadData,
   ) async {
-    const versionNumber = 1;
     final timestamp = Timestamp.now();
 
     try {
       final newSongRef = db.collection('songs').doc();
-      Map<String, dynamic>? versionData;
-
-      if (uploadData.file != null) {
-        final file = uploadData.file!;
-
-        final storageFileName = '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}';
-        final storageRef = storage.ref().child(storageFileName);
-        final uploadSnapshot = await storageRef.putData(
-          file.data,
-          SettableMetadata(
-            contentType: file.mimeType,
-          ),
-        );
-        final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
-
-        versionData = {
-          'song': newSongRef,
-          'version_number': versionNumber,
-          'timestamp': timestamp,
-          'file': {
-            'original_name': file.name,
-            'storage_name': '${projectId}_${newSongRef.id}_$versionNumber.${file.extension}',
-            'size': file.size,
-            'duration': file.duration,
-            'mime_type': file.mimeType,
-            'download_url': downloadUrl,
-          }
-        };
-      }
 
       await db.runTransaction((transaction) async {
         DocumentReference? versionRef;
 
-        if (versionData != null) {
-          final versionDoc = db.collection('versions').doc();
-          transaction.set(versionDoc, versionData);
+        if (uploadData.file != null) {
+          versionRef = db.collection('versions').doc();
+          final file = uploadData.file!;
+          final storageRef = storage.ref('audio').child(versionRef.id);
+          final uploadSnapshot = await storageRef.putData(
+            file.data,
+            SettableMetadata(
+              contentType: file.mimeType,
+            ),
+          );
+          final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
-          versionRef = (await versionDoc.get()).reference;
+          //TODO: zrobić klasę z toMap()
+          transaction.set(
+            versionRef,
+            {
+              'song': newSongRef,
+              'timestamp': timestamp,
+              'file': {
+                'name': file.name,
+                'storage_path': storageRef.fullPath,
+                'size': file.size,
+                'duration': file.duration,
+                'mime_type': file.mimeType,
+                'download_url': downloadUrl,
+              }
+            },
+          );
         }
 
+        //TODO: zrobić klasę z toMap()
         transaction.set(newSongRef, {
           'created_at': timestamp,
           'project': _projectRef,
           'title': uploadData.title,
           'state': uploadData.state.value,
-          'active_version': versionRef,
+          'current_version': versionRef,
         });
       });
 

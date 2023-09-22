@@ -1,14 +1,11 @@
+import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class ShareProjectWidget extends StatefulWidget {
-  const ShareProjectWidget({
-    super.key,
-    required this.projectId,
-  });
-
-  final String projectId;
+  const ShareProjectWidget({super.key});
 
   @override
   State<ShareProjectWidget> createState() => _ShareProjectWidgetState();
@@ -21,11 +18,13 @@ class _ShareProjectWidgetState extends State<ShareProjectWidget> {
   void initState() {
     super.initState();
 
+    final projectId = context.read<ProjectRepository>().projectId;
+
     //TODO: app url from env
     const appUrl = 'https://band-space-317b6.web.app';
     // const appUrl = 'localhost:61801';
 
-    _linkController.text = '$appUrl/invite?project=${widget.projectId}';
+    _linkController.text = '$appUrl/invite?project=$projectId';
   }
 
   @override

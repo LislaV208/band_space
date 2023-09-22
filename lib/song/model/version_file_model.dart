@@ -5,16 +5,16 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 class VersionFileModel extends Equatable {
-  final String original_name;
-  final String storage_name;
+  final String name;
+  final String storage_path;
   final int size;
   final int duration;
   final String mime_type;
   final String download_url;
 
   const VersionFileModel({
-    required this.original_name,
-    required this.storage_name,
+    required this.name,
+    required this.storage_path,
     required this.size,
     required this.duration,
     required this.mime_type,
@@ -24,8 +24,8 @@ class VersionFileModel extends Equatable {
   @override
   List<Object> get props {
     return [
-      original_name,
-      storage_name,
+      name,
+      storage_path,
       size,
       duration,
       mime_type,
@@ -35,8 +35,8 @@ class VersionFileModel extends Equatable {
 
   factory VersionFileModel.fromMap(Map<String, dynamic> map) {
     return VersionFileModel(
-      original_name: map['original_name'] ?? '',
-      storage_name: map['storage_name'] ?? '',
+      name: map['name'] ?? '',
+      storage_path: map['storage_path'] ?? '',
       size: map['size']?.toInt() ?? 0,
       duration: map['duration']?.toInt() ?? 0,
       mime_type: map['mime_type'] ?? '',
@@ -46,8 +46,8 @@ class VersionFileModel extends Equatable {
 
   Map<String, dynamic> toMap() {
     return {
-      'original_name': original_name,
-      'storage_name': storage_name,
+      'name': name,
+      'storage_path': storage_path,
       'size': size,
       'duration': duration,
       'mime_type': mime_type,

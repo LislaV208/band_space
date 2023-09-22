@@ -23,7 +23,6 @@ void setupServiceLocator() {
   sl.registerSingleton<AuthService>(AuthService(FirebaseAuth.instance, sl()));
 
   // repositories
-
   sl.registerFactory<UserProjectsRepository>(
     () => UserProjectsRepository(userId: _getUserId(), db: FirebaseFirestore.instance),
   );

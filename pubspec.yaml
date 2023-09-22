@@ -23,6 +23,7 @@ dependencies:
   firebase_storage: ^11.2.6
   audioplayers: ^5.1.0
   mime: ^1.0.4
+  just_audio: ^0.9.35
 
 dev_dependencies:
   flutter_test:
