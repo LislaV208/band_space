@@ -1,33 +1,34 @@
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
+import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/project/exceptions/project_exceptions.dart';
 import 'package:band_space/project/model/firebase_project_model.dart';
 import 'package:band_space/project/model/project_model.dart';
 import 'package:band_space/song/model/firebase/firebase_song_model.dart';
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
-import 'package:band_space/song/model/version_file_model.dart';
 import 'package:band_space/user/model/firebase_user_model.dart';
 import 'package:band_space/user/model/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-class ProjectRepository {
+class ProjectRepository extends FirestoreRepository {
   final String projectId;
   final String userId;
-  final FirebaseFirestore db;
+
   final FirebaseStorage storage;
 
   const ProjectRepository({
+    required super.db,
     required this.projectId,
     required this.userId,
-    required this.db,
     required this.storage,
   });
 
-  DocumentReference get _userRef => db.collection('users').doc(userId);
-  DocumentReference get _projectRef => db.collection('projects').doc(projectId);
+  DocumentReference get _userRef => db.collection(FirestoreCollectionNames.users).doc(userId);
+  DocumentReference get _projectRef => db.collection(FirestoreCollectionNames.projects).doc(projectId);
 
   Stream<ProjectModel> get() {
-    return db.collection('projects').doc(projectId).snapshots().map(
+    return db.collection(FirestoreCollectionNames.projects).doc(projectId).snapshots().map(
       (doc) {
         if (!doc.exists) {
           throw ProjectNotFoundException();
@@ -41,80 +42,13 @@ class ProjectRepository {
   Future<void> delete() async {
     final pathsOfFilesToRemove = <String>[];
 
-    await db.runTransaction((transaction) async {
-      final songsResult = await db
-          .collection('songs')
-          .where(
-            'project',
-            isEqualTo: _projectRef,
-          )
-          .get();
-
-      for (final songDoc in songsResult.docs) {
-        final versionsResult = await db
-            .collection('versions')
-            .where(
-              'song',
-              isEqualTo: songDoc.reference,
-            )
-            .get();
-
-        for (final versionDoc in versionsResult.docs) {
-          final file = versionDoc['file'] != null
-              ? VersionFileModel.fromMap(
-                  versionDoc['file'],
-                )
-              : null;
-          final path = file?.storage_path;
-
-          if (path != null) {
-            pathsOfFilesToRemove.add(path);
-          }
-
-          final markersResult = await db
-              .collection('markers')
-              .where(
-                'version',
-                isEqualTo: versionDoc.reference,
-              )
-              .get();
-
-          for (final markerDoc in markersResult.docs) {
-            final commentsResult = await db
-                .collection('comments')
-                .where(
-                  'parent',
-                  isEqualTo: markerDoc.reference,
-                )
-                .get();
-
-            for (final commentDoc in commentsResult.docs) {
-              transaction.delete(commentDoc.reference);
-            }
-
-            transaction.delete(markerDoc.reference);
-          }
-
-          transaction.delete(versionDoc.reference);
-        }
-
-        final commentsResult = await db
-            .collection('comments')
-            .where(
-              'parent',
-              isEqualTo: songDoc.reference,
-            )
-            .get();
-
-        for (final commentDoc in commentsResult.docs) {
-          transaction.delete(commentDoc.reference);
-        }
-
-        transaction.delete(songDoc.reference);
-      }
-
-      transaction.delete(_projectRef);
-    });
+    await db.runTransaction(
+      (transaction) async {
+        pathsOfFilesToRemove.addAll(
+          await deleteProject(transaction, _projectRef),
+        );
+      },
+    );
 
     for (final path in pathsOfFilesToRemove) {
       await storage.ref(path).delete();
@@ -144,7 +78,7 @@ class ProjectRepository {
 
   Stream<List<SongModel>> getSongs() {
     final queryStream = db
-        .collection('songs')
+        .collection(FirestoreCollectionNames.songs)
         .where(
           'project',
           isEqualTo: _projectRef,
@@ -169,7 +103,7 @@ class ProjectRepository {
     final timestamp = Timestamp.now();
 
     try {
-      final newSongRef = db.collection('songs').doc();
+      final newSongRef = db.collection(FirestoreCollectionNames.songs).doc();
 
       await db.runTransaction((transaction) async {
         DocumentReference? versionRef;

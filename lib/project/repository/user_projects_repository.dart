@@ -1,3 +1,4 @@
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/project/model/firebase_project_model.dart';
 import 'package:band_space/project/model/project_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,8 +12,8 @@ class UserProjectsRepository {
     required this.db,
   });
 
-  DocumentReference get _userRef => db.collection('users').doc(userId);
-  CollectionReference get _projectsRef => db.collection('projects');
+  DocumentReference get _userRef => db.collection(FirestoreCollectionNames.users).doc(userId);
+  CollectionReference get _projectsRef => db.collection(FirestoreCollectionNames.projects);
 
   Stream<List<ProjectModel>> getProjects() {
     return _projectsRef

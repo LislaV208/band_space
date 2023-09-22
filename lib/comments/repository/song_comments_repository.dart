@@ -1,4 +1,5 @@
 import 'package:band_space/comments/repository/comments_repository.dart';
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
 
 class SongCommentsRepository extends CommentsRepository {
   final String songId;
@@ -10,7 +11,7 @@ class SongCommentsRepository extends CommentsRepository {
   });
 
   @override
-  String get parentCollectionName => 'songs';
+  String get parentCollectionName => FirestoreCollectionNames.songs;
 
   @override
   String get parentId => songId;

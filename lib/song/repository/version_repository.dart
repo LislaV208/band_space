@@ -1,17 +1,18 @@
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
+import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/marker_dto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class VersionRepository {
+class VersionRepository extends FirestoreRepository {
   final String versionId;
-  final FirebaseFirestore db;
 
   const VersionRepository({
+    required super.db,
     required this.versionId,
-    required this.db,
   });
 
-  DocumentReference get _versionRef => db.collection('versions').doc(versionId);
+  DocumentReference get _versionRef => db.collection(FirestoreCollectionNames.versions).doc(versionId);
 
   Future<void> addMarker(
     MarkerDTO markerData,
@@ -27,7 +28,7 @@ class VersionRepository {
 
   Stream<List<Marker>> getMarkers() {
     final markersQueryStream = db
-        .collection('markers')
+        .collection(FirestoreCollectionNames.markers)
         .where(
           'version',
           isEqualTo: _versionRef,

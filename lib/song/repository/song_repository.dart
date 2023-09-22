@@ -1,29 +1,34 @@
 import 'dart:developer';
 
-import 'package:band_space/song/model/firebase/firebase_song_model.dart';
-import 'package:band_space/song/model/firebase/firebase_song_version_model.dart';
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/song/exceptions/song_exceptions.dart';
+import 'package:band_space/song/model/firebase/firebase_song_model.dart';
+import 'package:band_space/song/model/firebase/firebase_song_version_model.dart';
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
-import 'package:band_space/song/model/version_file_model.dart';
 
-class SongRepository {
+class SongRepository extends FirestoreRepository {
   final String songId;
-  final FirebaseFirestore db;
+
   final FirebaseStorage storage;
 
   SongRepository({
+    required super.db,
     required this.songId,
-    required this.db,
     required this.storage,
   });
 
-  DocumentReference get _songRef => db.collection('songs').doc(songId);
-  Query<Map<String, dynamic>> get _versionsQuery => db.collection('versions').where(
+  DocumentReference get _songRef => db.collection(FirestoreCollectionNames.songs).doc(songId);
+  Query<Map<String, dynamic>> get _versionsQuery => db
+      .collection(
+        FirestoreCollectionNames.versions,
+      )
+      .where(
         'song',
         isEqualTo: _songRef,
       );
@@ -57,80 +62,20 @@ class SongRepository {
     );
   }
 
-  // things to remove
-  // - song
-  // - song's versions
-  // - song's version's markers
-  // - song's comments
-  // - song's version's marker's comments
-  // - song's version's storage files
   Future<void> delete() async {
-    //TODO: usuwanie komentarzy i znaczników utworu
+    final pathsOfFilesToRemove = <String>[];
 
     await db.runTransaction(
       (transaction) async {
-        final versionsResult = await _versionsQuery.get();
-
-        final pathsOfFilesToRemove = <String>[];
-
-        for (final versionDoc in versionsResult.docs) {
-          final file = versionDoc['file'] != null
-              ? VersionFileModel.fromMap(
-                  versionDoc['file'],
-                )
-              : null;
-          final path = file?.storage_path;
-
-          if (path != null) {
-            pathsOfFilesToRemove.add(path);
-          }
-
-          final markersResult = await db
-              .collection('markers')
-              .where(
-                'version',
-                isEqualTo: versionDoc.reference,
-              )
-              .get();
-
-          for (final markerDoc in markersResult.docs) {
-            final commentsResult = await db
-                .collection('comments')
-                .where(
-                  'parent',
-                  isEqualTo: markerDoc.reference,
-                )
-                .get();
-
-            for (final commentDoc in commentsResult.docs) {
-              transaction.delete(commentDoc.reference);
-            }
-
-            transaction.delete(markerDoc.reference);
-          }
-
-          transaction.delete(versionDoc.reference);
-        }
-
-        final commentsResult = await db
-            .collection('comments')
-            .where(
-              'parent',
-              isEqualTo: _songRef,
-            )
-            .get();
-
-        for (final commentDoc in commentsResult.docs) {
-          transaction.delete(commentDoc.reference);
-        }
-
-        transaction.delete(_songRef);
-
-        for (final path in pathsOfFilesToRemove) {
-          await storage.ref(path).delete();
-        }
+        pathsOfFilesToRemove.addAll(
+          await deleteSong(transaction, _songRef),
+        );
       },
     );
+
+    for (final path in pathsOfFilesToRemove) {
+      await storage.ref(path).delete();
+    }
   }
 
   Stream<List<SongVersionModel>> getVersionHistory() {
@@ -161,7 +106,7 @@ class SongRepository {
     DocumentReference<Map<String, dynamic>>? versionRef;
 
     await db.runTransaction((transaction) async {
-      versionRef = db.collection('versions').doc();
+      versionRef = db.collection(FirestoreCollectionNames.versions).doc();
 
       final storageRef = storage.ref('audio').child(versionRef!.id);
       final uploadSnapshot = await storageRef.putData(

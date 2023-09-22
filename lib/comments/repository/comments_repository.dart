@@ -1,13 +1,13 @@
 import 'package:band_space/comments/model/comment.dart';
+import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-abstract class CommentsRepository {
+abstract class CommentsRepository extends FirestoreRepository {
   final String userId;
-  final FirebaseFirestore db;
 
   const CommentsRepository({
+    required super.db,
     required this.userId,
-    required this.db,
   });
 
   String get parentCollectionName;
@@ -48,9 +48,5 @@ abstract class CommentsRepository {
         );
       }));
     });
-  }
-
-  Future<void> deleteComment(String id) async {
-    await db.collection('comments').doc(id).delete();
   }
 }
