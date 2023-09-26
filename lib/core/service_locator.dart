@@ -1,17 +1,18 @@
-import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/comments/repository/marker_comments_repository.dart';
-import 'package:band_space/comments/repository/song_comments_repository.dart';
-import 'package:band_space/song/repository/version_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 
+import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/cubit/auth_cubit.dart';
+import 'package:band_space/comments/repository/marker_comments_repository.dart';
+import 'package:band_space/comments/repository/song_comments_repository.dart';
+import 'package:band_space/markers/marker_repository.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/user/repository/user_repository.dart';
 
 final sl = GetIt.instance;
@@ -53,6 +54,13 @@ void setupServiceLocator() {
   sl.registerFactoryParam<VersionRepository, String, void>(
     (versionId, _) => VersionRepository(
       versionId: versionId,
+      db: FirebaseFirestore.instance,
+    ),
+  );
+
+  sl.registerFactoryParam<MarkerRepository, String, void>(
+    (markerId, _) => MarkerRepository(
+      markerId: markerId,
       db: FirebaseFirestore.instance,
     ),
   );
