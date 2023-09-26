@@ -57,7 +57,7 @@ class MarkersListView extends StatelessWidget {
                     },
                   );
                 },
-                icon: Icon(Icons.message),
+                icon: const Icon(Icons.message),
               ),
             );
           }).toList(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/add_marker_screen.dart';
@@ -25,21 +26,15 @@ class SongView extends StatefulWidget {
 }
 
 class _SongViewState extends State<SongView> {
-  final _audioPlayer = AudioPlayerService();
-
   late var _currentVersion = widget.currentVersion;
 
   @override
   void initState() {
     super.initState();
-
-    // _audioPlayer.initialize(song!.current_version!.file!.download_url);
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
-
     super.dispose();
   }
 
@@ -60,7 +55,7 @@ class _SongViewState extends State<SongView> {
                           MarkersListView(
                             version: _currentVersion!,
                             onSelected: (marker) {
-                              _audioPlayer.seek(Duration(seconds: marker.position));
+                              sl<AudioPlayerService>().seek(Duration(seconds: marker.position));
                             },
                           ),
                           Text('Wersja ${_currentVersion!.version_number}'),
@@ -70,10 +65,7 @@ class _SongViewState extends State<SongView> {
                               vertical: 24,
                             ),
                             child: _currentVersion!.file != null
-                                ? SongPlayer(
-                                    audioPlayer: _audioPlayer,
-                                    duration: _currentVersion!.file!.duration,
-                                  )
+                                ? SongPlayer(file: _currentVersion!.file!)
                                 : const Text('Nie można odtworzyć pliku'),
                           ),
                           AppButtonSecondary(
@@ -102,7 +94,7 @@ class _SongViewState extends State<SongView> {
                   visible: false,
                   child: IconButton.filledTonal(
                     onPressed: () {},
-                    icon: Icon(Icons.history),
+                    icon: const Icon(Icons.history),
                   ),
                 ),
                 Flexible(
@@ -111,7 +103,7 @@ class _SongViewState extends State<SongView> {
                       horizontal: 20.0,
                     ),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: 500),
+                      constraints: const BoxConstraints(maxWidth: 500),
                       child: AppButtonPrimary(
                         onPressed: () async {
                           final newVersion = await showModalBottomSheet<SongVersionModel>(

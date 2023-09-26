@@ -1,24 +1,22 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerService {
   final _player = AudioPlayer();
 
-  String? _sourceUrl;
+  AudioPlayerService() {
+    _player.playerStateStream.listen(_handlePlayerStateChange);
+  }
 
-  void initialize(String sourceUrl) {
-    _sourceUrl = sourceUrl;
+  bool get isPlaying => _player.playing;
+  Stream<bool> get isPlayingStream => _player.playingStream;
+  Stream<Duration> get positionStream => _player.positionStream;
 
-    // _player.eventStream.listen((event) {
-    //   print(event);
-    // });
+  Future<Duration?> setUrl(String url) async {
+    return _player.setUrl(url, preload: false);
   }
 
   Future<void> play() async {
-    if (_sourceUrl == null) {
-      throw Exception('No source url');
-    }
-
-    await _player.play(UrlSource(_sourceUrl!));
+    await _player.play();
   }
 
   Future<void> pause() async {
@@ -29,9 +27,20 @@ class AudioPlayerService {
     await _player.seek(position);
   }
 
-  Stream<Duration> get positionChanges => _player.onPositionChanged;
+  Future<void> stop() async {
+    await _player.stop();
+  }
 
   Future<void> dispose() async {
     await _player.dispose();
+  }
+
+  void _handlePlayerStateChange(PlayerState state) async {
+    print(state);
+
+    if (state.processingState == ProcessingState.completed) {
+      await pause();
+      await seek(Duration.zero);
+    }
   }
 }

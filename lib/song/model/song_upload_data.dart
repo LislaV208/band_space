@@ -20,7 +20,6 @@ class SongUploadFile {
   final Uint8List data;
   final int size;
   final String mimeType;
-  final int duration;
 
   const SongUploadFile({
     required this.name,
@@ -28,6 +27,5 @@ class SongUploadFile {
     required this.data,
     required this.size,
     required this.mimeType,
-    required this.duration,
   });
 }

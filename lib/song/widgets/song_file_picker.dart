@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/utils/context_extensions.dart';
 import 'package:band_space/widgets/app_button_secondary.dart';
@@ -67,12 +66,7 @@ class _SongFilePickerState extends State<SongFilePicker> {
       final bytes = file.bytes;
 
       if (bytes != null) {
-        final duration = await _getDuration(file);
-
         final mimeType = lookupMimeType('', headerBytes: bytes);
-
-        print(duration);
-        print(mimeType);
 
         widget.onFilePicked(
           SongUploadFile(
@@ -81,7 +75,6 @@ class _SongFilePickerState extends State<SongFilePicker> {
             data: bytes,
             size: file.size,
             mimeType: mimeType ?? '',
-            duration: duration?.inSeconds ?? 0,
           ),
         );
 
@@ -100,19 +93,5 @@ class _SongFilePickerState extends State<SongFilePicker> {
     setState(() {
       _isLoading = false;
     });
-  }
-
-  Future<Duration?> _getDuration(PlatformFile file) async {
-    // TODO: find a way to get duration on Web
-    if (kIsWeb) return null;
-
-    if (file.path != null) {
-      final player = AudioPlayer();
-      await player.setSourceDeviceFile(file.path!);
-
-      return await player.getDuration();
-    } else {
-      return null;
-    }
   }
 }

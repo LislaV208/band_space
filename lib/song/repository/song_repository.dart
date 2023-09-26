@@ -11,6 +11,7 @@ import 'package:band_space/song/model/firebase/firebase_song_version_model.dart'
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
+import 'package:just_audio/just_audio.dart';
 
 class SongRepository extends FirestoreRepository {
   final String songId;
@@ -117,6 +118,11 @@ class SongRepository extends FirestoreRepository {
       );
       final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
+      //TODO: refactor
+      final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds;
+
+      log('song duration: ${duration}s');
+
       //TODO: zrobić klasę z toMap()
       transaction.set(
         versionRef!,
@@ -127,7 +133,7 @@ class SongRepository extends FirestoreRepository {
             'name': uploadFile.name,
             'storage_path': storageRef.fullPath,
             'size': uploadFile.size,
-            'duration': uploadFile.duration,
+            'duration': duration,
             'mime_type': uploadFile.mimeType,
             'download_url': downloadUrl,
           }

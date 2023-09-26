@@ -79,7 +79,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                                   strokeWidth: 3.0,
                                 ),
                               )
-                            : Text('Utwórz'),
+                            : const Text('Utwórz'),
                       ),
                     ),
                   ),

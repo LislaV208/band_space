@@ -19,8 +19,6 @@ class SongScreen extends StatelessWidget {
       builder: (context, snapshot) {
         final song = snapshot.data;
 
-        print(song?.current_version?.version_number);
-
         return Scaffold(
           appBar: AppBar(
             title: song != null ? Text(song.title) : null,

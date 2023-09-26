@@ -63,7 +63,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     const SizedBox(height: 40),
                     const Divider(),
                     const SizedBox(height: 20),
-                    Text('Określ stan utworu'),
+                    const Text('Określ stan utworu'),
                     const SizedBox(height: 20),
                     Wrap(
                       spacing: 20,

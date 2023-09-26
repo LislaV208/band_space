@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/project/exceptions/project_exceptions.dart';
@@ -10,6 +12,7 @@ import 'package:band_space/user/model/firebase_user_model.dart';
 import 'package:band_space/user/model/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:just_audio/just_audio.dart';
 
 class ProjectRepository extends FirestoreRepository {
   final String projectId;
@@ -120,6 +123,11 @@ class ProjectRepository extends FirestoreRepository {
           );
           final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
+          //TODO: refactor
+          final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds;
+
+          log('song duration: ${duration}s');
+
           //TODO: zrobić klasę z toMap()
           transaction.set(
             versionRef,
@@ -130,7 +138,7 @@ class ProjectRepository extends FirestoreRepository {
                 'name': file.name,
                 'storage_path': storageRef.fullPath,
                 'size': file.size,
-                'duration': file.duration,
+                'duration': duration,
                 'mime_type': file.mimeType,
                 'download_url': downloadUrl,
               }

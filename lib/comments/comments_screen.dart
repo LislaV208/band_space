@@ -27,7 +27,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dyskusja'),
+        title: const Text('Dyskusja'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -73,14 +73,14 @@ class _CommentsScreenState extends State<CommentsScreen> {
                     focusNode: _focusNode,
                     autofocus: true,
                     controller: _textController,
-                    decoration: InputDecoration(hintText: 'Zostaw komentarz'),
+                    decoration: const InputDecoration(hintText: 'Zostaw komentarz'),
                     onSubmitted: (_) => _onSubmit(),
                   ),
                 ),
                 const SizedBox(width: 10),
                 IconButton(
                   onPressed: _onSubmit,
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                 ),
               ],
             )

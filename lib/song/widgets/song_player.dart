@@ -1,67 +1,35 @@
-import 'dart:async';
-
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/song/model/version_file_model.dart';
 import 'package:flutter/material.dart';
 
 class SongPlayer extends StatefulWidget {
   const SongPlayer({
     super.key,
-    required this.audioPlayer,
-    required this.duration,
+    required this.file,
   });
 
-  final AudioPlayerService audioPlayer;
-  final int duration;
+  final VersionFileModel file;
 
   @override
   State createState() => _SongPlayerState();
 }
 
 class _SongPlayerState extends State<SongPlayer> {
-  late final audioPlayer = widget.audioPlayer;
-  int _currentPosition = 0;
-  late int _duration = widget.duration;
-
-  var _isPlaying = false;
-
-  StreamSubscription<Duration>? _positionSub;
+  final _audioPlayer = sl<AudioPlayerService>();
 
   @override
   void initState() {
     super.initState();
 
-    Future.delayed(Duration.zero, () => init());
+    _audioPlayer.setUrl(widget.file.download_url);
   }
 
   @override
   void dispose() {
-    _positionSub?.cancel();
+    _audioPlayer.stop();
 
     super.dispose();
-  }
-
-  void init() async {
-    // if (_duration == 0) {
-    //   await _player.setSourceUrl(widget.fileUrl);
-    //   final duration = await _player.getDuration();
-    //   if (duration != null) {
-    //     setState(() {
-    //       _duration = duration.inSeconds;
-    //     });
-    //   }
-    // }
-
-    _positionSub = audioPlayer.positionChanges.listen((position) {
-      setState(() {
-        _currentPosition = position.inSeconds;
-
-        if (_isPlaying && _currentPosition == _duration) {
-          _isPlaying = false;
-
-          audioPlayer.pause();
-        }
-      });
-    });
   }
 
   @override
@@ -69,32 +37,38 @@ class _SongPlayerState extends State<SongPlayer> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Column(
-          children: [
-            Slider(
-              value: _currentPosition.toDouble(),
-              min: 0,
-              max: _duration.toDouble(),
-              onChanged: (value) {
-                audioPlayer.seek(Duration(seconds: value.toInt()));
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        StreamBuilder(
+            stream: _audioPlayer.positionStream,
+            builder: (context, snapshot) {
+              final currentPosition = (snapshot.data ?? Duration.zero).inSeconds;
+
+              return Column(
                 children: [
-                  Text(
-                    _formatDuration(_currentPosition),
+                  Slider(
+                    value: currentPosition.toDouble(),
+                    min: 0,
+                    max: widget.file.duration.toDouble(),
+                    onChanged: (value) {
+                      _audioPlayer.seek(Duration(seconds: value.toInt()));
+                    },
                   ),
-                  Text(
-                    _formatDuration(_duration),
-                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 22.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatDuration(currentPosition),
+                        ),
+                        Text(
+                          _formatDuration(widget.file.duration),
+                        ),
+                      ],
+                    ),
+                  )
                 ],
-              ),
-            )
-          ],
-        ),
+              );
+            }),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -105,31 +79,23 @@ class _SongPlayerState extends State<SongPlayer> {
               ),
               iconSize: 40,
             ),
-            IconButton(
-              icon: Icon(
-                _isPlaying ? Icons.pause : Icons.play_arrow,
-              ),
-              color: Theme.of(context).primaryColor,
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-              ),
-              iconSize: 40,
-              onPressed: () async {
-                if (_isPlaying) {
-                  audioPlayer.pause();
-                } else {
-                  if (_currentPosition == _duration) {
-                    await audioPlayer.seek(Duration.zero);
-                  }
+            StreamBuilder(
+                stream: _audioPlayer.isPlayingStream,
+                builder: (context, snapshot) {
+                  final isPlaying = snapshot.data ?? false;
 
-                  audioPlayer.play();
-                }
-
-                setState(() {
-                  _isPlaying = !_isPlaying;
-                });
-              },
-            ),
+                  return IconButton(
+                    icon: Icon(
+                      isPlaying ? Icons.pause : Icons.play_arrow,
+                    ),
+                    color: Theme.of(context).primaryColor,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                    iconSize: 40,
+                    onPressed: _onPlayPausePressed,
+                  );
+                }),
             IconButton(
               onPressed: () {},
               icon: const Icon(
@@ -147,5 +113,13 @@ class _SongPlayerState extends State<SongPlayer> {
     final minutes = (durationInSeconds / 60).floor();
     final seconds = (durationInSeconds % 60).floor();
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _onPlayPausePressed() async {
+    if (_audioPlayer.isPlaying) {
+      _audioPlayer.pause();
+    } else {
+      _audioPlayer.play();
+    }
   }
 }
