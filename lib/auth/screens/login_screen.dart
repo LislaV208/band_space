@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -39,125 +37,112 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!Platform.isAndroid && !Platform.isIOS)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 40),
-                child: Text(
-                  'BandSpace',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-              ),
-            Card(
-              margin: const EdgeInsets.all(20.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints.tightFor(width: 440),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Logowanie',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        autofocus: true,
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Hasło',
-                          prefixIcon: Icon(Icons.lock),
-                        ),
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _onSubmit(),
-                      ),
-                      const SizedBox(height: 32.0),
-                      BlocConsumer<AuthCubit, BaseBlocState>(
-                        listener: (context, state) {
-                          if (state is CompletedState) {
-                            if (widget.redirect != null) {
-                              final queryParams = <String, dynamic>{};
-                              if (widget.redirect == 'invite') {
-                                queryParams.addAll({
-                                  'project': widget.redirectArg ?? '',
-                                });
-                              }
-
-                              context.goNamed(
-                                widget.redirect!,
-                                queryParameters: queryParams,
-                              );
-                            } else {
-                              context.goNamed('projects');
-                            }
-                          } else if (state is FailureState) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${state.error}'),
-                              ),
-                            );
-                          }
-                        },
-                        builder: (context, state) {
-                          return SizedBox(
-                            width: double.infinity,
-                            height: 40,
-                            child: FilledButton(
-                              onPressed: state is LoadingState ? null : _onSubmit,
-                              child: state is LoadingState
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: SizedBox(
-                                        height: 16,
-                                        width: 16,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    )
-                                  : const Text('Zaloguj'),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20.0),
-                      TextButton(
-                        onPressed: () {
+        child: Card(
+          margin: const EdgeInsets.all(20.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints.tightFor(width: 440),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Logowanie',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    autofocus: true,
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Hasło',
+                      prefixIcon: Icon(Icons.lock),
+                    ),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _onSubmit(),
+                  ),
+                  const SizedBox(height: 32.0),
+                  BlocConsumer<AuthCubit, BaseBlocState>(
+                    listener: (context, state) {
+                      if (state is CompletedState) {
+                        if (widget.redirect != null) {
                           final queryParams = <String, dynamic>{};
-                          if (widget.redirect != null) {
-                            if (widget.redirect == 'invite') {
-                              queryParams.addAll({
-                                'redirect': 'invite',
-                                'project': widget.redirectArg ?? '',
-                              });
-                            }
+                          if (widget.redirect == 'invite') {
+                            queryParams.addAll({
+                              'project': widget.redirectArg ?? '',
+                            });
                           }
+
                           context.goNamed(
-                            'register',
+                            widget.redirect!,
                             queryParameters: queryParams,
                           );
-                        },
-                        child: const Text('Zarejestruj się'),
-                      ),
-                    ],
+                        } else {
+                          context.goNamed('projects');
+                        }
+                      } else if (state is FailureState) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${state.error}'),
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 40,
+                        child: FilledButton(
+                          onPressed: state is LoadingState ? null : _onSubmit,
+                          child: state is LoadingState
+                              ? const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                )
+                              : const Text('Zaloguj'),
+                        ),
+                      );
+                    },
                   ),
-                ),
+                  const SizedBox(height: 20.0),
+                  TextButton(
+                    onPressed: () {
+                      final queryParams = <String, dynamic>{};
+                      if (widget.redirect != null) {
+                        if (widget.redirect == 'invite') {
+                          queryParams.addAll({
+                            'redirect': 'invite',
+                            'project': widget.redirectArg ?? '',
+                          });
+                        }
+                      }
+                      context.goNamed(
+                        'register',
+                        queryParameters: queryParams,
+                      );
+                    },
+                    child: const Text('Zarejestruj się'),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -54,7 +54,9 @@ class SongPlayer extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                _audioPlayer.rewind();
+              },
               icon: const Icon(
                 Icons.fast_rewind,
               ),
@@ -78,7 +80,9 @@ class SongPlayer extends StatelessWidget {
                   );
                 }),
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                _audioPlayer.forward();
+              },
               icon: const Icon(
                 Icons.fast_forward,
               ),
