@@ -55,6 +55,7 @@ void setupServiceLocator() {
     (versionId, _) => VersionRepository(
       versionId: versionId,
       db: FirebaseFirestore.instance,
+      storage: FirebaseStorage.instance,
     ),
   );
 

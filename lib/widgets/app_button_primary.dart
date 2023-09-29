@@ -37,6 +37,8 @@ class _AppButtonPrimaryState extends State<AppButtonPrimary> {
 
                     // await Future.delayed(const Duration(milliseconds: 300));
 
+                    if (!mounted) return;
+
                     setState(() {
                       _isLoading = false;
                     });

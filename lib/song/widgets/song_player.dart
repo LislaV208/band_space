@@ -1,36 +1,17 @@
-import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/song/model/version_file_model.dart';
 import 'package:flutter/material.dart';
 
-class SongPlayer extends StatefulWidget {
+import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/core/service_locator.dart';
+
+class SongPlayer extends StatelessWidget {
   const SongPlayer({
     super.key,
-    required this.file,
+    required this.duration,
   });
 
-  final VersionFileModel file;
+  final int duration;
 
-  @override
-  State createState() => _SongPlayerState();
-}
-
-class _SongPlayerState extends State<SongPlayer> {
-  final _audioPlayer = sl<AudioPlayerService>();
-
-  @override
-  void initState() {
-    super.initState();
-
-    _audioPlayer.setUrl(widget.file.download_url);
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.stop();
-
-    super.dispose();
-  }
+  AudioPlayerService get _audioPlayer => sl<AudioPlayerService>();
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +28,7 @@ class _SongPlayerState extends State<SongPlayer> {
                   Slider(
                     value: currentPosition.toDouble(),
                     min: 0,
-                    max: widget.file.duration.toDouble(),
+                    max: duration.toDouble(),
                     onChanged: (value) {
                       _audioPlayer.seek(Duration(seconds: value.toInt()));
                     },
@@ -61,7 +42,7 @@ class _SongPlayerState extends State<SongPlayer> {
                           _formatDuration(currentPosition),
                         ),
                         Text(
-                          _formatDuration(widget.file.duration),
+                          _formatDuration(duration),
                         ),
                       ],
                     ),

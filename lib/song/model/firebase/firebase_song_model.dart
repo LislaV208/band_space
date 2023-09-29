@@ -3,7 +3,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:band_space/song/model/song_model.dart';
-import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/song_state.dart';
 
 class FirebaseSongModel extends SongModel {
@@ -12,13 +11,10 @@ class FirebaseSongModel extends SongModel {
     required super.created_at,
     required super.title,
     required super.state,
-    required super.current_version,
+    required super.current_version_id,
   });
 
-  factory FirebaseSongModel.fromDocument(
-    DocumentSnapshot doc,
-    SongVersionModel? currentVersion,
-  ) {
+  factory FirebaseSongModel.create(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
     return FirebaseSongModel(
@@ -26,7 +22,7 @@ class FirebaseSongModel extends SongModel {
       created_at: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
       title: data['title'] ?? '',
       state: SongState.fromString(data['state'] ?? ''),
-      current_version: currentVersion,
+      current_version_id: (data['current_version'] as DocumentReference).id,
     );
   }
 }

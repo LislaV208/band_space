@@ -1,9 +1,11 @@
 import 'dart:developer';
 
-import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:just_audio/just_audio.dart';
 
+import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/song/exceptions/song_exceptions.dart';
 import 'package:band_space/song/model/firebase/firebase_song_model.dart';
@@ -11,7 +13,6 @@ import 'package:band_space/song/model/firebase/firebase_song_version_model.dart'
 import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/song/model/song_version_model.dart';
-import 'package:just_audio/just_audio.dart';
 
 class SongRepository extends FirestoreRepository {
   final String songId;
@@ -37,30 +38,24 @@ class SongRepository extends FirestoreRepository {
   Stream<SongModel> get() {
     final docSnapshot = _songRef.snapshots();
 
-    return docSnapshot.asyncMap(
-      (doc) async {
-        if (!doc.exists) {
-          log('Song not found!');
-          throw SongNotFoundException();
-        }
+    return docSnapshot.map((doc) {
+      log('SONG DOC CHANGE: ${doc.id}');
 
-        final data = doc.data() as Map<String, dynamic>?;
-        final versionRef = data?['current_version'] as DocumentReference?;
+      if (!doc.exists) {
+        log('Song not found!');
+        throw SongNotFoundException();
+      }
 
-        SongVersionModel? currentVersion;
-        if (versionRef != null) {
-          final versionNumber = (await _versionsQuery.count().get()).count;
+      return FirebaseSongModel.create(doc);
+    });
+  }
 
-          final versionDoc = await versionRef.get();
-          currentVersion = FirebaseSongVersionModel.fromDocument(
-            versionDoc,
-            versionNumber.toString(),
-          );
-        }
+  Future<SongVersionModel> fetchCurrentVersion() async {
+    final songDoc = await _songRef.get();
+    final data = songDoc.data() as Map<String, dynamic>;
+    final currentVersionRef = data['current_version'] as DocumentReference;
 
-        return FirebaseSongModel.fromDocument(doc, currentVersion);
-      },
-    );
+    return FirebaseSongVersionModel.create(doc: await currentVersionRef.get(), isCurrent: true);
   }
 
   Future<void> delete() async {
@@ -87,17 +82,13 @@ class SongRepository extends FirestoreRepository {
         )
         .snapshots();
 
-    return queryStream.map((query) {
-      final versionIDs = query.docs.reversed.map((doc) => doc.id).toList();
+    return queryStream.map((query) => query.docs.mapIndexed(
+          (index, doc) {
+            final isCurrent = index == 0;
 
-      return query.docs.map(
-        (doc) {
-          final versionNumber = versionIDs.indexOf(doc.id) + 1;
-
-          return FirebaseSongVersionModel.fromDocument(doc, versionNumber.toString());
-        },
-      ).toList();
-    });
+            return FirebaseSongVersionModel.create(doc: doc, isCurrent: isCurrent);
+          },
+        ).toList());
   }
 
   Future<SongVersionModel?> addVersion(
@@ -129,6 +120,7 @@ class SongRepository extends FirestoreRepository {
         {
           'song': _songRef,
           'timestamp': Timestamp.now(),
+          'comment': comment,
           'file': {
             'name': uploadFile.name,
             'storage_path': storageRef.fullPath,
@@ -144,12 +136,9 @@ class SongRepository extends FirestoreRepository {
     });
 
     if (versionRef != null) {
-      final countQuery = await _versionsQuery.count().get();
+      final doc = await versionRef!.get();
 
-      return FirebaseSongVersionModel.fromDocument(
-        await versionRef!.get(),
-        countQuery.count.toString(),
-      );
+      return FirebaseSongVersionModel.create(doc: doc, isCurrent: true);
     }
 
     return null;

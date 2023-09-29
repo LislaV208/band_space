@@ -1,25 +1,35 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-import 'package:band_space/song/model/song_version_model.dart';
-import 'package:band_space/song/repository/song_repository.dart';
 import 'package:provider/provider.dart';
 
-class SongVersionHistoryScreen extends StatelessWidget {
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/song/model/song_version_model.dart';
+import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/repository/version_repository.dart';
+import 'package:band_space/utils/date_formats.dart';
+
+class SongVersionHistoryScreen extends StatefulWidget {
   const SongVersionHistoryScreen({
     super.key,
-    required this.currentVersion,
+    required this.activeVersion,
   });
 
-  final SongVersionModel currentVersion;
+  final SongVersionModel activeVersion;
+
+  @override
+  State<SongVersionHistoryScreen> createState() => _SongVersionHistoryScreenState();
+}
+
+class _SongVersionHistoryScreenState extends State<SongVersionHistoryScreen> {
+  late var _activeVersion = widget.activeVersion;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Poprzednie wersje'),
+        title: const Text('Historia wersji'),
       ),
       body: StreamBuilder(
         stream: context.read<SongRepository>().getVersionHistory(),
@@ -44,11 +54,19 @@ class SongVersionHistoryScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final version = versions[index];
 
-              final isCurrent = version.id == currentVersion.id;
+              final isActive = version.id == _activeVersion.id;
 
               return _VersionHistoryListTile(
                 version: version,
-                isCurrent: isCurrent,
+                isActive: isActive,
+                canDelete: versions.length > 1,
+                onCurrentVersionDelete: () async {
+                  final currentVersion = await context.read<SongRepository>().fetchCurrentVersion();
+
+                  setState(() {
+                    _activeVersion = currentVersion;
+                  });
+                },
               );
             },
             separatorBuilder: (context, index) => const Divider(),
@@ -63,11 +81,15 @@ class SongVersionHistoryScreen extends StatelessWidget {
 class _VersionHistoryListTile extends StatelessWidget {
   const _VersionHistoryListTile({
     required this.version,
-    required this.isCurrent,
+    required this.isActive,
+    required this.canDelete,
+    required this.onCurrentVersionDelete,
   });
 
   final SongVersionModel version;
-  final bool isCurrent;
+  final bool isActive;
+  final bool canDelete;
+  final VoidCallback onCurrentVersionDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +109,15 @@ class _VersionHistoryListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Wersja ${version.version_number}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    version.is_current ? 'Aktualna' : 'Archiwalna',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: isActive ? FontWeight.bold : null,
+                          decoration: isActive ? TextDecoration.underline : null,
+                        ),
                   ),
                   if (version.timestamp != null)
                     Text(
-                      DateFormat('HH:mm dd/MM/yyyy').format(
-                        version.timestamp!,
-                      ),
+                      dateTimeFormat.format(version.timestamp!),
                     ),
                   if (version.comment.isNotEmpty)
                     Padding(
@@ -119,13 +142,33 @@ class _VersionHistoryListTile extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: isCurrent
+            onPressed: isActive
                 ? null
                 : () {
                     Navigator.of(context).pop(version);
                   },
-            child: Text(isCurrent ? 'Aktywna' : 'Ustaw jako aktywną'),
-          )
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 60),
+              child: Text(
+                isActive ? 'Aktywna' : 'Przywróć',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          if (canDelete)
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                onPressed: () async {
+                  await sl<VersionRepository>(param1: version.id).delete();
+
+                  if (version.is_current) {
+                    onCurrentVersionDelete();
+                  }
+                },
+                icon: const Icon(Icons.delete),
+              ),
+            ),
         ],
       ),
     );

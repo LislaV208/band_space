@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/song/model/version_file_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class FirestoreRepository {
   final FirebaseFirestore db;

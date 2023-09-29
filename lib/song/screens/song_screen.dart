@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +21,10 @@ class SongScreen extends StatelessWidget {
       stream: context.read<SongRepository>().get(),
       builder: (context, snapshot) {
         final song = snapshot.data;
+
+        if (song != null) {
+          log('Song current version id: ${song.current_version_id}');
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -55,9 +62,7 @@ class SongScreen extends StatelessWidget {
                           }
                         }
                       },
-                      icon: const Icon(
-                        Icons.delete,
-                      ),
+                      icon: const Icon(Icons.delete),
                     ),
                   ]
                 : null,
@@ -67,7 +72,7 @@ class SongScreen extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 )
               : SongView(
-                  currentVersion: song.current_version,
+                  versionId: song.current_version_id,
                 ),
         );
       },

@@ -7,17 +7,17 @@ import 'package:band_space/song/model/version_file_model.dart';
 
 class SongVersionModel extends Equatable {
   final String id;
-  final String version_number;
   final DateTime? timestamp;
   final VersionFileModel? file;
   final String comment;
+  final bool is_current;
 
   const SongVersionModel({
     required this.id,
-    required this.version_number,
     required this.timestamp,
     required this.file,
     required this.comment,
+    required this.is_current,
   });
 
   @override
@@ -28,6 +28,7 @@ class SongVersionModel extends Equatable {
       'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : null,
       'file': file?.toMap(),
       'comment': comment,
+      'is_current': is_current,
     };
   }
 }

@@ -1,5 +1,9 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:just_audio/just_audio.dart';
+
 import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/core/firestore/firestore_repository.dart';
 import 'package:band_space/project/exceptions/project_exceptions.dart';
@@ -10,9 +14,6 @@ import 'package:band_space/song/model/song_model.dart';
 import 'package:band_space/song/model/song_upload_data.dart';
 import 'package:band_space/user/model/firebase_user_model.dart';
 import 'package:band_space/user/model/user_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:just_audio/just_audio.dart';
 
 class ProjectRepository extends FirestoreRepository {
   final String projectId;
@@ -93,7 +94,7 @@ class ProjectRepository extends FirestoreRepository {
       (query) {
         return query.docs
             .map(
-              (doc) => FirebaseSongModel.fromDocument(doc, null),
+              (doc) => FirebaseSongModel.create(doc),
             )
             .toList();
       },

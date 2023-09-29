@@ -40,41 +40,49 @@ class MarkersListView extends StatelessWidget {
           );
         }
 
-        return Column(
-          children: markers.map((item) {
-            return ListTile(
-              onTap: () => onSelected(item),
-              leading: Text(item.position.toString()),
-              title: Text(item.name),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        builder: (context) {
-                          return Provider<CommentsRepository>(
-                            create: (context) => sl<MarkerCommentsRepository>(param1: item.id),
-                            child: const CommentsScreen(),
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: ListView(
+              primary: true,
+              shrinkWrap: true,
+              children: markers.map((item) {
+                return ListTile(
+                  onTap: () => onSelected(item),
+                  leading: Text(item.position.toString()),
+                  title: Text(item.name),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            useSafeArea: true,
+                            builder: (context) {
+                              return Provider<CommentsRepository>(
+                                create: (context) => sl<MarkerCommentsRepository>(param1: item.id),
+                                child: const CommentsScreen(),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                    icon: const Icon(Icons.message),
+                        icon: const Icon(Icons.message),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          sl<MarkerRepository>(param1: item.id).delete();
+                        },
+                        icon: const Icon(Icons.delete),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      sl<MarkerRepository>(param1: item.id).delete();
-                    },
-                    icon: const Icon(Icons.delete),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
+            ),
+          ),
         );
       },
     );
