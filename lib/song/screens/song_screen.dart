@@ -39,7 +39,7 @@ class SongScreen extends StatelessWidget {
                           useSafeArea: true,
                           builder: (_) => Provider<CommentsRepository>.value(
                             value: context.read<SongCommentsRepository>(),
-                            child: const CommentsScreen(),
+                            child: CommentsScreen(title: 'Utwór "${song.title}"'),
                           ),
                         );
                       },

@@ -1,9 +1,13 @@
-import 'package:band_space/core/base_bloc_state.dart';
-import 'package:band_space/auth/cubit/auth_cubit.dart';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:band_space/auth/cubit/auth_cubit.dart';
+import 'package:band_space/core/base_bloc_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.redirect, this.redirectArg});
@@ -34,19 +38,19 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                'BandSpace',
-                style: Theme.of(context).textTheme.displayLarge,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!Platform.isAndroid && !Platform.isIOS)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 40),
+                child: Text(
+                  'BandSpace',
+                  style: Theme.of(context).textTheme.displayLarge,
+                ),
               ),
-            ),
-          ),
-          Center(
-            child: Card(
+            Card(
               margin: const EdgeInsets.all(20.0),
               child: ConstrainedBox(
                 constraints: const BoxConstraints.tightFor(width: 440),
@@ -61,11 +65,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
+                        autofocus: true,
                         controller: _emailController,
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           prefixIcon: Icon(Icons.email),
                         ),
+                        textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 16.0),
                       TextFormField(
@@ -75,6 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Hasło',
                           prefixIcon: Icon(Icons.lock),
                         ),
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _onSubmit(),
                       ),
                       const SizedBox(height: 32.0),
                       BlocConsumer<AuthCubit, BaseBlocState>(
@@ -108,14 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: double.infinity,
                             height: 40,
                             child: FilledButton(
-                              onPressed: state is LoadingState
-                                  ? null
-                                  : () async {
-                                      context.read<AuthCubit>().logIn(
-                                            _emailController.text,
-                                            _passwordController.text,
-                                          );
-                                    },
+                              onPressed: state is LoadingState ? null : _onSubmit,
                               child: state is LoadingState
                                   ? const Padding(
                                       padding: EdgeInsets.all(8.0),
@@ -156,10 +157,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-          ),
-          const Spacer(),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  void _onSubmit() {
+    context.read<AuthCubit>().logIn(_emailController.text, _passwordController.text);
   }
 }

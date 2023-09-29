@@ -113,7 +113,7 @@ class _SongVersionViewState extends State<SongVersionView> {
               : const SizedBox(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 40),
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

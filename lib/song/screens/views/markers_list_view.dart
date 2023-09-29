@@ -35,9 +35,7 @@ class MarkersListView extends StatelessWidget {
         final markers = snapshot.data!;
 
         if (markers.isEmpty) {
-          return const Center(
-            child: Text('Brak znaczników'),
-          );
+          return const SizedBox();
         }
 
         return Align(
@@ -64,7 +62,7 @@ class MarkersListView extends StatelessWidget {
                             builder: (context) {
                               return Provider<CommentsRepository>(
                                 create: (context) => sl<MarkerCommentsRepository>(param1: item.id),
-                                child: const CommentsScreen(),
+                                child: CommentsScreen(title: 'Znacznik "${item.name}"'),
                               );
                             },
                           );

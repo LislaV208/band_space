@@ -64,6 +64,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
                   labelText: 'Pozycja (sekunda)',
                   hintText: 'W której sekundzie chcesz umieścić znacznik?',
                 ),
+                keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                 ],

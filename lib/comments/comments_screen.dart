@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
 
 import 'package:band_space/comments/repository/comments_repository.dart';
 
 class CommentsScreen extends StatefulWidget {
-  const CommentsScreen({super.key});
+  const CommentsScreen({super.key, required this.title});
+
+  final String title;
 
   @override
   State<CommentsScreen> createState() => _CommentsScreenState();
@@ -27,7 +30,10 @@ class _CommentsScreenState extends State<CommentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dyskusja'),
+        title: ListTile(
+          title: Text(widget.title),
+          subtitle: const Text('Dyskusja'),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
