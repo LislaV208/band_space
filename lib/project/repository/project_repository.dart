@@ -152,7 +152,6 @@ class ProjectRepository extends FirestoreRepository {
           'created_at': timestamp,
           'project': _projectRef,
           'title': uploadData.title,
-          'state': uploadData.state.value,
           'current_version': versionRef,
         });
       });

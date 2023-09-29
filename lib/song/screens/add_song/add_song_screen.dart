@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
-import 'package:band_space/song/song_state.dart';
 import 'package:band_space/song/widgets/song_file_picker.dart';
 import 'package:band_space/utils/context_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
@@ -61,35 +61,11 @@ class _AddSongScreenState extends State<AddSongScreen> {
                       },
                     ),
                     const SizedBox(height: 40),
-                    const Divider(),
-                    const SizedBox(height: 20),
-                    const Text('Określ stan utworu'),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 20,
-                      children: [
-                        _buildChoiceChip(
-                          label: 'Szkic',
-                          state: state,
-                          songState: SongState.draft,
-                        ),
-                        _buildChoiceChip(
-                          label: 'Demo',
-                          state: state,
-                          songState: SongState.demo,
-                        ),
-                        _buildChoiceChip(
-                          label: 'Finalny',
-                          state: state,
-                          songState: SongState.finalVersion,
-                        ),
-                      ],
-                    ),
                   ],
                 ),
                 AppButtonPrimary(
                   onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate() && state.selectedFile != null) {
                       final songId = await state.addSong(
                         _titleController.text,
                       );
@@ -117,22 +93,6 @@ class _AddSongScreenState extends State<AddSongScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildChoiceChip({
-    required String label,
-    required AddSongState state,
-    required SongState songState,
-  }) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: state.songState == songState,
-      onSelected: (isSelected) {
-        if (isSelected) {
-          state.onSongStateSelected(songState);
-        }
-      },
     );
   }
 }
