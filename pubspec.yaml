@@ -1,7 +1,7 @@
 name: band_space
 description: A new Flutter project.
 publish_to: 'none'
-version: 0.3.0
+version: 0.3.0+3
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -24,12 +24,32 @@ dependencies:
   mime: ^1.0.4
   just_audio: ^0.9.35
   collection: ^1.17.2
+  flutter_native_splash: ^2.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
   build_runner: ^2.4.6
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  image_path: "assets/launcher_icon.png"
+  android: true
+  # adaptive_icon_background: "#262830"
+  adaptive_icon_foreground: "#262830"  
+  image_path_android: "assets/launcher_icon.png"
+  ios: true
+  image_path_ios: "assets/launcher_icon.png"
+  web:
+    generate: true
+    image_path: "assets/launcher_icon.png"
+    background_color: "#262830"
+    theme_color: "#262830"
+
+flutter_native_splash:
+  color: "#262830"
+  image: "assets/splash_icon.png"
