@@ -18,10 +18,7 @@ import 'package:band_space/user/repository/user_repository.dart';
 final sl = GetIt.instance;
 
 void setupServiceLocator() {
-  sl.registerSingleton<AudioPlayerService>(
-    AudioPlayerService(),
-    dispose: (instance) => instance.dispose(),
-  );
+  sl.registerFactory<AudioPlayerService>(() => AudioPlayerService());
 
   // TODO: zrobić inaczej, chyba tak zeby w appce uzywac tylko UserRepository a AuthService uzywac w repozytoriach
   sl.registerSingleton<UserRepository>(UserRepository(FirebaseFirestore.instance));

@@ -9,9 +9,16 @@ class AudioPlayerService {
 
   bool get isPlaying => _player.playing;
   Stream<bool> get isPlayingStream => _player.playingStream;
-  Stream<Duration> get positionStream => _player.positionStream;
 
   Duration get currentPosition => _player.position;
+  Stream<Duration> get positionStream => _player.positionStream;
+
+  Future<void> toggleLoopMode() async {
+    final loopMode = _player.loopMode;
+    await _player.setLoopMode(loopMode == LoopMode.off ? LoopMode.one : LoopMode.off);
+  }
+
+  Stream<bool> get loopModeStream => _player.loopModeStream.map((event) => event != LoopMode.off);
 
   Future<Duration?> setUrl(String url) async {
     return _player.setUrl(url, preload: false);

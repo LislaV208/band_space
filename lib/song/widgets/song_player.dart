@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/core/service_locator.dart';
 
 class SongPlayer extends StatelessWidget {
   const SongPlayer({
     super.key,
+    required this.audioPlayer,
     required this.duration,
   });
 
+  final AudioPlayerService audioPlayer;
   final int duration;
-
-  AudioPlayerService get _audioPlayer => sl<AudioPlayerService>();
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +18,7 @@ class SongPlayer extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         StreamBuilder(
-            stream: _audioPlayer.positionStream,
+            stream: audioPlayer.positionStream,
             builder: (context, snapshot) {
               final currentPosition = (snapshot.data ?? Duration.zero).inSeconds;
 
@@ -30,7 +29,7 @@ class SongPlayer extends StatelessWidget {
                     min: 0,
                     max: duration.toDouble(),
                     onChanged: (value) {
-                      _audioPlayer.seek(Duration(seconds: value.toInt()));
+                      audioPlayer.seek(Duration(seconds: value.toInt()));
                     },
                   ),
                   Padding(
@@ -53,9 +52,16 @@ class SongPlayer extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            Visibility.maintain(
+              visible: false,
+              child: IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.loop),
+              ),
+            ),
             IconButton(
               onPressed: () {
-                _audioPlayer.rewind();
+                audioPlayer.rewind();
               },
               icon: const Icon(
                 Icons.fast_rewind,
@@ -63,7 +69,7 @@ class SongPlayer extends StatelessWidget {
               iconSize: 40,
             ),
             StreamBuilder(
-                stream: _audioPlayer.isPlayingStream,
+                stream: audioPlayer.isPlayingStream,
                 builder: (context, snapshot) {
                   final isPlaying = snapshot.data ?? false;
 
@@ -81,13 +87,28 @@ class SongPlayer extends StatelessWidget {
                 }),
             IconButton(
               onPressed: () {
-                _audioPlayer.forward();
+                audioPlayer.forward();
               },
               icon: const Icon(
                 Icons.fast_forward,
               ),
               iconSize: 40,
             ),
+            StreamBuilder(
+                stream: audioPlayer.loopModeStream,
+                builder: (context, snapshot) {
+                  final isLoopMode = snapshot.data ?? false;
+
+                  return IconButton(
+                    onPressed: () {
+                      audioPlayer.toggleLoopMode();
+                    },
+                    icon: Icon(
+                      Icons.loop,
+                      color: isLoopMode ? Theme.of(context).colorScheme.primary : null,
+                    ),
+                  );
+                }),
           ],
         ),
       ],
@@ -101,10 +122,10 @@ class SongPlayer extends StatelessWidget {
   }
 
   void _onPlayPausePressed() async {
-    if (_audioPlayer.isPlaying) {
-      _audioPlayer.pause();
+    if (audioPlayer.isPlaying) {
+      audioPlayer.pause();
     } else {
-      _audioPlayer.play();
+      audioPlayer.play();
     }
   }
 }

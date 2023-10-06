@@ -42,7 +42,7 @@ class _SongVersionViewState extends State<SongVersionView> {
 
   @override
   void dispose() {
-    _audioPlayer.stop();
+    _audioPlayer.dispose();
 
     super.dispose();
   }
@@ -91,6 +91,7 @@ class _SongVersionViewState extends State<SongVersionView> {
                           ),
                           child: _currentVersion!.file != null
                               ? SongPlayer(
+                                  audioPlayer: _audioPlayer,
                                   duration: _currentVersion!.file!.duration,
                                 )
                               : const Text('Nie można odtworzyć pliku'),
