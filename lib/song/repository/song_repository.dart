@@ -50,6 +50,10 @@ class SongRepository extends FirestoreRepository {
     });
   }
 
+  Future<void> changeTitle(String title) async {
+    await _songRef.update({'title': title.trim()});
+  }
+
   Future<SongVersionModel> fetchCurrentVersion() async {
     final songDoc = await _songRef.get();
     final data = songDoc.data() as Map<String, dynamic>;

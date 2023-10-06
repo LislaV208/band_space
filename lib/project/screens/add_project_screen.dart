@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
+
+import 'package:go_router/go_router.dart';
+
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/user_projects_repository.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -46,6 +48,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Nazwa',
                         ),
+                        onSubmitted: (_) => _onSubmit(),
                       ),
                     ],
                   ),
@@ -55,22 +58,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       width: double.infinity,
                       height: 40,
                       child: FilledButton(
-                        onPressed: _isAdding
-                            ? null
-                            : () async {
-                                final name = _titleController.text;
-                                if (name.isNotEmpty) {
-                                  setState(() {
-                                    _isAdding = true;
-                                  });
-
-                                  await sl<UserProjectsRepository>().addProject(name);
-
-                                  if (!mounted) return;
-
-                                  context.pop();
-                                }
-                              },
+                        onPressed: _isAdding ? null : _onSubmit,
                         child: _isAdding
                             ? const SizedBox(
                                 height: 20,
@@ -90,5 +78,20 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         ),
       ),
     );
+  }
+
+  void _onSubmit() async {
+    final name = _titleController.text;
+    if (name.isNotEmpty) {
+      setState(() {
+        _isAdding = true;
+      });
+
+      await sl<UserProjectsRepository>().addProject(name);
+
+      if (!mounted) return;
+
+      context.pop();
+    }
   }
 }

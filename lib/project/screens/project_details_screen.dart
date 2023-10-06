@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:band_space/project/screens/delete_project/delete_project_dialog.
 import 'package:band_space/project/screens/project_members/project_members_screen.dart';
 import 'package:band_space/song/screens/add_song/add_song_screen.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
+import 'package:band_space/widgets/app_editable_text.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key});
@@ -21,7 +23,12 @@ class ProjectDetailsScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(project?.name ?? ''),
+            title: AppEditableText(
+              project?.name ?? '',
+              onEdited: (value) {
+                context.read<ProjectRepository>().changeName(value);
+              },
+            ),
             actions: project != null
                 ? [
                     IconButton(

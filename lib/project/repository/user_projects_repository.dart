@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/project/model/firebase_project_model.dart';
 import 'package:band_space/project/model/project_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserProjectsRepository {
   final String userId;
@@ -21,6 +22,7 @@ class UserProjectsRepository {
           'owners',
           arrayContains: _userRef,
         )
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

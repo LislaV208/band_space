@@ -32,7 +32,7 @@ class ProjectRepository extends FirestoreRepository {
   DocumentReference get _projectRef => db.collection(FirestoreCollectionNames.projects).doc(projectId);
 
   Stream<ProjectModel> get() {
-    return db.collection(FirestoreCollectionNames.projects).doc(projectId).snapshots().map(
+    return _projectRef.snapshots().map(
       (doc) {
         if (!doc.exists) {
           throw ProjectNotFoundException();
@@ -41,6 +41,10 @@ class ProjectRepository extends FirestoreRepository {
         return FirebaseProjectModel.fromDocument(doc);
       },
     );
+  }
+
+  Future<void> changeName(String name) async {
+    await _projectRef.update({'name': name.trim()});
   }
 
   Future<void> delete() async {

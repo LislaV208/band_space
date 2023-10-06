@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:band_space/project/screens/add_project_screen.dart';
 import 'package:band_space/project/widgets/project_card.dart';
-import 'package:flutter/material.dart';
 
 class ProjectsScreen extends StatelessWidget {
   const ProjectsScreen({super.key});

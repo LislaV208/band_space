@@ -11,6 +11,7 @@ import 'package:band_space/comments/repository/song_comments_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
 import 'package:band_space/song/screens/views/song_view.dart';
+import 'package:band_space/widgets/app_editable_text.dart';
 
 class SongScreen extends StatelessWidget {
   const SongScreen({super.key});
@@ -28,7 +29,14 @@ class SongScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: song != null ? Text(song.title) : null,
+            title: song != null
+                ? AppEditableText(
+                    song.title,
+                    onEdited: (value) {
+                      context.read<SongRepository>().changeTitle(value);
+                    },
+                  )
+                : null,
             actions: song != null
                 ? [
                     IconButton(
