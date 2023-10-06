@@ -11,6 +11,7 @@ import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/utils/duration_extensions.dart';
+import 'package:band_space/widgets/app_popup_menu_button.dart';
 
 class MarkersListView extends StatelessWidget {
   const MarkersListView({
@@ -51,11 +52,12 @@ class MarkersListView extends StatelessWidget {
                   onTap: () => onSelected(item),
                   leading: Text(Duration(seconds: item.position).format()),
                   title: Text(item.name),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
+                  trailing: AppPopupMenuButton(
+                    itemBuilder: (context) => [
+                      AppPopupMenuButtonItem(
+                        iconData: Icons.message,
+                        text: 'Dyskusja',
+                        onSelected: () {
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
@@ -68,14 +70,14 @@ class MarkersListView extends StatelessWidget {
                             },
                           );
                         },
-                        icon: const Icon(Icons.message),
                       ),
-                      IconButton(
-                        onPressed: () {
+                      AppPopupMenuButtonItem(
+                        iconData: Icons.delete,
+                        text: 'Usuń',
+                        onSelected: () {
                           sl<MarkerRepository>(param1: item.id).delete();
                         },
-                        icon: const Icon(Icons.delete),
-                      ),
+                      )
                     ],
                   ),
                 );

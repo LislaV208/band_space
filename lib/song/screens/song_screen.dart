@@ -8,10 +8,14 @@ import 'package:provider/provider.dart';
 import 'package:band_space/comments/comments_screen.dart';
 import 'package:band_space/comments/repository/comments_repository.dart';
 import 'package:band_space/comments/repository/song_comments_repository.dart';
+import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
-import 'package:band_space/song/screens/views/song_view.dart';
+import 'package:band_space/song/screens/views/song_version_view.dart';
 import 'package:band_space/widgets/app_editable_text.dart';
+import 'package:band_space/widgets/app_popup_menu_button.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class SongScreen extends StatelessWidget {
   const SongScreen({super.key});
@@ -39,38 +43,44 @@ class SongScreen extends StatelessWidget {
                 : null,
             actions: song != null
                 ? [
-                    IconButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          useSafeArea: true,
-                          builder: (_) => Provider<CommentsRepository>.value(
-                            value: context.read<SongCommentsRepository>(),
-                            child: CommentsScreen(title: 'Utwór "${song.title}"'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.message),
-                    ),
-                    IconButton(
-                      onPressed: () async {
-                        final isDeleted = await showDialog(
+                    AppPopupMenuButton(
+                      itemBuilder: (context) => [
+                        AppPopupMenuButtonItem(
+                          iconData: Icons.message,
+                          text: 'Dyskusja',
+                          onSelected: () {
+                            showModalBottomSheet(
                               context: context,
-                              builder: (_) => Provider.value(
-                                value: context.read<SongRepository>(),
-                                child: const DeleteSongDialog(),
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              builder: (_) => Provider<CommentsRepository>.value(
+                                value: context.read<SongCommentsRepository>(),
+                                child: CommentsScreen(title: 'Utwór "${song.title}"'),
                               ),
-                            ) ??
-                            false;
+                            );
+                          },
+                        ),
+                        AppPopupMenuButtonItem(
+                          iconData: Icons.delete,
+                          text: 'Usuń',
+                          onSelected: () async {
+                            final isDeleted = await showDialog(
+                                  context: context,
+                                  builder: (_) => Provider.value(
+                                    value: context.read<SongRepository>(),
+                                    child: const DeleteSongDialog(),
+                                  ),
+                                ) ??
+                                false;
 
-                        if (context.mounted) {
-                          if (isDeleted) {
-                            context.pop();
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.delete),
+                            if (context.mounted) {
+                              if (isDeleted) {
+                                context.pop();
+                              }
+                            }
+                          },
+                        )
+                      ],
                     ),
                   ]
                 : null,
@@ -79,8 +89,11 @@ class SongScreen extends StatelessWidget {
               ? const Center(
                   child: CircularProgressIndicator(),
                 )
-              : SongView(
-                  versionId: song.current_version_id,
+              : AppStreamBuilder(
+                  stream: sl<VersionRepository>(param1: song.current_version_id).get(),
+                  builder: (context, currentVersion) {
+                    return SongVersionView(currentVersion: currentVersion);
+                  },
                 ),
         );
       },

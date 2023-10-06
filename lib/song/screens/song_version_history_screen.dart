@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -9,6 +7,7 @@ import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/utils/date_formats.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class SongVersionHistoryScreen extends StatefulWidget {
   const SongVersionHistoryScreen({
@@ -31,25 +30,9 @@ class _SongVersionHistoryScreenState extends State<SongVersionHistoryScreen> {
       appBar: AppBar(
         title: const Text('Historia wersji'),
       ),
-      body: StreamBuilder(
+      body: AppStreamBuilder(
         stream: context.read<SongRepository>().getVersionHistory(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.active) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (snapshot.hasError) {
-            log(snapshot.error.toString());
-
-            return const Center(
-              child: Text('Wystąpił błąd'),
-            );
-          }
-
-          final versions = snapshot.data!;
-
+        builder: (context, versions) {
           return ListView.separated(
             itemBuilder: (context, index) {
               final version = versions[index];

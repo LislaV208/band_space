@@ -51,17 +51,13 @@ class _ProjectCardState extends State<ProjectCard> {
             padding: const EdgeInsets.all(10.0),
             child: ConstrainedBox(
               constraints: BoxConstraints.tight(
-                const Size.square(140),
+                const Size.square(125),
               ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.folder,
-                      size: 70,
-                    ),
-                    const SizedBox(height: 6),
+                    const Icon(Icons.folder, size: 70),
                     AppEditableText(
                       widget.project.name,
                       onEdited: (value) {

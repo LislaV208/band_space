@@ -4,6 +4,7 @@ import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:band_space/project/screens/add_project_screen.dart';
 import 'package:band_space/project/widgets/project_card.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class ProjectsScreen extends StatelessWidget {
   const ProjectsScreen({super.key});
@@ -14,27 +15,9 @@ class ProjectsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Projekty'),
       ),
-      body: StreamBuilder(
+      body: AppStreamBuilder(
         stream: sl<UserProjectsRepository>().getProjects(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.active) {
-            return const Center(child: SizedBox());
-          }
-
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Wystąpił błąd'),
-            );
-          }
-
-          final projects = snapshot.data!;
-
-          if (projects.isEmpty) {
-            return const Center(
-              child: Text('Brak projektów'),
-            );
-          }
-
+        builder: (context, projects) {
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -46,6 +29,7 @@ class ProjectsScreen extends StatelessWidget {
             ),
           );
         },
+        noDataText: 'Brak projektów',
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

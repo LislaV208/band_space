@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:band_space/comments/repository/comments_repository.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class CommentsScreen extends StatefulWidget {
   const CommentsScreen({super.key, required this.title});
@@ -40,36 +41,21 @@ class _CommentsScreenState extends State<CommentsScreen> {
         child: Column(
           children: [
             Expanded(
-              child: StreamBuilder(
+              child: AppStreamBuilder(
                 stream: _commentsRepository.getComments(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.active) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    throw Exception(snapshot.error);
-                  }
-
-                  final comments = snapshot.data!;
-
-                  return comments.isEmpty
-                      ? const Center(
-                          child: Text('Brak komentarzy. Rozpocznij dyskusję!'),
+                builder: (context, comments) {
+                  return ListView(
+                    children: comments
+                        .map(
+                          (e) => ListTile(
+                            title: Text(e.created_by),
+                            subtitle: Text(e.content),
+                          ),
                         )
-                      : ListView(
-                          children: comments
-                              .map(
-                                (e) => ListTile(
-                                  title: Text(e.created_by),
-                                  subtitle: Text(e.content),
-                                ),
-                              )
-                              .toList(),
-                        );
+                        .toList(),
+                  );
                 },
+                noDataText: 'Brak komentarzy. Rozpocznij dyskusję!',
               ),
             ),
             Row(

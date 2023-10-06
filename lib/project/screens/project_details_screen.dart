@@ -10,6 +10,8 @@ import 'package:band_space/project/screens/project_members/project_members_scree
 import 'package:band_space/song/screens/add_song/add_song_screen.dart';
 import 'package:band_space/song/screens/add_song/add_song_state.dart';
 import 'package:band_space/widgets/app_editable_text.dart';
+import 'package:band_space/widgets/app_popup_menu_button.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key});
@@ -31,100 +33,79 @@ class ProjectDetailsScreen extends StatelessWidget {
             ),
             actions: project != null
                 ? [
-                    IconButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          useSafeArea: true,
-                          isScrollControlled: true,
-                          builder: (_) => Provider.value(
-                            value: context.read<ProjectRepository>(),
-                            child: const ProjectMembersScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.people,
-                      ),
-                      tooltip: 'Członkowie',
-                    ),
-                    IconButton(
-                      onPressed: () async {
-                        final isDeleted = await showDialog(
+                    AppPopupMenuButton(
+                      itemBuilder: (context) => [
+                        AppPopupMenuButtonItem(
+                          iconData: Icons.people,
+                          text: 'Członkowie',
+                          onSelected: () {
+                            showModalBottomSheet(
                               context: context,
+                              useSafeArea: true,
+                              isScrollControlled: true,
                               builder: (_) => Provider.value(
                                 value: context.read<ProjectRepository>(),
-                                child: const DeleteProjectDialog(),
+                                child: const ProjectMembersScreen(),
                               ),
-                            ) ??
-                            false;
+                            );
+                          },
+                        ),
+                        AppPopupMenuButtonItem(
+                          iconData: Icons.delete,
+                          text: 'Usuń',
+                          onSelected: () async {
+                            final isDeleted = await showDialog(
+                                  context: context,
+                                  builder: (_) => Provider.value(
+                                    value: context.read<ProjectRepository>(),
+                                    child: const DeleteProjectDialog(),
+                                  ),
+                                ) ??
+                                false;
 
-                        if (context.mounted) {
-                          if (isDeleted) {
-                            context.goNamed('projects');
-                          }
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.delete,
-                      ),
-                      tooltip: 'Usuń projekt',
+                            if (context.mounted) {
+                              if (isDeleted) {
+                                context.goNamed('projects');
+                              }
+                            }
+                          },
+                        )
+                      ],
                     ),
                   ]
                 : null,
           ),
-          body: project == null
-              ? const SizedBox()
-              : StreamBuilder(
-                  stream: context.read<ProjectRepository>().getSongs(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.active) {
-                      return const Center(
-                        child: SizedBox(),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return const Center(
-                        child: Text('Wystąpił błąd'),
-                      );
-                    }
-
-                    final songs = snapshot.data!;
-
-                    if (songs.isEmpty) {
-                      return const Center(
-                        child: Text('Brak utworów'),
-                      );
-                    }
-
-                    return Column(
-                      children: songs.map(
-                        (song) {
-                          return ListTile(
-                            onTap: () async {
-                              context.goNamed(
-                                'song',
-                                pathParameters: {
-                                  'project_id': context.read<ProjectRepository>().projectId,
-                                  'song_id': song.id,
-                                },
-                              );
-                            },
-                            leading: const Icon(Icons.music_note),
-                            title: Text(
-                              song.title,
-                            ),
-                            subtitle: Text(
-                              song.created_at != null ? DateFormat('dd-MM-yyyy HH:mm').format(song.created_at!) : '-',
-                            ),
-                            trailing: const Icon(Icons.arrow_forward_ios),
-                          );
-                        },
-                      ).toList(),
+          body: AppStreamBuilder(
+            stream: context.read<ProjectRepository>().getSongs(),
+            builder: (context, songs) {
+              return Column(
+                children: songs.map(
+                  (song) {
+                    return ListTile(
+                      onTap: () async {
+                        context.goNamed(
+                          'song',
+                          pathParameters: {
+                            'project_id': context.read<ProjectRepository>().projectId,
+                            'song_id': song.id,
+                          },
+                        );
+                      },
+                      leading: const Icon(Icons.music_note),
+                      title: Text(
+                        song.title,
+                      ),
+                      subtitle: Text(
+                        song.created_at != null ? DateFormat('dd-MM-yyyy HH:mm').format(song.created_at!) : '-',
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios),
                     );
                   },
-                ),
+                ).toList(),
+              );
+            },
+            noDataText: 'Brak utworów',
+          ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
               showModalBottomSheet(

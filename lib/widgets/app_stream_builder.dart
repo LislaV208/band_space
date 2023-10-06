@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-class AppFutureBuilder<T> extends StatelessWidget {
-  const AppFutureBuilder({
+class AppStreamBuilder<T> extends StatelessWidget {
+  const AppStreamBuilder({
     super.key,
-    required this.future,
+    required this.stream,
     required this.builder,
     this.loadingWidget,
     this.errorWidget,
     this.noDataText,
   });
 
-  final Future<T> future;
+  final Stream<T> stream;
   final Widget Function(BuildContext context, T data) builder;
   final Widget? loadingWidget;
   final Widget? errorWidget;
@@ -18,10 +18,10 @@ class AppFutureBuilder<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<T>(
-      future: future,
+    return StreamBuilder<T>(
+      stream: stream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+        if (snapshot.connectionState != ConnectionState.active) {
           return Center(
             child: loadingWidget ?? const CircularProgressIndicator(),
           );

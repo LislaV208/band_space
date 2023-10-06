@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +7,7 @@ import 'package:band_space/project/exceptions/project_exceptions.dart';
 import 'package:band_space/project/model/project_model.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/utils/context_extensions.dart';
+import 'package:band_space/widgets/app_future_builder.dart';
 
 class ConfirmInvitationScreen extends StatefulWidget {
   const ConfirmInvitationScreen({super.key});
@@ -30,19 +32,10 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: FutureBuilder(
+        child: AppFutureBuilder(
           future: _projectFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done || _loading) {
-              return const CircularProgressIndicator();
-            }
-
-            final project = snapshot.data;
-
-            if (project == null) {
-              return const Text('Nieprawidłowe zaprosznie');
-            }
-
+          builder: (context, project) {
+            if (_loading) return const CircularProgressIndicator();
             return Card(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -104,6 +97,7 @@ class _ConfirmInvitationScreenState extends State<ConfirmInvitationScreen> {
               ),
             );
           },
+          noDataText: 'Nieprawidłowe zaprosznie',
         ),
       ),
     );
