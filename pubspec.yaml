@@ -25,6 +25,7 @@ dependencies:
   just_audio: ^0.9.35
   collection: ^1.17.2
   flutter_native_splash: ^2.3.3
+  duration: ^3.0.13
 
 dev_dependencies:
   flutter_test:

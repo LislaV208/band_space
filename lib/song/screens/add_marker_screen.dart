@@ -11,9 +11,11 @@ class AddMarkerScreen extends StatefulWidget {
   const AddMarkerScreen({
     super.key,
     required this.version,
+    required this.currentPosition,
   });
 
   final SongVersionModel version;
+  final int currentPosition;
 
   @override
   State<AddMarkerScreen> createState() => _AddMarkerScreenState();
@@ -23,7 +25,8 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
-  final _positionController = TextEditingController();
+  late final _positionController =
+      TextEditingController(text: widget.currentPosition > 0 ? widget.currentPosition.toString() : null);
 
   @override
   void dispose() {
@@ -46,6 +49,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
           child: Column(
             children: [
               TextFormField(
+                autofocus: true,
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nazwa',

@@ -10,6 +10,7 @@ import 'package:band_space/markers/marker_repository.dart';
 import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/version_repository.dart';
+import 'package:band_space/utils/duration_extensions.dart';
 
 class MarkersListView extends StatelessWidget {
   const MarkersListView({
@@ -48,7 +49,7 @@ class MarkersListView extends StatelessWidget {
               children: markers.map((item) {
                 return ListTile(
                   onTap: () => onSelected(item),
-                  leading: Text(item.position.toString()),
+                  leading: Text(Duration(seconds: item.position).format()),
                   title: Text(item.name),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

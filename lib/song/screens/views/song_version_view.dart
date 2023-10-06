@@ -101,6 +101,7 @@ class _SongVersionViewState extends State<SongVersionView> {
                               context: context,
                               builder: (_) => AddMarkerScreen(
                                 version: _currentVersion!,
+                                currentPosition: _audioPlayer.currentPosition.inSeconds,
                               ),
                             );
                           },
@@ -117,11 +118,11 @@ class _SongVersionViewState extends State<SongVersionView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Visibility.maintain(
+              const Visibility.maintain(
                 visible: false,
                 child: IconButton.filledTonal(
-                  onPressed: () {},
-                  icon: const Icon(Icons.history),
+                  onPressed: null,
+                  icon: Icon(Icons.history),
                 ),
               ),
               Flexible(

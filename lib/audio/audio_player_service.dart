@@ -11,6 +11,8 @@ class AudioPlayerService {
   Stream<bool> get isPlayingStream => _player.playingStream;
   Stream<Duration> get positionStream => _player.positionStream;
 
+  Duration get currentPosition => _player.position;
+
   Future<Duration?> setUrl(String url) async {
     return _player.setUrl(url, preload: false);
   }
