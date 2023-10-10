@@ -10,6 +10,8 @@ import 'package:band_space/comments/repository/marker_comments_repository.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/markers/marker_repository.dart';
 import 'package:band_space/song/model/marker.dart';
+import 'package:band_space/song/model/marker_dto.dart';
+import 'package:band_space/song/screens/add_edit_marker_screen.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 import 'package:band_space/widgets/app_popup_menu_button.dart';
 
@@ -18,10 +20,14 @@ class MarkersListView extends StatelessWidget {
     super.key,
     required this.markers,
     required this.audioPlayer,
+    required this.maxMarkerPosition,
+    required this.onMarkerEdit,
   });
 
   final List<Marker> markers;
   final AudioPlayerService audioPlayer;
+  final int maxMarkerPosition;
+  final Future<void> Function(Marker markerToEdit, MarkerDTO newMarkerData) onMarkerEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -78,23 +84,40 @@ class MarkersListView extends StatelessWidget {
                               Icons.loop,
                               color: isLooped ? Theme.of(context).colorScheme.primary : null,
                             ),
+                            tooltip: isLooped ? 'Wyłącz zapętlenie' : 'Włącz zapętlenie',
                           ),
+                        IconButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              builder: (context) {
+                                return Provider<CommentsRepository>(
+                                  create: (context) => sl<MarkerCommentsRepository>(param1: item.id),
+                                  child: CommentsScreen(title: 'Znacznik "${item.name}"'),
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Icons.message),
+                          tooltip: 'Dyskusja',
+                        ),
                         AppPopupMenuButton(
                           itemBuilder: (context) => [
                             AppPopupMenuButtonItem(
-                              iconData: Icons.message,
-                              text: 'Dyskusja',
+                              iconData: Icons.edit,
+                              text: 'Edytuj',
                               onSelected: () {
                                 showModalBottomSheet(
                                   context: context,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  builder: (context) {
-                                    return Provider<CommentsRepository>(
-                                      create: (context) => sl<MarkerCommentsRepository>(param1: item.id),
-                                      child: CommentsScreen(title: 'Znacznik "${item.name}"'),
-                                    );
-                                  },
+                                  builder: (_) => AddEditMarkerScreen(
+                                    markers: markers,
+                                    maxPositionValue: maxMarkerPosition,
+                                    startPosition: item.start_position,
+                                    markerToEdit: item,
+                                    onAddEditMarker: (markerData) async => await onMarkerEdit(item, markerData),
+                                  ),
                                 );
                               },
                             ),

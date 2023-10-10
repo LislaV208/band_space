@@ -1,13 +1,17 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/audio/loop_sections_manager.dart';
 import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/markers/marker_repository.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
-import 'package:band_space/song/screens/add_marker_screen.dart';
+import 'package:band_space/song/screens/add_edit_marker_screen.dart';
 import 'package:band_space/song/screens/new_song_version_screen.dart';
 import 'package:band_space/song/screens/song_version_history_screen.dart';
 import 'package:band_space/song/screens/views/markers_list_view.dart';
@@ -74,53 +78,76 @@ class _SongVersionViewState extends State<SongVersionView> {
             ),
           Expanded(
             child: _currentVersion != null
-                ? Align(
-                    child: SizedBox(
-                      width: 800,
-                      child: AppStreamBuilder(
-                        stream: sl<VersionRepository>(param1: _currentVersion!.id).getMarkers(),
-                        showEmptyDataText: false,
-                        builder: (context, markers) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: MarkersListView(
-                                  audioPlayer: _audioPlayer,
-                                  markers: markers,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 32,
-                                ),
-                                child: _currentVersion!.file != null
-                                    ? SongPlayer(
-                                        audioPlayer: _audioPlayer,
-                                        duration: _currentVersion!.file!.duration,
-                                      )
-                                    : const Text('Nie można odtworzyć pliku'),
-                              ),
-                              AppButtonSecondary(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (_) => AddMarkerScreen(
+                ? _currentVersion!.file != null
+                    ? Align(
+                        child: SizedBox(
+                          width: 800,
+                          child: AppStreamBuilder(
+                            stream: sl<VersionRepository>(param1: _currentVersion!.id).getMarkers(),
+                            showEmptyDataText: false,
+                            builder: (context, markers) {
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: MarkersListView(
+                                      audioPlayer: _audioPlayer,
                                       markers: markers,
-                                      version: _currentVersion!,
-                                      currentPosition: _audioPlayer.currentPosition.inSeconds,
+                                      maxMarkerPosition: _currentVersion!.file!.duration,
+                                      onMarkerEdit: (markerToEdit, newMarkerData) async {
+                                        try {
+                                          await sl<MarkerRepository>(param1: markerToEdit.id).edit(newMarkerData);
+
+                                          if (markerToEdit.end_position != null && newMarkerData.endPosition == null) {
+                                            _audioPlayer.removeLoopSection(
+                                              LoopSection(
+                                                start: markerToEdit.start_position,
+                                                end: markerToEdit.end_position!,
+                                              ),
+                                            );
+                                          }
+                                        } on Exception catch (e) {
+                                          // TODO: handle error
+                                          log(e.toString());
+                                        }
+                                      },
                                     ),
-                                  );
-                                },
-                                text: 'Dodaj znacznik',
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  )
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 32,
+                                    ),
+                                    child: SongPlayer(
+                                      audioPlayer: _audioPlayer,
+                                      duration: _currentVersion!.file!.duration,
+                                    ),
+                                  ),
+                                  AppButtonSecondary(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        builder: (_) => AddEditMarkerScreen(
+                                          markers: markers,
+                                          maxPositionValue: _currentVersion!.file!.duration,
+                                          startPosition: _audioPlayer.currentPosition.inSeconds,
+                                          onAddEditMarker: (marker) async =>
+                                              await sl<VersionRepository>(param1: _currentVersion!.id)
+                                                  .addMarker(marker),
+                                        ),
+                                      );
+                                    },
+                                    text: 'Dodaj znacznik',
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      )
+                    : const Center(
+                        child: Text('Nie można odtworzyć pliku'),
+                      )
                 : const SizedBox(),
           ),
           Padding(

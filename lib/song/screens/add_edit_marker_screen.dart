@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/marker_collision_validator.dart';
 import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/marker_dto.dart';
-import 'package:band_space/song/model/song_version_model.dart';
-import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 
-class AddMarkerScreen extends StatefulWidget {
-  const AddMarkerScreen({
+class AddEditMarkerScreen extends StatefulWidget {
+  const AddEditMarkerScreen({
     super.key,
     required this.markers,
-    required this.version,
-    required this.currentPosition,
+    required this.maxPositionValue,
+    this.startPosition,
+    this.markerToEdit,
+    required this.onAddEditMarker,
   });
 
   final List<Marker> markers;
-  final SongVersionModel version;
-  final int currentPosition;
+  final int maxPositionValue;
+  final int? startPosition;
+  final Marker? markerToEdit;
+
+  final Future<void> Function(MarkerDTO marker) onAddEditMarker;
 
   @override
-  State<AddMarkerScreen> createState() => _AddMarkerScreenState();
+  State<AddEditMarkerScreen> createState() => _AddEditMarkerScreenState();
 }
 
-class _AddMarkerScreenState extends State<AddMarkerScreen> {
+class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
-  late final _startPositionController =
-      TextEditingController(text: widget.currentPosition > 0 ? widget.currentPosition.toString() : null);
-  final _endPositionController = TextEditingController();
+  late final _nameController = TextEditingController(
+    text: widget.markerToEdit?.name,
+  );
+  late final _startPositionController = TextEditingController(
+    text: widget.startPosition?.toString(),
+  );
+  late final _endPositionController = TextEditingController(
+    text: widget.markerToEdit?.end_position?.toString(),
+  );
 
   var _validationMessage = '';
 
@@ -49,7 +56,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dodaj znacznik'),
+        title: Text(widget.markerToEdit == null ? 'Dodaj znacznik' : 'Edytuj znacznik'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -90,9 +97,8 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
                         final intValue = int.tryParse(value);
                         if (intValue == null) return 'Nieprawidłowa wartość (tylko liczby)';
 
-                        final songDuration = widget.version.file?.duration;
-                        if (songDuration != null) {
-                          if (intValue > songDuration) return 'Maksymalna wartość - $songDuration';
+                        if (intValue > widget.maxPositionValue) {
+                          return 'Maksymalna wartość - ${widget.maxPositionValue}';
                         }
 
                         return null;
@@ -118,11 +124,8 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
                         }
 
                         if (intValue != null) {
-                          final songDuration = widget.version.file?.duration;
-                          if (songDuration != null) {
-                            if (intValue > songDuration) {
-                              return 'Maksymalna wartość - $songDuration';
-                            }
+                          if (intValue > widget.maxPositionValue) {
+                            return 'Maksymalna wartość - ${widget.maxPositionValue}';
                           }
                         }
 
@@ -144,7 +147,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
               AppButtonPrimary(
                 onPressed: () async {
                   if (_validate()) {
-                    await sl<VersionRepository>(param1: widget.version.id).addMarker(
+                    await widget.onAddEditMarker(
                       MarkerDTO(
                         name: _nameController.text,
                         startPosition: int.parse(_startPositionController.text),
@@ -157,33 +160,13 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
                     Navigator.of(context).pop();
                   }
                 },
-                text: 'Dodaj',
+                text: widget.markerToEdit == null ? 'Dodaj' : 'Zapisz',
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _buildCollidingMarkersMessage(List<Marker> markers) {
-    final buffer = StringBuffer('Znacznik koliduje z ');
-    buffer.write(markers.length > 1 ? 'innymi znacznikami: ' : 'innym znaniczkiem: ');
-
-    for (final marker in markers) {
-      buffer.write('${marker.name} (');
-      if (marker.end_position == null) {
-        buffer.write(Duration(seconds: marker.start_position).format());
-      } else {
-        buffer.write(Duration(seconds: marker.start_position).format());
-        buffer.write(' - ');
-        buffer.write(Duration(seconds: marker.end_position!).format());
-      }
-      buffer.write('), ');
-    }
-
-    final bufferString = buffer.toString();
-    return bufferString.substring(0, bufferString.length - 2);
   }
 
   bool _validate() {
@@ -209,7 +192,7 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
       }
     }
 
-    if (startPosition == 0 && endPosition == widget.version.file?.duration) {
+    if (startPosition == 0 && endPosition == widget.maxPositionValue) {
       setState(() {
         _validationMessage = 'Znacznik obejmuje cały utwór';
       });
@@ -223,6 +206,14 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
       end: endPosition,
     ).validate();
 
+    if (widget.markerToEdit != null) {
+      collidingMarkers.removeWhere(
+        (element) =>
+            element.start_position == widget.markerToEdit!.start_position &&
+            element.end_position == widget.markerToEdit!.end_position,
+      );
+    }
+
     if (collidingMarkers.isNotEmpty) {
       setState(() {
         _validationMessage = _buildCollidingMarkersMessage(collidingMarkers);
@@ -232,5 +223,25 @@ class _AddMarkerScreenState extends State<AddMarkerScreen> {
     }
 
     return true;
+  }
+
+  String _buildCollidingMarkersMessage(List<Marker> markers) {
+    final buffer = StringBuffer('Znacznik koliduje z ');
+    buffer.write(markers.length > 1 ? 'innymi znacznikami: ' : 'innym znaniczkiem: ');
+
+    for (final marker in markers) {
+      buffer.write('${marker.name} (');
+      if (marker.end_position == null) {
+        buffer.write(Duration(seconds: marker.start_position).format());
+      } else {
+        buffer.write(Duration(seconds: marker.start_position).format());
+        buffer.write(' - ');
+        buffer.write(Duration(seconds: marker.end_position!).format());
+      }
+      buffer.write('), ');
+    }
+
+    final bufferString = buffer.toString();
+    return bufferString.substring(0, bufferString.length - 2);
   }
 }
