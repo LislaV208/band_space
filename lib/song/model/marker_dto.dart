@@ -1,9 +1,11 @@
 class MarkerDTO {
   final String name;
-  final int position;
+  final int startPosition;
+  final int? endPosition;
 
   const MarkerDTO({
     required this.name,
-    required this.position,
+    required this.startPosition,
+    required this.endPosition,
   });
 }

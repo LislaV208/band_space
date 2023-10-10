@@ -67,24 +67,27 @@ class SongPlayer extends StatelessWidget {
                 Icons.fast_rewind,
               ),
               iconSize: 40,
+              tooltip: 'Przewiń do tyłu',
             ),
             StreamBuilder(
-                stream: audioPlayer.isPlayingStream,
-                builder: (context, snapshot) {
-                  final isPlaying = snapshot.data ?? false;
+              stream: audioPlayer.isPlayingStream,
+              builder: (context, snapshot) {
+                final isPlaying = snapshot.data ?? false;
 
-                  return IconButton(
-                    icon: Icon(
-                      isPlaying ? Icons.pause : Icons.play_arrow,
-                    ),
-                    color: Theme.of(context).primaryColor,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                    iconSize: 40,
-                    onPressed: _onPlayPausePressed,
-                  );
-                }),
+                return IconButton(
+                  icon: Icon(
+                    isPlaying ? Icons.pause : Icons.play_arrow,
+                  ),
+                  color: Theme.of(context).primaryColor,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                  iconSize: 40,
+                  onPressed: _onPlayPausePressed,
+                  tooltip: isPlaying ? 'Pauza' : 'Odtwórz',
+                );
+              },
+            ),
             IconButton(
               onPressed: () {
                 audioPlayer.forward();
@@ -93,22 +96,25 @@ class SongPlayer extends StatelessWidget {
                 Icons.fast_forward,
               ),
               iconSize: 40,
+              tooltip: 'Przewiń do przodu',
             ),
             StreamBuilder(
-                stream: audioPlayer.loopModeStream,
-                builder: (context, snapshot) {
-                  final isLoopMode = snapshot.data ?? false;
+              stream: audioPlayer.loopModeStream,
+              builder: (context, snapshot) {
+                final isLoopMode = snapshot.data ?? false;
 
-                  return IconButton(
-                    onPressed: () {
-                      audioPlayer.toggleLoopMode();
-                    },
-                    icon: Icon(
-                      Icons.loop,
-                      color: isLoopMode ? Theme.of(context).colorScheme.primary : null,
-                    ),
-                  );
-                }),
+                return IconButton(
+                  onPressed: () {
+                    audioPlayer.toggleLoopMode();
+                  },
+                  icon: Icon(
+                    Icons.loop,
+                    color: isLoopMode ? Theme.of(context).colorScheme.primary : null,
+                  ),
+                  tooltip: isLoopMode ? 'Wyłącz zapętlenie' : 'Włącz zapętlenie',
+                );
+              },
+            ),
           ],
         ),
       ],
@@ -118,6 +124,7 @@ class SongPlayer extends StatelessWidget {
   String _formatDuration(int durationInSeconds) {
     final minutes = (durationInSeconds / 60).floor();
     final seconds = (durationInSeconds % 60).floor();
+
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 

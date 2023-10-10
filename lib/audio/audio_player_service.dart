@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
+
+import 'package:band_space/audio/loop_sections_manager.dart';
 
 class AudioPlayerService {
   final _player = AudioPlayer();
+  final _loopSectionsManager = LoopSectionsManager();
+
+  StreamSubscription<Duration>? _positionStreamSubscription;
 
   AudioPlayerService() {
     _player.playerStateStream.listen(_handlePlayerStateChange);
@@ -13,12 +20,44 @@ class AudioPlayerService {
   Duration get currentPosition => _player.position;
   Stream<Duration> get positionStream => _player.positionStream;
 
+  Stream<bool> get loopModeStream => _player.loopModeStream.map((event) => event != LoopMode.off);
+
+  Stream<List<LoopSection>> get loopSectionsStream => _loopSectionsManager.loopSectionsStream;
+
   Future<void> toggleLoopMode() async {
-    final loopMode = _player.loopMode;
-    await _player.setLoopMode(loopMode == LoopMode.off ? LoopMode.one : LoopMode.off);
+    await _player.setLoopMode(
+      _player.loopMode == LoopMode.off ? LoopMode.one : LoopMode.off,
+    );
   }
 
-  Stream<bool> get loopModeStream => _player.loopModeStream.map((event) => event != LoopMode.off);
+  Future<void> addLoopSection(LoopSection loopSection) async {
+    _loopSectionsManager.addSection(loopSection);
+
+    // listen to position stream only when first loop section is added
+    if (_loopSectionsManager.sections.length == 1) {
+      _positionStreamSubscription = positionStream.listen((duration) {
+        final currentPosition = duration.inSeconds;
+
+        for (final section in _loopSectionsManager.joinedSections) {
+          // + 1 because we want last section second to be played too
+          if (currentPosition == section.end + 1) {
+            seek(Duration(seconds: section.start));
+
+            // no need to check other sections
+            break;
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> removeLoopSection(LoopSection loopSection) async {
+    _loopSectionsManager.removeSection(loopSection);
+
+    if (_loopSectionsManager.sections.isEmpty) {
+      await _positionStreamSubscription?.cancel();
+    }
+  }
 
   Future<Duration?> setUrl(String url) async {
     return _player.setUrl(url, preload: false);
@@ -51,6 +90,9 @@ class AudioPlayerService {
   }
 
   Future<void> dispose() async {
+    await _loopSectionsManager.dispose();
+    await _positionStreamSubscription?.cancel();
+
     await _player.dispose();
   }
 

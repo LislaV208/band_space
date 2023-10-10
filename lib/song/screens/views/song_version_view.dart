@@ -6,6 +6,7 @@ import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
+import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/song/screens/add_marker_screen.dart';
 import 'package:band_space/song/screens/new_song_version_screen.dart';
 import 'package:band_space/song/screens/song_version_history_screen.dart';
@@ -14,6 +15,7 @@ import 'package:band_space/song/widgets/song_player.dart';
 import 'package:band_space/utils/date_formats.dart';
 import 'package:band_space/widgets/app_button_primary.dart';
 import 'package:band_space/widgets/app_button_secondary.dart';
+import 'package:band_space/widgets/app_stream_builder.dart';
 
 class SongVersionView extends StatefulWidget {
   const SongVersionView({
@@ -75,42 +77,47 @@ class _SongVersionViewState extends State<SongVersionView> {
                 ? Align(
                     child: SizedBox(
                       width: 800,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: MarkersListView(
-                              version: _currentVersion!,
-                              onSelected: (marker) {
-                                _audioPlayer.seek(Duration(seconds: marker.position));
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 32,
-                            ),
-                            child: _currentVersion!.file != null
-                                ? SongPlayer(
-                                    audioPlayer: _audioPlayer,
-                                    duration: _currentVersion!.file!.duration,
-                                  )
-                                : const Text('Nie można odtworzyć pliku'),
-                          ),
-                          AppButtonSecondary(
-                            onTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (_) => AddMarkerScreen(
-                                  version: _currentVersion!,
-                                  currentPosition: _audioPlayer.currentPosition.inSeconds,
+                      child: AppStreamBuilder(
+                        stream: sl<VersionRepository>(param1: _currentVersion!.id).getMarkers(),
+                        showEmptyDataText: false,
+                        builder: (context, markers) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: MarkersListView(
+                                  audioPlayer: _audioPlayer,
+                                  markers: markers,
                                 ),
-                              );
-                            },
-                            text: 'Dodaj znacznik',
-                          ),
-                        ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 32,
+                                ),
+                                child: _currentVersion!.file != null
+                                    ? SongPlayer(
+                                        audioPlayer: _audioPlayer,
+                                        duration: _currentVersion!.file!.duration,
+                                      )
+                                    : const Text('Nie można odtworzyć pliku'),
+                              ),
+                              AppButtonSecondary(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (_) => AddMarkerScreen(
+                                      markers: markers,
+                                      version: _currentVersion!,
+                                      currentPosition: _audioPlayer.currentPosition.inSeconds,
+                                    ),
+                                  );
+                                },
+                                text: 'Dodaj znacznik',
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   )

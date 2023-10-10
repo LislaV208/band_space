@@ -43,99 +43,97 @@ class _AppShellState extends State<AppShell> {
 
     final useBottomNavigation = context.useBottomNavigation;
 
-    return SelectionArea(
-      child: Scaffold(
-        bottomNavigationBar: useBottomNavigation
-            ? NavigationBar(
-                destinations: destinations
-                    .map(
-                      (item) => NavigationDestination(
-                        icon: item.icon,
-                        label: item.label,
-                      ),
-                    )
-                    .toList(),
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) => _onItemTapped(index, context),
-              )
-            : null,
-        body: Row(
-          children: [
-            if (!useBottomNavigation)
-              NavigationRail(
-                leading: Padding(
-                  padding: const EdgeInsets.all(32.0),
+    return Scaffold(
+      bottomNavigationBar: useBottomNavigation
+          ? NavigationBar(
+              destinations: destinations
+                  .map(
+                    (item) => NavigationDestination(
+                      icon: item.icon,
+                      label: item.label,
+                    ),
+                  )
+                  .toList(),
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (index) => _onItemTapped(index, context),
+            )
+          : null,
+      body: Row(
+        children: [
+          if (!useBottomNavigation)
+            NavigationRail(
+              leading: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'BandSpace',
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      user?.email ?? '',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8.0),
+                    SelectableText(
+                      user?.id ?? '',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              trailing: Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        'BandSpace',
-                        style: Theme.of(context).textTheme.displaySmall,
+                      FilledButton.tonalIcon(
+                        onPressed: () async {
+                          await sl.get<AuthService>().signOut();
+
+                          if (context.mounted) {
+                            context.goNamed('login');
+                          }
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Wyloguj'),
                       ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        user?.email ?? '',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 8.0),
-                      SelectableText(
-                        user?.id ?? '',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      const SizedBox(height: 24),
+                      FutureBuilder(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) return const SizedBox();
+
+                            return Text(
+                              'v${snapshot.data!.version}',
+                              style: const TextStyle(color: Colors.grey),
+                            );
+                          }),
                     ],
                   ),
                 ),
-                trailing: Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        FilledButton.tonalIcon(
-                          onPressed: () async {
-                            await sl.get<AuthService>().signOut();
-
-                            if (context.mounted) {
-                              context.goNamed('login');
-                            }
-                          },
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Wyloguj'),
-                        ),
-                        const SizedBox(height: 24),
-                        FutureBuilder(
-                            future: PackageInfo.fromPlatform(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) return const SizedBox();
-
-                              return Text(
-                                'v${snapshot.data!.version}',
-                                style: const TextStyle(color: Colors.grey),
-                              );
-                            }),
-                      ],
+              ),
+              destinations: destinations
+                  .map(
+                    (item) => NavigationRailDestination(
+                      icon: item.icon,
+                      label: Text(item.label),
                     ),
-                  ),
-                ),
-                destinations: destinations
-                    .map(
-                      (item) => NavigationRailDestination(
-                        icon: item.icon,
-                        label: Text(item.label),
-                      ),
-                    )
-                    .toList(),
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) => _onItemTapped(index, context),
-                extended: true,
-                backgroundColor: Colors.blueGrey[900],
-              ),
-            Expanded(
-              child: Scaffold(
-                body: widget.child,
-              ),
+                  )
+                  .toList(),
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (index) => _onItemTapped(index, context),
+              extended: true,
+              backgroundColor: Colors.blueGrey[900],
             ),
-          ],
-        ),
+          Expanded(
+            child: Scaffold(
+              body: widget.child,
+            ),
+          ),
+        ],
       ),
     );
   }

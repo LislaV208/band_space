@@ -43,7 +43,8 @@ class VersionRepository extends FirestoreRepository {
     await newMarkerDoc.set({
       'version': _versionRef,
       'name': markerData.name,
-      'position': markerData.position,
+      'start_position': markerData.startPosition,
+      'end_position': markerData.endPosition,
     });
   }
 
@@ -54,7 +55,7 @@ class VersionRepository extends FirestoreRepository {
           'version',
           isEqualTo: _versionRef,
         )
-        .orderBy('position')
+        .orderBy('start_position')
         .snapshots();
 
     return markersQueryStream.map((query) {
@@ -63,7 +64,8 @@ class VersionRepository extends FirestoreRepository {
         return Marker(
           id: doc.id,
           name: data['name'],
-          position: data['position'],
+          start_position: data['start_position'],
+          end_position: data['end_position'],
         );
       }).toList();
     });

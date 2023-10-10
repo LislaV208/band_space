@@ -5,6 +5,7 @@ class AppStreamBuilder<T> extends StatelessWidget {
     super.key,
     required this.stream,
     required this.builder,
+    this.showEmptyDataText = true,
     this.loadingWidget,
     this.errorWidget,
     this.noDataText,
@@ -12,6 +13,7 @@ class AppStreamBuilder<T> extends StatelessWidget {
 
   final Stream<T> stream;
   final Widget Function(BuildContext context, T data) builder;
+  final bool showEmptyDataText;
   final Widget? loadingWidget;
   final Widget? errorWidget;
   final String? noDataText;
@@ -36,7 +38,7 @@ class AppStreamBuilder<T> extends StatelessWidget {
         final data = snapshot.data as T;
 
         if (data is List) {
-          if (data.isEmpty) {
+          if (data.isEmpty && showEmptyDataText) {
             return Center(
               child: Text(
                 noDataText ?? 'Brak wyników',
