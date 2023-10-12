@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/song/widgets/song_timeline.dart';
 
 class SongPlayer extends StatelessWidget {
   const SongPlayer({
@@ -18,37 +19,19 @@ class SongPlayer extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         StreamBuilder(
-            stream: audioPlayer.positionStream,
-            builder: (context, snapshot) {
-              final currentPosition = (snapshot.data ?? Duration.zero).inSeconds;
+          stream: audioPlayer.positionStream,
+          builder: (context, snapshot) {
+            final currentPosition = (snapshot.data ?? Duration.zero);
 
-              return Column(
-                children: [
-                  Slider(
-                    value: currentPosition.toDouble(),
-                    min: 0,
-                    max: duration.toDouble(),
-                    onChanged: (value) {
-                      audioPlayer.seek(Duration(seconds: value.toInt()));
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 22.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _formatDuration(currentPosition),
-                        ),
-                        Text(
-                          _formatDuration(duration),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              );
-            }),
+            return SongTimeline(
+              currentPosition: currentPosition,
+              duration: Duration(seconds: duration),
+              onPositionChanged: (position) {
+                audioPlayer.seek(position);
+              },
+            );
+          },
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -119,13 +102,6 @@ class SongPlayer extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDuration(int durationInSeconds) {
-    final minutes = (durationInSeconds / 60).floor();
-    final seconds = (durationInSeconds % 60).floor();
-
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   void _onPlayPausePressed() async {
