@@ -42,18 +42,21 @@ class TimelineState extends Equatable with ChangeNotifier {
   double width;
   final double height;
   final Stream<Duration> songPositionStream;
+  final Stream<Duration> songBufferStream;
   final Duration songDuration;
   final Stream<List<Marker>> markersStream;
   final void Function(Duration position) onPositionChanged;
   final void Function(Marker marker) onMarkerTap;
 
   StreamSubscription<double>? _positionStreamSubscription;
+  StreamSubscription<double>? _bufferStreamSubscription;
   StreamSubscription<List<Marker>>? _markersStreamSubscription;
 
   TimelineState({
     required this.width,
     required this.height,
     required this.songPositionStream,
+    required this.songBufferStream,
     required this.songDuration,
     required this.markersStream,
     required this.onPositionChanged,
@@ -67,6 +70,11 @@ class TimelineState extends Equatable with ChangeNotifier {
 
         notifyListeners();
       }
+    });
+
+    _bufferStreamSubscription =
+        songBufferStream.map((position) => position.inMilliseconds / songDuration.inMilliseconds).listen((position) {
+      bufferPosition = position;
     });
 
     _markersStreamSubscription = markersStream.listen((markers) {
@@ -90,6 +98,7 @@ class TimelineState extends Equatable with ChangeNotifier {
   void dispose() {
     print('timeline state dispose');
     _positionStreamSubscription?.cancel();
+    _bufferStreamSubscription?.cancel();
     _markersStreamSubscription?.cancel();
 
     super.dispose();
@@ -98,12 +107,14 @@ class TimelineState extends Equatable with ChangeNotifier {
   // logical position - from 0.0 to 1.0
   // where 0.0 is start and 1.0 is end
   var currentPosition = 0.0;
+  var bufferPosition = 0.0;
   var showHoverCursor = false;
   var isHandleDragging = false;
   var _originalMarkers = <Marker>[];
   var markers = <TimelineMarker>[];
 
   double get currentPositionInPixels => currentPosition * width;
+  double get bufferPositionInPixels => bufferPosition * width;
   Duration get currentPositionInDuration => Duration(
         milliseconds: (currentPosition * songDuration.inMilliseconds).round(),
       );

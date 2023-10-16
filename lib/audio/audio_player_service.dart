@@ -9,20 +9,24 @@ class AudioPlayerService {
   final _loopSectionsManager = LoopSectionsManager();
 
   StreamSubscription<Duration>? _positionStreamSubscription;
+  final _loadingStreamController = StreamController<bool>();
 
   AudioPlayerService() {
     _player.playerStateStream.listen(_handlePlayerStateChange);
   }
 
   bool get isPlaying => _player.playing;
-  Stream<bool> get isPlayingStream => _player.playingStream;
 
   Duration get currentPosition => _player.position;
+
+  Stream<bool> get isPlayingStream => _player.playingStream;
   Stream<Duration> get positionStream => _player.positionStream;
-
+  Stream<Duration> get bufferStream => _player.bufferedPositionStream;
+  Stream<bool> get loadingStream => _loadingStreamController.stream;
   Stream<bool> get loopModeStream => _player.loopModeStream.map((event) => event != LoopMode.off);
-
   Stream<List<LoopSection>> get loopSectionsStream => _loopSectionsManager.loopSectionsStream;
+
+  var _isLoading = false;
 
   Future<void> toggleLoopMode() async {
     await _player.setLoopMode(
@@ -92,6 +96,7 @@ class AudioPlayerService {
   Future<void> dispose() async {
     await _loopSectionsManager.dispose();
     await _positionStreamSubscription?.cancel();
+    await _loadingStreamController.close();
 
     await _player.dispose();
   }
@@ -99,9 +104,19 @@ class AudioPlayerService {
   void _handlePlayerStateChange(PlayerState state) async {
     print(state);
 
-    if (state.processingState == ProcessingState.completed) {
-      await pause();
-      await seek(Duration.zero);
+    if (state.processingState == ProcessingState.loading) {
+      _isLoading = true;
+      _loadingStreamController.add(true);
+    } else {
+      if (_isLoading) {
+        _isLoading = false;
+        _loadingStreamController.add(false);
+      }
+
+      if (state.processingState == ProcessingState.completed) {
+        await pause();
+        await seek(Duration.zero);
+      }
     }
   }
 }

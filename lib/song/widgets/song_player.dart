@@ -23,6 +23,7 @@ class SongPlayer extends StatelessWidget {
       children: [
         SongTimeline(
           positionStream: audioPlayer.positionStream,
+          bufferStream: audioPlayer.bufferStream,
           duration: Duration(seconds: duration),
           onPositionChanged: (position) {
             audioPlayer.seek(position);
@@ -53,24 +54,43 @@ class SongPlayer extends StatelessWidget {
               tooltip: 'Przewiń do tyłu',
             ),
             StreamBuilder(
-              stream: audioPlayer.isPlayingStream,
-              builder: (context, snapshot) {
-                final isPlaying = snapshot.data ?? false;
+                stream: audioPlayer.loadingStream,
+                builder: (context, loadingSnapshot) {
+                  final isLoading = loadingSnapshot.data ?? false;
 
-                return IconButton(
-                  icon: Icon(
-                    isPlaying ? Icons.pause : Icons.play_arrow,
-                  ),
-                  color: Theme.of(context).primaryColor,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                  iconSize: 40,
-                  onPressed: _onPlayPausePressed,
-                  tooltip: isPlaying ? 'Pauza' : 'Odtwórz',
-                );
-              },
-            ),
+                  return StreamBuilder(
+                    stream: audioPlayer.isPlayingStream,
+                    builder: (context, isPlayingSnapshot) {
+                      final isPlaying = isPlayingSnapshot.data ?? false;
+
+                      return IconButton(
+                        icon: isLoading
+                            ? Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: CircularProgressIndicator(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                              ),
+                        color: Theme.of(context).primaryColor,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                        ),
+                        iconSize: 40,
+                        onPressed: _onPlayPausePressed,
+                        tooltip: isPlaying ? 'Pauza' : 'Odtwórz',
+                      );
+                    },
+                  );
+                }),
             IconButton(
               onPressed: () {
                 audioPlayer.forward();

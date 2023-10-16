@@ -8,6 +8,7 @@ class SongTimeline extends StatefulWidget {
   const SongTimeline({
     super.key,
     required this.positionStream,
+    required this.bufferStream,
     required this.duration,
     required this.onPositionChanged,
     required this.markersStream,
@@ -15,6 +16,7 @@ class SongTimeline extends StatefulWidget {
   });
 
   final Stream<Duration> positionStream;
+  final Stream<Duration> bufferStream;
   final Duration duration;
   final Function(Duration position) onPositionChanged;
   final Stream<List<Marker>> markersStream;
@@ -39,6 +41,7 @@ class _SongTimelineState extends State<SongTimeline> {
             width: constraints.maxWidth,
             height: SongTimeline.widgetHeight,
             songPositionStream: widget.positionStream,
+            songBufferStream: widget.bufferStream,
             songDuration: widget.duration,
             markersStream: widget.markersStream,
             onPositionChanged: widget.onPositionChanged,
@@ -128,17 +131,33 @@ class TimelinePainter extends CustomPainter {
     final startingLinePoint = Offset(0, size.height / 2);
     final endingBackgroundLinePoint = Offset(size.width, size.height / 2);
 
+    // background line
     canvas.drawLine(startingLinePoint, endingBackgroundLinePoint, backgroundLinePaint);
+
+    final bufferLinePaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // buffer line
+    canvas.drawLine(
+      startingLinePoint,
+      Offset(state.bufferPositionInPixels.clamp(0, size.width), size.height / 2),
+      bufferLinePaint,
+    );
 
     final foregroundLinePaint = backgroundLinePaint..color = Colors.white;
     final endingForegroundLinePoint = Offset(state.currentPositionInPixels.clamp(0, size.width), size.height / 2);
 
+    // position line
     canvas.drawLine(startingLinePoint, endingForegroundLinePoint, foregroundLinePaint);
 
     final handlePaint = Paint()..color = Colors.white;
 
     final handleOffset = Offset(state.currentPositionInPixels.clamp(0.0, size.width), size.height / 2);
     final handleRadius = state.isHandleDragging ? handleDraggingRadius : handleDefaultRadius;
+
+    // handle circle
     canvas.drawCircle(handleOffset, handleRadius, handlePaint);
   }
 
