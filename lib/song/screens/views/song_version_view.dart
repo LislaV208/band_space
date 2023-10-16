@@ -121,6 +121,7 @@ class _SongVersionViewState extends State<SongVersionView> {
                                     child: SongPlayer(
                                       audioPlayer: _audioPlayer,
                                       duration: _currentVersion!.file!.duration,
+                                      markersStream: sl<VersionRepository>(param1: _currentVersion!.id).getMarkers(),
                                     ),
                                   ),
                                   AppButtonSecondary(

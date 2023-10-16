@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/widgets/song_timeline.dart';
 
 class SongPlayer extends StatelessWidget {
@@ -8,28 +9,27 @@ class SongPlayer extends StatelessWidget {
     super.key,
     required this.audioPlayer,
     required this.duration,
+    required this.markersStream,
   });
 
   final AudioPlayerService audioPlayer;
   final int duration;
+  final Stream<List<Marker>> markersStream;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        StreamBuilder(
-          stream: audioPlayer.positionStream,
-          builder: (context, snapshot) {
-            final currentPosition = (snapshot.data ?? Duration.zero);
-
-            return SongTimeline(
-              currentPosition: currentPosition,
-              duration: Duration(seconds: duration),
-              onPositionChanged: (position) {
-                audioPlayer.seek(position);
-              },
-            );
+        SongTimeline(
+          positionStream: audioPlayer.positionStream,
+          duration: Duration(seconds: duration),
+          onPositionChanged: (position) {
+            audioPlayer.seek(position);
+          },
+          markersStream: markersStream,
+          onMarkerTap: (marker) {
+            audioPlayer.seek(Duration(seconds: marker.start_position));
           },
         ),
         Row(

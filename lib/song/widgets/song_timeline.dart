@@ -1,217 +1,124 @@
 import 'package:flutter/material.dart';
 
+import 'package:band_space/song/model/marker.dart';
+import 'package:band_space/song/screens/timeline_state.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 
-class SongTimeline extends StatelessWidget {
+class SongTimeline extends StatefulWidget {
   const SongTimeline({
     super.key,
-    required this.currentPosition,
+    required this.positionStream,
     required this.duration,
     required this.onPositionChanged,
+    required this.markersStream,
+    required this.onMarkerTap,
   });
 
-  final Duration currentPosition;
+  final Stream<Duration> positionStream;
   final Duration duration;
   final Function(Duration position) onPositionChanged;
+  final Stream<List<Marker>> markersStream;
+  final void Function(Marker marker) onMarkerTap;
 
   static const widgetHeight = 80.0;
+
+  @override
+  State<SongTimeline> createState() => _SongTimelineState();
+}
+
+class _SongTimelineState extends State<SongTimeline> {
+  TimelineState? _state;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return _Timeline(
-          width: constraints.maxWidth,
-          height: widgetHeight,
-          currentPosition: currentPosition,
-          duration: duration,
-          onPositionChanged: onPositionChanged,
+        // potrzebne aby nie utracić stanu podczas resize
+        if (_state == null) {
+          _state = TimelineState(
+            width: constraints.maxWidth,
+            height: SongTimeline.widgetHeight,
+            songPositionStream: widget.positionStream,
+            songDuration: widget.duration,
+            markersStream: widget.markersStream,
+            onPositionChanged: widget.onPositionChanged,
+            onMarkerTap: widget.onMarkerTap,
+          );
+        } else {
+          _state!.width = constraints.maxWidth;
+        }
+
+        return _Timeline(state: _state!);
+      },
+    );
+  }
+}
+
+class _Timeline extends StatelessWidget {
+  const _Timeline({
+    // ignore: unused_element
+    super.key,
+    required this.state,
+  });
+  final TimelineState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, child) {
+        return MouseRegion(
+          cursor: state.showHoverCursor ? SystemMouseCursors.click : MouseCursor.defer,
+          onHover: (event) => state.onHover(event.localPosition),
+          child: GestureDetector(
+            onTapDown: (details) => state.onTapDown(details.localPosition),
+            onTapUp: (details) => state.onTapUp(details.localPosition),
+            onPanStart: (details) => state.onDragStart(details),
+            onPanUpdate: (details) => state.onDragUpdate(details),
+            onPanEnd: (details) => state.onDragEnd(details),
+            child: CustomPaint(
+              painter: TimelinePainter(state: state),
+              child: SizedBox(
+                width: state.width,
+                height: state.height,
+                child: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.labelSmall!,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(state.currentPositionInDuration.format()),
+                        Text(state.songDuration.format()),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
   }
 }
 
-class _Timeline extends StatefulWidget {
-  const _Timeline({
-    // ignore: unused_element
-    super.key,
-    required this.width,
-    required this.height,
-    required this.currentPosition,
-    required this.duration,
-    required this.onPositionChanged,
-  });
-
-  final double width;
-  final double height;
-  final Duration currentPosition;
-  final Duration duration;
-  final Function(Duration position) onPositionChanged;
-
-  @override
-  State<_Timeline> createState() => __TimelineState();
-}
-
-class __TimelineState extends State<_Timeline> {
-  late var _currentPosition = widget.currentPosition;
-  late var _handlePosition = _songPositionToHandlePosition();
-  var _isHandleDragging = false;
-  var _isHandleHovered = false;
-
-  Duration _handlePositionToSongCurrentPosition() {
-    final logicalPosition = _handlePosition / widget.width;
-    // print('logicalPosition: $logicalPosition');
-
-    final songPositionInMs = (widget.duration.inMilliseconds * logicalPosition).truncate();
-
-    return Duration(milliseconds: songPositionInMs);
-  }
-
-  double _songPositionToHandlePosition() {
-    final logicalPosition = _currentPosition.inMilliseconds / widget.duration.inMilliseconds;
-    // print('current: ${_currentPosition.inMilliseconds}');
-    // print('total: ${widget.duration.inMilliseconds}');
-
-    return widget.width * logicalPosition;
-  }
-
-  @override
-  void didUpdateWidget(covariant _Timeline oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.width != oldWidget.width) {
-      // where handle was on timeline from 0 to 1
-      final logicalPosition = _handlePosition / oldWidget.width;
-      _handlePosition = widget.width * logicalPosition;
-    }
-
-    if (widget.currentPosition != oldWidget.currentPosition) {
-      if (!_isHandleDragging) {
-        _currentPosition = widget.currentPosition;
-        _handlePosition = _songPositionToHandlePosition();
-
-        // print(_handlePosition);
-      }
-    }
-
-    // print('didUpdateWidget');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: _isHandleHovered ? SystemMouseCursors.click : MouseCursor.defer,
-      onHover: (event) {
-        final touchXPosition = event.localPosition.dx;
-        final touchYPosition = event.localPosition.dy;
-
-        const dragTouchSize = Size.square(TimelinePainter.handleDraggingRadius);
-
-        final isInX = (touchXPosition - _handlePosition).abs() <= dragTouchSize.width;
-        final isInY = (touchYPosition - widget.height / 2).abs() <= dragTouchSize.height;
-
-        if (isInX && isInY) {
-          if (!_isHandleHovered) {
-            setState(() {
-              _isHandleHovered = true;
-            });
-          }
-        } else if (_isHandleHovered) {
-          setState(() {
-            _isHandleHovered = false;
-          });
-        }
-      },
-      child: GestureDetector(
-        onTapDown: (details) {
-          setState(() {
-            _isHandleDragging = true;
-            _handlePosition = details.localPosition.dx;
-            _currentPosition = _handlePositionToSongCurrentPosition();
-          });
-        },
-        onTapUp: (details) {
-          setState(() {
-            _isHandleDragging = false;
-          });
-          widget.onPositionChanged(_currentPosition);
-        },
-        onPanStart: (details) {
-          setState(() {
-            _isHandleDragging = true;
-          });
-        },
-        onPanUpdate: (details) {
-          if (_isHandleDragging) {
-            setState(() {
-              _handlePosition = (_handlePosition + details.delta.dx).clamp(0, widget.width);
-
-              if (details.localPosition.dx < 0 && _handlePosition > 0) {
-                _handlePosition = 0;
-              } else if (details.localPosition.dx > widget.width && _handlePosition < widget.width) {
-                _handlePosition = widget.width;
-              }
-
-              _currentPosition = _handlePositionToSongCurrentPosition();
-            });
-          }
-        },
-        onPanEnd: (details) {
-          if (_isHandleDragging) {
-            setState(() {
-              _isHandleDragging = false;
-            });
-
-            widget.onPositionChanged(_currentPosition);
-          }
-        },
-        child: CustomPaint(
-          painter: TimelinePainter(
-            handlePosition: _handlePosition,
-            isHandleDragging: _isHandleDragging,
-          ),
-          child: Container(
-            // padding: const EdgeInsets.symmetric(horizontal: 10),
-            // color: Colors.grey.withOpacity(0.1),
-            width: widget.width,
-            height: widget.height,
-            child: DefaultTextStyle(
-              style: Theme.of(context).textTheme.labelSmall!,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(_currentPosition.format()),
-                    Text(widget.duration.format()),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class TimelinePainter extends CustomPainter {
-  final double handlePosition;
-  final bool isHandleDragging;
+  final TimelineState state;
+
   static const handleDefaultRadius = 5.5;
   static const handleDraggingRadius = 6.7;
 
   TimelinePainter({
-    super.repaint,
-    required this.handlePosition,
-    required this.isHandleDragging,
-  });
+    required this.state,
+  }) : super(repaint: state);
 
   @override
   void paint(Canvas canvas, Size size) {
-    // print(size);
+    for (final marker in state.markers) {
+      _paintMarker(marker, canvas, size);
+    }
 
     final backgroundLinePaint = Paint()
       ..color = Colors.grey[700]!
@@ -224,20 +131,105 @@ class TimelinePainter extends CustomPainter {
     canvas.drawLine(startingLinePoint, endingBackgroundLinePoint, backgroundLinePaint);
 
     final foregroundLinePaint = backgroundLinePaint..color = Colors.white;
-    final endingForegroundLinePoint = Offset(handlePosition.clamp(0, size.width), size.height / 2);
+    final endingForegroundLinePoint = Offset(state.currentPositionInPixels.clamp(0, size.width), size.height / 2);
 
     canvas.drawLine(startingLinePoint, endingForegroundLinePoint, foregroundLinePaint);
 
     final handlePaint = Paint()..color = Colors.white;
 
-    final handleOffset = Offset(handlePosition.clamp(0.0, size.width), size.height / 2);
-    final handleRadius = isHandleDragging ? handleDraggingRadius : handleDefaultRadius;
+    final handleOffset = Offset(state.currentPositionInPixels.clamp(0.0, size.width), size.height / 2);
+    final handleRadius = state.isHandleDragging ? handleDraggingRadius : handleDefaultRadius;
     canvas.drawCircle(handleOffset, handleRadius, handlePaint);
   }
 
   @override
   bool shouldRepaint(covariant TimelinePainter oldDelegate) {
-    // return true;
-    return handlePosition != oldDelegate.handlePosition || isHandleDragging != oldDelegate.isHandleDragging;
+    return state != oldDelegate.state;
+  }
+
+  static const markerSize = 20.0;
+  static const markerJointSize = 2.0;
+
+  void _paintMarker(TimelineMarker marker, Canvas canvas, Size size) {
+    final isTimestampMarker = marker.endPosition == null;
+
+    final markerPaint = Paint()
+      ..color = isTimestampMarker ? Colors.blue : Colors.red
+      ..strokeWidth = markerSize;
+
+    final markerJointPaint = Paint()
+      ..color = isTimestampMarker ? Colors.blue : Colors.red
+      ..strokeWidth = markerJointSize;
+
+    const fontSize = 13.0;
+
+    const textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: fontSize,
+    );
+    final textSpan = TextSpan(
+      text: marker.name,
+      style: textStyle,
+    );
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      ellipsis: '..',
+      maxLines: 1,
+    );
+
+    const padding = 4.0;
+
+    if (isTimestampMarker) {
+      textPainter.layout(maxWidth: 80);
+    }
+
+    final startX = marker.startPosition * size.width;
+    final endX = (isTimestampMarker ? startX + textPainter.width : marker.endPosition! * size.width) + padding;
+
+    if (!isTimestampMarker) {
+      textPainter.layout(maxWidth: endX - startX);
+    }
+
+    final rect = Rect.fromLTRB(
+      startX,
+      (size.height / 2) - (handleDefaultRadius * 2) - textPainter.height - padding,
+      endX + (isTimestampMarker ? padding : 0.0),
+      (size.height / 2) - (handleDefaultRadius * 2),
+    );
+
+    canvas.drawRect(rect, markerPaint);
+
+    state.updateMarkerRect(marker, rect);
+
+    canvas.drawLine(
+      Offset(
+        startX + markerJointSize / 2,
+        (size.height / 2) - (handleDefaultRadius * 2),
+      ),
+      Offset(
+        startX + markerJointSize / 2,
+        size.height / 2,
+      ),
+      markerJointPaint,
+    );
+
+    if (!isTimestampMarker) {
+      canvas.drawLine(
+        Offset(
+          endX - markerJointSize / 2,
+          (size.height / 2) - (handleDefaultRadius * 2),
+        ),
+        Offset(
+          endX - markerJointSize / 2,
+          size.height / 2,
+        ),
+        markerJointPaint,
+      );
+    }
+
+    final position =
+        Offset(startX + padding, size.height / 2 - handleDefaultRadius * 2 - textPainter.height - padding / 2);
+    textPainter.paint(canvas, position);
   }
 }
