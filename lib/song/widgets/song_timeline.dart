@@ -119,9 +119,7 @@ class TimelinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final marker in state.markers) {
-      _paintMarker(marker, canvas, size);
-    }
+    _paintMarkers(canvas, size);
 
     final backgroundLinePaint = Paint()
       ..color = Colors.grey[700]!
@@ -169,86 +167,97 @@ class TimelinePainter extends CustomPainter {
   static const markerSize = 20.0;
   static const markerJointSize = 2.0;
 
-  void _paintMarker(TimelineMarker marker, Canvas canvas, Size size) {
-    final isTimestampMarker = marker.endPosition == null;
-
-    final markerPaint = Paint()
-      ..color = isTimestampMarker ? Colors.blue : Colors.red
-      ..strokeWidth = markerSize;
-
-    final markerJointPaint = Paint()
-      ..color = isTimestampMarker ? Colors.blue : Colors.red
-      ..strokeWidth = markerJointSize;
-
+  void _paintMarkers(Canvas canvas, Size size) {
     const fontSize = 13.0;
 
     const textStyle = TextStyle(
       color: Colors.black,
       fontSize: fontSize,
     );
-    final textSpan = TextSpan(
-      text: marker.name,
-      style: textStyle,
-    );
-    final textPainter = TextPainter(
-      text: textSpan,
-      textDirection: TextDirection.ltr,
-      ellipsis: '..',
-      maxLines: 1,
-    );
 
-    const padding = 4.0;
+    for (var i = 0; i < state.markers.length; ++i) {
+      final marker = state.markers[i];
 
-    if (isTimestampMarker) {
-      textPainter.layout(maxWidth: 80);
-    }
+      final isTimestampMarker = marker.endPosition == null;
 
-    final startX = marker.startPosition * size.width;
-    final endX = (isTimestampMarker ? startX + textPainter.width : marker.endPosition! * size.width) + padding;
+      final markerPaint = Paint()
+        ..color = isTimestampMarker ? Colors.blue : Colors.red
+        ..strokeWidth = markerSize;
 
-    if (!isTimestampMarker) {
-      textPainter.layout(maxWidth: endX - startX);
-    }
+      final markerJointPaint = Paint()
+        ..color = isTimestampMarker ? Colors.blue : Colors.red
+        ..strokeWidth = markerJointSize;
 
-    final rect = Rect.fromLTRB(
-      startX,
-      (size.height / 2) - (handleDefaultRadius * 2) - textPainter.height - padding,
-      endX + (isTimestampMarker ? padding : 0.0),
-      (size.height / 2) - (handleDefaultRadius * 2),
-    );
+      final textSpan = TextSpan(
+        text: marker.name,
+        style: textStyle,
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+        ellipsis: '..',
+        maxLines: 1,
+      );
 
-    canvas.drawRect(rect, markerPaint);
+      const padding = 4.0;
 
-    state.updateMarkerRect(marker, rect);
+      if (isTimestampMarker) {
+        textPainter.layout(maxWidth: 80);
+      }
 
-    canvas.drawLine(
-      Offset(
-        startX + markerJointSize / 2,
+      final startX = marker.startPosition * size.width;
+      final endX = (isTimestampMarker ? startX + textPainter.width : marker.endPosition! * size.width) + padding;
+
+      if (!isTimestampMarker) {
+        textPainter.layout(maxWidth: endX - startX);
+      }
+
+      final rect = Rect.fromLTRB(
+        startX,
+        (size.height / 2) - (handleDefaultRadius * 2) - textPainter.height - padding,
+        endX + (isTimestampMarker ? padding : 0.0),
         (size.height / 2) - (handleDefaultRadius * 2),
-      ),
-      Offset(
-        startX + markerJointSize / 2,
-        size.height / 2,
-      ),
-      markerJointPaint,
-    );
+      );
 
-    if (!isTimestampMarker) {
+      canvas.drawRect(rect, markerPaint);
+
+      state.updateMarkerRect(marker, rect);
+
       canvas.drawLine(
         Offset(
-          endX - markerJointSize / 2,
+          startX + markerJointSize / 2,
           (size.height / 2) - (handleDefaultRadius * 2),
         ),
         Offset(
-          endX - markerJointSize / 2,
+          startX + markerJointSize / 2,
           size.height / 2,
         ),
         markerJointPaint,
       );
-    }
 
-    final position =
-        Offset(startX + padding, size.height / 2 - handleDefaultRadius * 2 - textPainter.height - padding / 2);
-    textPainter.paint(canvas, position);
+      if (!isTimestampMarker) {
+        if (i < state.markers.length - 1) {
+          final nextMarker = state.markers[i + 1];
+
+          if (nextMarker.startPosition != marker.endPosition) {
+            canvas.drawLine(
+              Offset(
+                endX - markerJointSize / 2,
+                (size.height / 2) - (handleDefaultRadius * 2),
+              ),
+              Offset(
+                endX - markerJointSize / 2,
+                size.height / 2,
+              ),
+              markerJointPaint,
+            );
+          }
+        }
+      }
+
+      final position =
+          Offset(startX + padding, size.height / 2 - handleDefaultRadius * 2 - textPainter.height - padding / 2);
+      textPainter.paint(canvas, position);
+    }
   }
 }
