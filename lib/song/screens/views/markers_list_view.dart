@@ -15,7 +15,7 @@ import 'package:band_space/song/screens/add_edit_marker_screen.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 import 'package:band_space/widgets/app_popup_menu_button.dart';
 
-class MarkersListView extends StatelessWidget {
+class MarkersListView extends StatefulWidget {
   const MarkersListView({
     super.key,
     required this.markers,
@@ -30,20 +30,64 @@ class MarkersListView extends StatelessWidget {
   final Future<void> Function(Marker markerToEdit, MarkerDTO newMarkerData) onMarkerEdit;
 
   @override
+  State<MarkersListView> createState() => _MarkersListViewState();
+}
+
+class _MarkersListViewState extends State<MarkersListView> {
+  @override
+  void didUpdateWidget(covariant MarkersListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // jezeli jakis znacznik zostal usuniety
+    if (widget.markers.length < oldWidget.markers.length) {
+      // znajdujemy usuniete znaczniki
+      final removedMarkers = oldWidget.markers.skipWhile((value) => widget.markers.contains(value));
+
+      for (final marker in removedMarkers) {
+        // jezeli usuniety znacznik moze byc zapętlony, to usuwamy zapętlenie
+        if (marker.end_position != null) {
+          widget.audioPlayer.removeLoopSection(
+            LoopSection(start: marker.start_position, end: marker.end_position!),
+          );
+        }
+      }
+    }
+    // jezeli liczba znacznikow sie nie zmieniła
+    else if (widget.markers.length == oldWidget.markers.length) {
+      // szukamy zmian w znacznikach
+      for (var i = 0; i < widget.markers.length; ++i) {
+        final currentMarker = widget.markers[i];
+        final oldMarker = oldWidget.markers[i];
+
+        // jezeli znajdziemy zmianę
+        if (currentMarker != oldMarker) {
+          // jezeli znacznik moze zostać zapętlony, to uaktualniamy zapętlenie
+          if (currentMarker.end_position != null && oldMarker.end_position != null) {
+            widget.audioPlayer.updateLoopSection(
+              LoopSection(start: oldMarker.start_position, end: oldMarker.end_position!),
+              LoopSection(start: currentMarker.start_position, end: currentMarker.end_position!),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Scrollbar(
         thumbVisibility: true,
         child: StreamBuilder(
-          stream: audioPlayer.loopSectionsStream,
+          stream: widget.audioPlayer.loopSectionsStream,
           builder: (context, snapshot) {
             final loopSections = snapshot.data ?? [];
 
             return ListView(
               primary: true,
               shrinkWrap: true,
-              children: markers.map(
+              children: widget.markers.map(
                 (item) {
                   final isLooped = item.end_position != null
                       ? loopSections.contains(
@@ -52,7 +96,7 @@ class MarkersListView extends StatelessWidget {
                       : false;
 
                   return ListTile(
-                    onTap: () => audioPlayer.seek(
+                    onTap: () => widget.audioPlayer.seek(
                       Duration(seconds: item.start_position),
                     ),
                     leading: item.end_position == null
@@ -75,9 +119,9 @@ class MarkersListView extends StatelessWidget {
                               final loopSection = LoopSection(start: item.start_position, end: item.end_position!);
 
                               if (isLooped) {
-                                audioPlayer.removeLoopSection(loopSection);
+                                widget.audioPlayer.removeLoopSection(loopSection);
                               } else {
-                                audioPlayer.addLoopSection(loopSection);
+                                widget.audioPlayer.addLoopSection(loopSection);
                               }
                             },
                             icon: Icon(
@@ -112,11 +156,11 @@ class MarkersListView extends StatelessWidget {
                                 showModalBottomSheet(
                                   context: context,
                                   builder: (_) => AddEditMarkerScreen(
-                                    markers: markers,
-                                    maxPositionValue: maxMarkerPosition,
+                                    markers: widget.markers,
+                                    maxPositionValue: widget.maxMarkerPosition,
                                     startPosition: item.start_position,
                                     markerToEdit: item,
-                                    onAddEditMarker: (markerData) async => await onMarkerEdit(item, markerData),
+                                    onAddEditMarker: (markerData) async => await widget.onMarkerEdit(item, markerData),
                                   ),
                                 );
                               },
@@ -126,7 +170,7 @@ class MarkersListView extends StatelessWidget {
                               text: 'Usuń',
                               onSelected: () {
                                 if (item.end_position != null && isLooped) {
-                                  audioPlayer.removeLoopSection(
+                                  widget.audioPlayer.removeLoopSection(
                                     LoopSection(start: item.start_position, end: item.end_position!),
                                   );
                                 }

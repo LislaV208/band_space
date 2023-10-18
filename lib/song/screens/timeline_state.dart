@@ -79,13 +79,9 @@ class TimelineState extends Equatable with ChangeNotifier {
 
     _markersStreamSubscription = markersStream.listen((markers) {
       _originalMarkers = markers;
+      this.markers = markers.map((marker) => TimelineMarker.fromMarker(marker, songDuration)).toList();
 
-      final timelineMarkers = markers.map((marker) => TimelineMarker.fromMarker(marker, songDuration)).toList();
-      if (timelineMarkers.length != this.markers.length) {
-        this.markers = timelineMarkers;
-
-        notifyListeners();
-      }
+      notifyListeners();
     });
   }
 

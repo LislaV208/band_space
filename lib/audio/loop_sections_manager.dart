@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:rxdart/rxdart.dart';
 
 class LoopSection extends Equatable implements Comparable<LoopSection> {
   final int start;
@@ -22,32 +23,45 @@ class LoopSectionsManager {
   final _loopSections = <LoopSection>[];
   var _joinedLoopSections = <LoopSection>[];
 
-  final _loopSectionsStreamController = StreamController<List<LoopSection>>();
+  final _loopSectionsController = BehaviorSubject<List<LoopSection>>();
 
   List<LoopSection> get sections => _loopSections;
   List<LoopSection> get joinedSections => _joinedLoopSections;
 
-  Stream<List<LoopSection>> get loopSectionsStream => _loopSectionsStreamController.stream;
+  Stream<List<LoopSection>> get loopSectionsStream => _loopSectionsController.stream;
 
   void addSection(LoopSection section) {
     _loopSections.add(section);
-    _loopSectionsStreamController.add(_loopSections);
+    _loopSectionsController.add(_loopSections);
 
     _updateJoinedLoopSections();
   }
 
-  void removeSection(LoopSection section) {
-    _loopSections.remove(section);
-    _loopSectionsStreamController.add(_loopSections);
+  void updateLoopSection(LoopSection current, LoopSection updated) {
+    final index = _loopSections.indexOf(current);
 
-    _updateJoinedLoopSections();
+    if (index >= 0) {
+      _loopSections[index] = updated;
+      _loopSectionsController.add(_loopSections);
+
+      _updateJoinedLoopSections();
+    }
+  }
+
+  void removeSection(LoopSection section) {
+    final isRemoved = _loopSections.remove(section);
+    if (isRemoved) {
+      _loopSectionsController.add(_loopSections);
+
+      _updateJoinedLoopSections();
+    }
   }
 
   Future<void> dispose() async {
     _loopSections.clear();
     _joinedLoopSections.clear();
 
-    await _loopSectionsStreamController.close();
+    await _loopSectionsController.close();
   }
 
   void _updateJoinedLoopSections() {
@@ -57,6 +71,7 @@ class LoopSectionsManager {
     int? tempEnd;
 
     _loopSections.sort();
+
     final sectionsCount = _loopSections.length;
     if (sectionsCount == 1) {
       joinedSections.add(_loopSections.first);

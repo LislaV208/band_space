@@ -16,5 +16,5 @@ class Marker extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, name, start_position, end_position];
 }

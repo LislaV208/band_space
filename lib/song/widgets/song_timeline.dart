@@ -236,22 +236,27 @@ class TimelinePainter extends CustomPainter {
       );
 
       if (!isTimestampMarker) {
+        var drawEndLine = true;
         if (i < state.markers.length - 1) {
           final nextMarker = state.markers[i + 1];
 
-          if (nextMarker.startPosition != marker.endPosition) {
-            canvas.drawLine(
-              Offset(
-                endX - markerJointSize / 2,
-                (size.height / 2) - (handleDefaultRadius * 2),
-              ),
-              Offset(
-                endX - markerJointSize / 2,
-                size.height / 2,
-              ),
-              markerJointPaint,
-            );
+          if (nextMarker.startPosition == marker.endPosition) {
+            drawEndLine = false;
           }
+        }
+
+        if (drawEndLine) {
+          canvas.drawLine(
+            Offset(
+              endX - markerJointSize / 2,
+              (size.height / 2) - (handleDefaultRadius * 2),
+            ),
+            Offset(
+              endX - markerJointSize / 2,
+              size.height / 2,
+            ),
+            markerJointPaint,
+          );
         }
       }
 

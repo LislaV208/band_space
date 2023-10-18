@@ -8,6 +8,7 @@ import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/audio/loop_sections_manager.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/markers/marker_repository.dart';
+import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
@@ -177,7 +178,15 @@ class _SongVersionViewState extends State<SongVersionView> {
                             builder: (_) {
                               return Provider.value(
                                 value: context.read<SongRepository>(),
-                                child: const NewSongVersionScreen(),
+                                child: StreamBuilder(
+                                    stream: _currentVersion != null
+                                        ? sl<VersionRepository>(param1: _currentVersion!.id).getMarkers()
+                                        : const Stream<List<Marker>>.empty(),
+                                    builder: (context, snapshot) {
+                                      final canCopyMarkers = snapshot.data?.isNotEmpty ?? false;
+
+                                      return NewSongVersionScreen(canCopyMarkers: canCopyMarkers);
+                                    }),
                               );
                             },
                           );

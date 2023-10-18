@@ -98,13 +98,16 @@ class SongRepository extends FirestoreRepository {
   Future<SongVersionModel?> addVersion(
     SongUploadFile uploadFile,
     String comment,
+    bool copyMarkers,
+    bool keepMarkersComments,
   ) async {
-    DocumentReference<Map<String, dynamic>>? versionRef;
+    DocumentReference<Map<String, dynamic>>? currentVersionRef;
+    DocumentReference<Map<String, dynamic>>? newVersionRef;
 
     await db.runTransaction((transaction) async {
-      versionRef = db.collection(FirestoreCollectionNames.versions).doc();
+      newVersionRef = db.collection(FirestoreCollectionNames.versions).doc();
 
-      final storageRef = storage.ref('audio').child(versionRef!.id);
+      final storageRef = storage.ref('audio').child(newVersionRef!.id);
       final uploadSnapshot = await storageRef.putData(
         uploadFile.data,
         SettableMetadata(
@@ -114,13 +117,56 @@ class SongRepository extends FirestoreRepository {
       final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
       //TODO: refactor
-      final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds;
+      final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds ?? 0;
 
       log('song duration: ${duration}s');
 
+      if (copyMarkers) {
+        final songData = (await _songRef.get()).data() as Map<String, dynamic>;
+        currentVersionRef = songData['current_version'] as DocumentReference<Map<String, dynamic>>;
+
+        final markersDocs =
+            (await db.collection(FirestoreCollectionNames.markers).where('version', isEqualTo: currentVersionRef).get())
+                .docs;
+
+        for (final marker in markersDocs) {
+          var data = marker.data();
+          data['version'] = newVersionRef;
+
+          final start = data['start_position'] as int?;
+          final end = data['end_position'] as int?;
+
+          if (start != null && start <= duration) {
+            if (end != null && end > duration) {
+              continue;
+            }
+
+            final newMarkerRef = db.collection(FirestoreCollectionNames.markers).doc();
+
+            transaction.set(newMarkerRef, data);
+
+            if (keepMarkersComments) {
+              final commentsDocs = (await db
+                      .collection(FirestoreCollectionNames.comments)
+                      .where('parent', isEqualTo: marker.reference)
+                      .get())
+                  .docs;
+
+              for (final comment in commentsDocs) {
+                data = comment.data();
+                data['parent'] = newMarkerRef;
+
+                final newCommentRef = db.collection(FirestoreCollectionNames.comments).doc();
+                transaction.set(newCommentRef, data);
+              }
+            }
+          }
+        }
+      }
+
       //TODO: zrobić klasę z toMap()
       transaction.set(
-        versionRef!,
+        newVersionRef!,
         {
           'song': _songRef,
           'timestamp': Timestamp.now(),
@@ -136,11 +182,11 @@ class SongRepository extends FirestoreRepository {
         },
       );
 
-      transaction.update(_songRef, {'current_version': versionRef});
+      transaction.update(_songRef, {'current_version': newVersionRef});
     });
 
-    if (versionRef != null) {
-      final doc = await versionRef!.get();
+    if (newVersionRef != null) {
+      final doc = await newVersionRef!.get();
 
       return FirebaseSongVersionModel.create(doc: doc, isCurrent: true);
     }
