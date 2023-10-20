@@ -18,7 +18,8 @@ class VersionRepository extends FirestoreRepository {
     required this.storage,
   });
 
-  DocumentReference get _versionRef => db.collection(FirestoreCollectionNames.versions).doc(versionId);
+  DocumentReference<Map<String, dynamic>> get _versionRef =>
+      db.collection(FirestoreCollectionNames.versions).doc(versionId);
 
   Stream<SongVersionModel> get() {
     return _versionRef.snapshots().asyncMap(
@@ -43,8 +44,8 @@ class VersionRepository extends FirestoreRepository {
     await newMarkerDoc.set({
       'version': _versionRef,
       'name': markerData.name,
-      'start_position': markerData.startPosition,
-      'end_position': markerData.endPosition,
+      'start_position': markerData.startPosition.inMilliseconds,
+      'end_position': markerData.endPosition != null ? markerData.endPosition!.inMilliseconds : null,
     });
   }
 
@@ -64,8 +65,8 @@ class VersionRepository extends FirestoreRepository {
         return Marker(
           id: doc.id,
           name: data['name'],
-          start_position: data['start_position'],
-          end_position: data['end_position'],
+          start_position: Duration(milliseconds: data['start_position'] ?? 0),
+          end_position: data['end_position'] != null ? Duration(milliseconds: data['end_position']) : null,
         );
       }).toList();
     });

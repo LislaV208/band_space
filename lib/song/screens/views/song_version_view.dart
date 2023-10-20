@@ -94,7 +94,7 @@ class _SongVersionViewState extends State<SongVersionView> {
                                     child: MarkersListView(
                                       audioPlayer: _audioPlayer,
                                       markers: markers,
-                                      maxMarkerPosition: _currentVersion!.file!.duration,
+                                      songDuration: _currentVersion!.file!.duration,
                                       onMarkerEdit: (markerToEdit, newMarkerData) async {
                                         try {
                                           await sl<MarkerRepository>(param1: markerToEdit.id).edit(newMarkerData);
@@ -131,8 +131,8 @@ class _SongVersionViewState extends State<SongVersionView> {
                                         context: context,
                                         builder: (_) => AddEditMarkerScreen(
                                           markers: markers,
-                                          maxPositionValue: _currentVersion!.file!.duration,
-                                          startPosition: _audioPlayer.currentPosition.inSeconds,
+                                          songDuration: _currentVersion!.file!.duration,
+                                          startPosition: _audioPlayer.currentPosition,
                                           onAddEditMarker: (marker) async =>
                                               await sl<VersionRepository>(param1: _currentVersion!.id)
                                                   .addMarker(marker),

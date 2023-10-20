@@ -2,8 +2,8 @@ import 'package:band_space/song/model/marker.dart';
 
 class MarkerCollisionValidator {
   final List<Marker> currentMarkers;
-  final int? start;
-  final int? end;
+  final Duration? start;
+  final Duration? end;
 
   const MarkerCollisionValidator({
     required this.currentMarkers,

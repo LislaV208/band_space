@@ -13,7 +13,7 @@ class SongPlayer extends StatelessWidget {
   });
 
   final AudioPlayerService audioPlayer;
-  final int duration;
+  final Duration duration;
   final Stream<List<Marker>> markersStream;
 
   @override
@@ -24,13 +24,13 @@ class SongPlayer extends StatelessWidget {
         SongTimeline(
           positionStream: audioPlayer.positionStream,
           bufferStream: audioPlayer.bufferStream,
-          duration: Duration(seconds: duration),
+          duration: duration,
           onPositionChanged: (position) {
             audioPlayer.seek(position);
           },
           markersStream: markersStream,
           onMarkerTap: (marker) {
-            audioPlayer.seek(Duration(seconds: marker.start_position));
+            audioPlayer.seek(marker.start_position);
           },
         ),
         Row(

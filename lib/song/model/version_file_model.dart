@@ -8,7 +8,7 @@ class VersionFileModel extends Equatable {
   final String name;
   final String storage_path;
   final int size;
-  final int duration;
+  final Duration duration;
   final String mime_type;
   final String download_url;
 
@@ -38,7 +38,7 @@ class VersionFileModel extends Equatable {
       name: map['name'] ?? '',
       storage_path: map['storage_path'] ?? '',
       size: map['size']?.toInt() ?? 0,
-      duration: map['duration']?.toInt() ?? 0,
+      duration: Duration(milliseconds: map['duration']?.toInt() ?? 0),
       mime_type: map['mime_type'] ?? '',
       download_url: map['download_url'] ?? '',
     );
@@ -49,7 +49,7 @@ class VersionFileModel extends Equatable {
       'name': name,
       'storage_path': storage_path,
       'size': size,
-      'duration': duration,
+      'duration': duration.inMilliseconds,
       'mime_type': mime_type,
       'download_url': download_url,
     };

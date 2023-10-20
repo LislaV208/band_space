@@ -5,8 +5,8 @@ import 'package:equatable/equatable.dart';
 class Marker extends Equatable {
   final String id;
   final String name;
-  final int start_position;
-  final int? end_position;
+  final Duration start_position;
+  final Duration? end_position;
 
   const Marker({
     required this.id,

@@ -117,7 +117,7 @@ class SongRepository extends FirestoreRepository {
       final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
       //TODO: refactor
-      final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds ?? 0;
+      final duration = (await AudioPlayer().setUrl(downloadUrl))?.inMilliseconds ?? 0;
 
       log('song duration: ${duration}s');
 

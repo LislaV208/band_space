@@ -40,12 +40,10 @@ class AudioPlayerService {
 
     // listen to position stream only when first loop section is added
     if (_loopSectionsManager.sections.length == 1) {
-      _positionStreamSubscription = positionStream.listen((duration) {
-        final currentPosition = duration.inSeconds;
-
+      _positionStreamSubscription = positionStream.listen((position) {
         for (final section in _loopSectionsManager.joinedSections) {
-          if (currentPosition >= section.end) {
-            seek(Duration(seconds: section.start));
+          if (position >= section.end) {
+            seek(section.start);
 
             // no need to check other sections
             break;

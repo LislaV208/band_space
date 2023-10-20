@@ -23,10 +23,9 @@ class TimelineMarker extends Equatable {
   factory TimelineMarker.fromMarker(Marker marker, Duration songDuration) {
     return TimelineMarker(
       name: marker.name,
-      startPosition: Duration(seconds: marker.start_position).inMilliseconds / songDuration.inMilliseconds,
-      endPosition: marker.end_position != null
-          ? Duration(seconds: marker.end_position!).inMilliseconds / songDuration.inMilliseconds
-          : null,
+      startPosition: marker.start_position.inMilliseconds / songDuration.inMilliseconds,
+      endPosition:
+          marker.end_position != null ? marker.end_position!.inMilliseconds / songDuration.inMilliseconds : null,
     );
   }
 

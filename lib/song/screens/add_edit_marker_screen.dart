@@ -11,15 +11,15 @@ class AddEditMarkerScreen extends StatefulWidget {
   const AddEditMarkerScreen({
     super.key,
     required this.markers,
-    required this.maxPositionValue,
+    required this.songDuration,
     this.startPosition,
     this.markerToEdit,
     required this.onAddEditMarker,
   });
 
   final List<Marker> markers;
-  final int maxPositionValue;
-  final int? startPosition;
+  final Duration songDuration;
+  final Duration? startPosition;
   final Marker? markerToEdit;
 
   final Future<void> Function(MarkerDTO marker) onAddEditMarker;
@@ -35,10 +35,10 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
     text: widget.markerToEdit?.name,
   );
   late final _startPositionController = TextEditingController(
-    text: widget.startPosition?.toString(),
+    text: widget.startPosition != null ? widget.startPosition!.inSeconds.toString() : '',
   );
   late final _endPositionController = TextEditingController(
-    text: widget.markerToEdit?.end_position?.toString(),
+    text: widget.markerToEdit?.end_position != null ? widget.markerToEdit!.end_position!.inSeconds.toString() : '',
   );
 
   var _validationMessage = '';
@@ -97,8 +97,8 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
                         final intValue = int.tryParse(value);
                         if (intValue == null) return 'Nieprawidłowa wartość (tylko liczby)';
 
-                        if (intValue > widget.maxPositionValue) {
-                          return 'Maksymalna wartość - ${widget.maxPositionValue}';
+                        if (intValue > widget.songDuration.inSeconds) {
+                          return 'Maksymalna wartość - ${widget.songDuration.inSeconds}';
                         }
 
                         return null;
@@ -124,8 +124,8 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
                         }
 
                         if (intValue != null) {
-                          if (intValue > widget.maxPositionValue) {
-                            return 'Maksymalna wartość - ${widget.maxPositionValue}';
+                          if (intValue > widget.songDuration.inSeconds) {
+                            return 'Maksymalna wartość - ${widget.songDuration.inSeconds}';
                           }
                         }
 
@@ -150,8 +150,10 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
                     await widget.onAddEditMarker(
                       MarkerDTO(
                         name: _nameController.text,
-                        startPosition: int.parse(_startPositionController.text),
-                        endPosition: int.tryParse(_endPositionController.text),
+                        startPosition: Duration(seconds: int.parse(_startPositionController.text)),
+                        endPosition: _endPositionController.text.isNotEmpty
+                            ? Duration(seconds: int.parse(_endPositionController.text))
+                            : null,
                       ),
                     );
 
@@ -192,7 +194,7 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
       }
     }
 
-    if (startPosition == 0 && endPosition == widget.maxPositionValue) {
+    if (startPosition == 0 && endPosition == widget.songDuration.inSeconds) {
       setState(() {
         _validationMessage = 'Znacznik obejmuje cały utwór';
       });
@@ -202,8 +204,8 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
 
     final collidingMarkers = MarkerCollisionValidator(
       currentMarkers: widget.markers,
-      start: startPosition,
-      end: endPosition,
+      start: startPosition != null ? Duration(seconds: startPosition) : null,
+      end: endPosition != null ? Duration(seconds: endPosition) : null,
     ).validate();
 
     if (widget.markerToEdit != null) {
@@ -232,11 +234,11 @@ class _AddEditMarkerScreenState extends State<AddEditMarkerScreen> {
     for (final marker in markers) {
       buffer.write('${marker.name} (');
       if (marker.end_position == null) {
-        buffer.write(Duration(seconds: marker.start_position).format());
+        buffer.write(marker.start_position.format());
       } else {
-        buffer.write(Duration(seconds: marker.start_position).format());
+        buffer.write(marker.start_position.format());
         buffer.write(' - ');
-        buffer.write(Duration(seconds: marker.end_position!).format());
+        buffer.write(marker.end_position!.format());
       }
       buffer.write('), ');
     }

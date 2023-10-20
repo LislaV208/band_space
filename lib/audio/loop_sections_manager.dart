@@ -4,8 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoopSection extends Equatable implements Comparable<LoopSection> {
-  final int start;
-  final int end;
+  final Duration start;
+  final Duration end;
 
   const LoopSection({
     required this.start,
@@ -16,7 +16,7 @@ class LoopSection extends Equatable implements Comparable<LoopSection> {
   List<Object?> get props => [start, end];
 
   @override
-  int compareTo(other) => start - other.start;
+  int compareTo(other) => start.inMilliseconds - other.start.inMilliseconds;
 }
 
 class LoopSectionsManager {
@@ -67,8 +67,8 @@ class LoopSectionsManager {
   void _updateJoinedLoopSections() {
     final joinedSections = <LoopSection>[];
 
-    int? tempStart;
-    int? tempEnd;
+    Duration? tempStart;
+    Duration? tempEnd;
 
     _loopSections.sort();
 

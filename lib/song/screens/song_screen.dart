@@ -73,8 +73,12 @@ class SongScreen extends StatelessWidget {
                                 ) ??
                                 false;
 
+                            //TODO: po usunięciu nie robi pop. poprawić
+
                             if (context.mounted) {
+                              print('mounted');
                               if (isDeleted) {
+                                print('POP!');
                                 context.pop();
                               }
                             }
@@ -86,8 +90,8 @@ class SongScreen extends StatelessWidget {
                 : null,
           ),
           body: song == null
-              ? const Center(
-                  child: CircularProgressIndicator(),
+              ? Center(
+                  child: snapshot.hasError ? const Text('Zjebalo sie') : const CircularProgressIndicator(),
                 )
               : AppStreamBuilder(
                   stream: sl<VersionRepository>(param1: song.current_version_id).get(),

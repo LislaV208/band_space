@@ -20,13 +20,13 @@ class MarkersListView extends StatefulWidget {
     super.key,
     required this.markers,
     required this.audioPlayer,
-    required this.maxMarkerPosition,
+    required this.songDuration,
     required this.onMarkerEdit,
   });
 
   final List<Marker> markers;
   final AudioPlayerService audioPlayer;
-  final int maxMarkerPosition;
+  final Duration songDuration;
   final Future<void> Function(Marker markerToEdit, MarkerDTO newMarkerData) onMarkerEdit;
 
   @override
@@ -96,16 +96,14 @@ class _MarkersListViewState extends State<MarkersListView> {
                       : false;
 
                   return ListTile(
-                    onTap: () => widget.audioPlayer.seek(
-                      Duration(seconds: item.start_position),
-                    ),
+                    onTap: () => widget.audioPlayer.seek(item.start_position),
                     leading: item.end_position == null
-                        ? Text(Duration(seconds: item.start_position).format())
+                        ? Text(item.start_position.format())
                         : Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(Duration(seconds: item.start_position).format()),
-                              Text(Duration(seconds: item.end_position!).format()),
+                              Text(item.start_position.format()),
+                              Text(item.end_position!.format()),
                             ],
                           ),
                     title: Text(item.name),
@@ -157,7 +155,7 @@ class _MarkersListViewState extends State<MarkersListView> {
                                   context: context,
                                   builder: (_) => AddEditMarkerScreen(
                                     markers: widget.markers,
-                                    maxPositionValue: widget.maxMarkerPosition,
+                                    songDuration: widget.songDuration,
                                     startPosition: item.start_position,
                                     markerToEdit: item,
                                     onAddEditMarker: (markerData) async => await widget.onMarkerEdit(item, markerData),

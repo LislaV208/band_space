@@ -129,7 +129,7 @@ class ProjectRepository extends FirestoreRepository {
           final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
 
           //TODO: refactor
-          final duration = (await AudioPlayer().setUrl(downloadUrl))?.inSeconds;
+          final duration = (await AudioPlayer().setUrl(downloadUrl))?.inMilliseconds;
 
           log('song duration: ${duration}s');
 
