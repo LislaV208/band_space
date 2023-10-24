@@ -126,7 +126,7 @@ class _AppShellState extends State<AppShell> {
               selectedIndex: _selectedIndex,
               onDestinationSelected: (index) => _onItemTapped(index, context),
               extended: true,
-              backgroundColor: Colors.blueGrey[900],
+              backgroundColor: Colors.blueGrey[900]?.withOpacity(0.5),
             ),
           Expanded(
             child: Scaffold(

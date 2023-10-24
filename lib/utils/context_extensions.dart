@@ -43,3 +43,26 @@ extension ContextMenuExtension on BuildContext {
     );
   }
 }
+
+extension DialogExtension on BuildContext {
+  Future<T?> showDialog<T>({required Widget dialog}) {
+    return showGeneralDialog<T>(
+      context: this,
+      pageBuilder: (context, a1, a2) => dialog,
+      barrierDismissible: true,
+      barrierLabel: 'Anuluj',
+      transitionDuration: const Duration(milliseconds: 400),
+      transitionBuilder: (context, a1, a2, widget) {
+        final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+
+        return Transform(
+          transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+          child: Opacity(
+            opacity: a1.value,
+            child: widget,
+          ),
+        );
+      },
+    );
+  }
+}

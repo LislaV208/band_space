@@ -7,13 +7,16 @@ import 'package:band_space/song/model/firebase/firebase_song_version_model.dart'
 import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/marker_dto.dart';
 import 'package:band_space/song/model/song_version_model.dart';
+import 'package:band_space/song/model/version_comment.dart';
 
 class VersionRepository extends FirestoreRepository {
   final String versionId;
+  final String userId;
   final FirebaseStorage storage;
 
   const VersionRepository({
     required this.versionId,
+    required this.userId,
     required super.db,
     required this.storage,
   });
@@ -34,6 +37,47 @@ class VersionRepository extends FirestoreRepository {
         return FirebaseSongVersionModel.create(doc: doc, isCurrent: isVersionCurrent);
       },
     );
+  }
+
+  Future<void> addComment(String text, Duration? startPosition, Duration? endPosition) async {
+    final userRef = db.collection('users').doc(userId);
+
+    final commentRef = _versionRef.collection(FirestoreCollectionNames.comments).doc();
+    await commentRef.set({
+      'created_at': Timestamp.now(),
+      'author': userRef,
+      'text': text,
+      'start_position': startPosition?.inMilliseconds,
+      'end_position': endPosition?.inMilliseconds,
+    });
+  }
+
+  Stream<List<VersionComment>> getComments() {
+    return _versionRef
+        .collection(FirestoreCollectionNames.comments)
+        .orderBy('created_at')
+        .snapshots()
+        .asyncMap((event) async {
+      return await Future.wait(event.docs.map((doc) async {
+        final data = doc.data();
+        final userRef = data['author'] as DocumentReference<Map<String, dynamic>>;
+
+        final userDoc = await userRef.get();
+        final userData = userDoc.data();
+
+        return VersionComment(
+          id: doc.id,
+          created_at: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
+          author: userData?['email'] ?? '',
+          text: data['text'] ?? '',
+          start_position: data['start_position'] != null ? Duration(milliseconds: data['start_position']) : null,
+        );
+      }));
+    });
+  }
+
+  Future<void> deleteComment(String id) async {
+    await _versionRef.collection(FirestoreCollectionNames.comments).doc(id).delete();
   }
 
   Future<void> addMarker(

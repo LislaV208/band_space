@@ -9,6 +9,7 @@ class AppStreamBuilder<T> extends StatelessWidget {
     this.loadingWidget,
     this.errorWidget,
     this.noDataText,
+    this.noDataWidget,
   });
 
   final Stream<T> stream;
@@ -17,38 +18,49 @@ class AppStreamBuilder<T> extends StatelessWidget {
   final Widget? loadingWidget;
   final Widget? errorWidget;
   final String? noDataText;
+  final Widget? noDataWidget;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<T>(
       stream: stream,
       builder: (context, snapshot) {
+        late Widget child;
+
         if (snapshot.connectionState != ConnectionState.active) {
-          return Center(
+          child = Center(
             child: loadingWidget ?? const CircularProgressIndicator(),
           );
-        }
+        } else if (snapshot.hasError) {
+          print(snapshot.error);
 
-        if (snapshot.hasError) {
-          return Center(
+          child = Center(
             child: errorWidget ?? const Text('Wystąpił błąd'),
           );
-        }
+        } else {
+          final data = snapshot.data as T;
 
-        final data = snapshot.data as T;
-
-        if (data is List) {
-          if (data.isEmpty && showEmptyDataText) {
-            return Center(
-              child: Text(
-                noDataText ?? 'Brak wyników',
-                textAlign: TextAlign.center,
-              ),
+          if (data is List && data.isEmpty && showEmptyDataText) {
+            child = Center(
+              child: noDataWidget ??
+                  Text(
+                    noDataText ?? 'Brak wyników',
+                    textAlign: TextAlign.center,
+                  ),
             );
+          } else {
+            child = builder(context, data);
           }
         }
 
-        return builder(context, data);
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.fastOutSlowIn,
+          switchOutCurve: Curves.fastOutSlowIn,
+          child: child,
+        );
+
+        // return builder(context, data);
       },
     );
   }

@@ -51,6 +51,7 @@ void setupServiceLocator() {
   sl.registerFactoryParam<VersionRepository, String, void>(
     (versionId, _) => VersionRepository(
       versionId: versionId,
+      userId: _getUserId(),
       db: FirebaseFirestore.instance,
       storage: FirebaseStorage.instance,
     ),
