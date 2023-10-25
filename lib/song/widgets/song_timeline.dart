@@ -1,29 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'package:band_space/song/model/version_comment.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/timeline_state.dart';
 import 'package:band_space/song/screens/widgets/timeline_comment_markers.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 
 class SongTimeline extends StatefulWidget {
-  const SongTimeline({
-    super.key,
-    required this.positionStream,
-    required this.bufferStream,
-    required this.duration,
-    required this.onPositionChanged,
-    required this.commentsStream,
-    required this.selectedComment,
-    required this.onSelectedCommentChange,
-  });
-
-  final Stream<Duration> positionStream;
-  final Stream<Duration> bufferStream;
-  final Duration duration;
-  final Function(Duration position) onPositionChanged;
-  final Stream<List<VersionComment>> commentsStream;
-  final VersionComment? selectedComment;
-  final void Function(VersionComment? comment) onSelectedCommentChange;
+  const SongTimeline({super.key});
 
   static const widgetHeight = 60.0;
 
@@ -46,10 +31,12 @@ class _SongTimelineState extends State<SongTimeline> {
           _state = TimelineState(
             width: maxWidth,
             height: SongTimeline.widgetHeight,
-            songPositionStream: widget.positionStream,
-            songBufferStream: widget.bufferStream,
-            songDuration: widget.duration,
-            onPositionChanged: widget.onPositionChanged,
+            songPositionStream: context.read<VersionCubit>().audioPlayer.positionStream,
+            songBufferStream: context.read<VersionCubit>().audioPlayer.bufferStream,
+            songDuration: context.read<VersionCubit>().currentVersion.file!.duration,
+            onPositionChanged: (position) {
+              context.read<VersionCubit>().audioPlayer.seek(position);
+            },
           );
         } else {
           _state!.width = maxWidth;
@@ -62,11 +49,7 @@ class _SongTimelineState extends State<SongTimeline> {
               child: _Timeline(state: _state!),
             ),
             TimelineCommentMarkers(
-              commentsStream: widget.commentsStream,
-              selectedComment: widget.selectedComment,
-              songDuration: widget.duration,
               maxWidth: constraints.maxWidth - (paddingValue * 2),
-              onSelectedCommentChange: widget.onSelectedCommentChange,
             ),
           ],
         );

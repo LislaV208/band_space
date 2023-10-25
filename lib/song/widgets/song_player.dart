@@ -1,28 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/song/model/version_comment.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/widgets/song_timeline.dart';
 
 class SongPlayer extends StatelessWidget {
-  const SongPlayer({
-    super.key,
-    required this.audioPlayer,
-    required this.duration,
-    required this.commentsStream,
-    required this.selectedComment,
-    required this.onSelectedCommentChange,
-  });
-
-  final AudioPlayerService audioPlayer;
-  final Duration duration;
-  final Stream<List<VersionComment>> commentsStream;
-  final VersionComment? selectedComment;
-  final void Function(VersionComment? comment) onSelectedCommentChange;
+  const SongPlayer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final audioPlayer = context.read<VersionCubit>().audioPlayer;
+
     return Container(
       alignment: Alignment.center,
       constraints: const BoxConstraints(maxWidth: 1800),
@@ -33,25 +23,15 @@ class SongPlayer extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SongTimeline(
-            positionStream: audioPlayer.positionStream,
-            bufferStream: audioPlayer.bufferStream,
-            duration: duration,
-            onPositionChanged: (position) {
-              audioPlayer.seek(position);
-            },
-            commentsStream: commentsStream,
-            selectedComment: selectedComment,
-            onSelectedCommentChange: onSelectedCommentChange,
-          ),
+          const SongTimeline(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Visibility.maintain(
+              const Visibility.maintain(
                 visible: false,
                 child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.loop),
+                  onPressed: null,
+                  icon: Icon(Icons.loop),
                 ),
               ),
               IconButton(
@@ -96,7 +76,13 @@ class SongPlayer extends StatelessWidget {
                             backgroundColor: Theme.of(context).colorScheme.secondary,
                           ),
                           iconSize: 40,
-                          onPressed: _onPlayPausePressed,
+                          onPressed: () {
+                            if (audioPlayer.isPlaying) {
+                              audioPlayer.pause();
+                            } else {
+                              audioPlayer.play();
+                            }
+                          },
                           tooltip: (isPlaying ? 'Pauza' : 'Odtwórz') + (kIsWeb ? ' [Spacja]' : ''),
                         );
                       },
@@ -134,13 +120,5 @@ class SongPlayer extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _onPlayPausePressed() async {
-    if (audioPlayer.isPlaying) {
-      audioPlayer.pause();
-    } else {
-      audioPlayer.play();
-    }
   }
 }

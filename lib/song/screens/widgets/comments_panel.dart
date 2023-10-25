@@ -4,27 +4,12 @@ import 'package:animated_list_plus/animated_list_plus.dart';
 import 'package:animated_list_plus/transitions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:band_space/song/model/version_comment.dart';
-import 'package:band_space/song/repository/version_repository.dart';
+import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/widgets/comment_tile.dart';
 import 'package:band_space/widgets/app_stream_builder.dart';
 
-class CommentsPanel extends StatefulWidget {
-  const CommentsPanel({
-    super.key,
-    required this.commentsStream,
-    required this.onSelectedCommentChange,
-  });
-
-  final Stream<List<VersionComment>> commentsStream;
-  final void Function(VersionComment? comment) onSelectedCommentChange;
-
-  @override
-  State<CommentsPanel> createState() => _CommentsPanelState();
-}
-
-class _CommentsPanelState extends State<CommentsPanel> {
-  VersionComment? _selectedComment;
+class CommentsPanel extends StatelessWidget {
+  const CommentsPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +22,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: AppStreamBuilder(
-        stream: widget.commentsStream,
+        stream: context.read<VersionCubit>().versionRepository.getComments(),
         noDataWidget: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -65,25 +50,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
                 sizeFraction: 0.7,
                 curve: Curves.easeInOut,
                 animation: animation,
-                child: CommentTile(
-                  comment: comment,
-                  onTap: () => setState(
-                    () {
-                      if (_selectedComment == null || _selectedComment != comment) {
-                        _selectedComment = comment;
-                      } else {
-                        _selectedComment = null;
-                      }
-
-                      widget.onSelectedCommentChange(_selectedComment);
-                    },
-                  ),
-                  onEdit: () {},
-                  onDelete: () {
-                    context.read<VersionRepository>().deleteComment(comment.id);
-                  },
-                  isSelected: comment == _selectedComment,
-                ),
+                child: CommentTile(comment: comment),
               );
             },
           );

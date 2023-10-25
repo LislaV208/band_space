@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/song/cubit/version_cubit.dart';
+import 'package:band_space/song/cubit/version_state.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
@@ -72,11 +75,14 @@ class SongScreen extends StatelessWidget {
               : AppStreamBuilder(
                   stream: sl<VersionRepository>(param1: song.current_version_id).get(),
                   builder: (context, currentVersion) {
-                    return MultiProvider(
-                      providers: [
-                        Provider(create: (context) => sl<VersionRepository>(param1: currentVersion.id)),
-                        Provider.value(value: currentVersion),
-                      ],
+                    return Provider(
+                      create: (context) => VersionCubit(
+                        const VersionState(selectedComment: null),
+                        currentVersion: currentVersion,
+                        versionRepository: sl<VersionRepository>(param1: currentVersion.id),
+                        audioPlayer: sl<AudioPlayerService>(),
+                      ),
+                      dispose: (context, cubit) => cubit.dispose(),
                       child: const VersionView(),
                     );
                   },

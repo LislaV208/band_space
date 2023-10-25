@@ -1,18 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/widgets/comment_position_switch.dart';
 
 class VersionCommentInput extends StatefulWidget {
   const VersionCommentInput({
     super.key,
-    required this.onSubmitted,
-    required this.getCurrentPosition,
     this.focusNode,
   });
 
-  final Duration Function() getCurrentPosition;
-  final void Function(String value, Duration? startPosition, Duration? endPosition) onSubmitted;
   final FocusNode? focusNode;
 
   @override
@@ -48,7 +47,7 @@ class _VersionCommentInputState extends State<VersionCommentInput> {
       setState(() {
         _hasFocus = widget.focusNode!.hasFocus;
         if (_hasFocus) {
-          _currentPosition = widget.getCurrentPosition();
+          _currentPosition = context.read<VersionCubit>().audioPlayer.currentPosition;
         }
       });
     }
@@ -115,9 +114,10 @@ class _VersionCommentInputState extends State<VersionCommentInput> {
   }
 
   void _submit(String text) {
-    final startPosition = _sendPosition ? _currentPosition : null;
+    context
+        .read<VersionCubit>()
+        .addComment(text, startPosition: _sendPosition ? _currentPosition : null, endPosition: null);
 
-    widget.onSubmitted(text, startPosition, null);
     _textController.clear();
   }
 }
