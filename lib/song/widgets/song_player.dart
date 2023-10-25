@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
-import 'package:band_space/song/model/marker.dart';
+import 'package:band_space/song/model/version_comment.dart';
 import 'package:band_space/song/widgets/song_timeline.dart';
 
 class SongPlayer extends StatelessWidget {
@@ -10,12 +10,16 @@ class SongPlayer extends StatelessWidget {
     super.key,
     required this.audioPlayer,
     required this.duration,
-    required this.markersStream,
+    required this.commentsStream,
+    required this.selectedComment,
+    required this.onSelectedCommentChange,
   });
 
   final AudioPlayerService audioPlayer;
   final Duration duration;
-  final Stream<List<Marker>> markersStream;
+  final Stream<List<VersionComment>> commentsStream;
+  final VersionComment? selectedComment;
+  final void Function(VersionComment? comment) onSelectedCommentChange;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +30,6 @@ class SongPlayer extends StatelessWidget {
         color: Theme.of(context).primaryColorDark.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -37,10 +40,9 @@ class SongPlayer extends StatelessWidget {
             onPositionChanged: (position) {
               audioPlayer.seek(position);
             },
-            markersStream: markersStream,
-            onMarkerTap: (marker) {
-              audioPlayer.seek(marker.start_position);
-            },
+            commentsStream: commentsStream,
+            selectedComment: selectedComment,
+            onSelectedCommentChange: onSelectedCommentChange,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

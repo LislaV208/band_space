@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:band_space/song/model/marker.dart';
+import 'package:band_space/song/model/version_comment.dart';
 import 'package:band_space/song/screens/timeline_state.dart';
+import 'package:band_space/song/screens/widgets/timeline_comment_markers.dart';
 import 'package:band_space/utils/duration_extensions.dart';
 
 class SongTimeline extends StatefulWidget {
@@ -11,18 +12,20 @@ class SongTimeline extends StatefulWidget {
     required this.bufferStream,
     required this.duration,
     required this.onPositionChanged,
-    required this.markersStream,
-    required this.onMarkerTap,
+    required this.commentsStream,
+    required this.selectedComment,
+    required this.onSelectedCommentChange,
   });
 
   final Stream<Duration> positionStream;
   final Stream<Duration> bufferStream;
   final Duration duration;
   final Function(Duration position) onPositionChanged;
-  final Stream<List<Marker>> markersStream;
-  final void Function(Marker marker) onMarkerTap;
+  final Stream<List<VersionComment>> commentsStream;
+  final VersionComment? selectedComment;
+  final void Function(VersionComment? comment) onSelectedCommentChange;
 
-  static const widgetHeight = 80.0;
+  static const widgetHeight = 60.0;
 
   @override
   State<SongTimeline> createState() => _SongTimelineState();
@@ -33,25 +36,40 @@ class _SongTimelineState extends State<SongTimeline> {
 
   @override
   Widget build(BuildContext context) {
+    const paddingValue = 20.0;
     return LayoutBuilder(
       builder: (context, constraints) {
         // potrzebne aby nie utracić stanu podczas resize
+        final maxWidth = constraints.maxWidth - paddingValue * 2;
+
         if (_state == null) {
           _state = TimelineState(
-            width: constraints.maxWidth,
+            width: maxWidth,
             height: SongTimeline.widgetHeight,
             songPositionStream: widget.positionStream,
             songBufferStream: widget.bufferStream,
             songDuration: widget.duration,
-            markersStream: widget.markersStream,
             onPositionChanged: widget.onPositionChanged,
-            onMarkerTap: widget.onMarkerTap,
           );
         } else {
-          _state!.width = constraints.maxWidth;
+          _state!.width = maxWidth;
         }
 
-        return _Timeline(state: _state!);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: paddingValue),
+              child: _Timeline(state: _state!),
+            ),
+            TimelineCommentMarkers(
+              commentsStream: widget.commentsStream,
+              selectedComment: widget.selectedComment,
+              songDuration: widget.duration,
+              maxWidth: constraints.maxWidth - (paddingValue * 2),
+              onSelectedCommentChange: widget.onSelectedCommentChange,
+            ),
+          ],
+        );
       },
     );
   }
@@ -87,7 +105,7 @@ class _Timeline extends StatelessWidget {
                 child: DefaultTextStyle(
                   style: Theme.of(context).textTheme.labelSmall!,
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
+                    padding: const EdgeInsets.only(bottom: 0.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -119,7 +137,7 @@ class TimelinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintMarkers(canvas, size);
+    // print(size);
 
     final backgroundLinePaint = Paint()
       ..color = Colors.grey[700]!
@@ -162,107 +180,5 @@ class TimelinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant TimelinePainter oldDelegate) {
     return state != oldDelegate.state;
-  }
-
-  static const markerSize = 20.0;
-  static const markerJointSize = 2.0;
-
-  void _paintMarkers(Canvas canvas, Size size) {
-    const fontSize = 13.0;
-
-    const textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: fontSize,
-    );
-
-    for (var i = 0; i < state.markers.length; ++i) {
-      final marker = state.markers[i];
-
-      final isTimestampMarker = marker.endPosition == null;
-
-      final markerPaint = Paint()
-        ..color = isTimestampMarker ? Colors.blue : Colors.red
-        ..strokeWidth = markerSize;
-
-      final markerJointPaint = Paint()
-        ..color = isTimestampMarker ? Colors.blue : Colors.red
-        ..strokeWidth = markerJointSize;
-
-      final textSpan = TextSpan(
-        text: marker.name,
-        style: textStyle,
-      );
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-        ellipsis: '..',
-        maxLines: 1,
-      );
-
-      const padding = 4.0;
-
-      if (isTimestampMarker) {
-        textPainter.layout(maxWidth: 80);
-      }
-
-      final startX = marker.startPosition * size.width;
-      final endX = (isTimestampMarker ? startX + textPainter.width : marker.endPosition! * size.width) + padding;
-
-      if (!isTimestampMarker) {
-        textPainter.layout(maxWidth: endX - startX);
-      }
-
-      final rect = Rect.fromLTRB(
-        startX,
-        (size.height / 2) - (handleDefaultRadius * 2) - textPainter.height - padding,
-        endX + (isTimestampMarker ? padding : 0.0),
-        (size.height / 2) - (handleDefaultRadius * 2),
-      );
-
-      canvas.drawRect(rect, markerPaint);
-
-      state.updateMarkerRect(marker, rect);
-
-      canvas.drawLine(
-        Offset(
-          startX + markerJointSize / 2,
-          (size.height / 2) - (handleDefaultRadius * 2),
-        ),
-        Offset(
-          startX + markerJointSize / 2,
-          size.height / 2,
-        ),
-        markerJointPaint,
-      );
-
-      if (!isTimestampMarker) {
-        var drawEndLine = true;
-        if (i < state.markers.length - 1) {
-          final nextMarker = state.markers[i + 1];
-
-          if (nextMarker.startPosition == marker.endPosition) {
-            drawEndLine = false;
-          }
-        }
-
-        if (drawEndLine) {
-          canvas.drawLine(
-            Offset(
-              endX - markerJointSize / 2,
-              (size.height / 2) - (handleDefaultRadius * 2),
-            ),
-            Offset(
-              endX - markerJointSize / 2,
-              size.height / 2,
-            ),
-            markerJointPaint,
-          );
-        }
-      }
-
-      final position =
-          Offset(startX + padding, size.height / 2 - handleDefaultRadius * 2 - textPainter.height - padding / 2);
-      textPainter.paint(canvas, position);
-    }
   }
 }

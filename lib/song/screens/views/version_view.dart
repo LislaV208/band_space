@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/model/song_version_model.dart';
+import 'package:band_space/song/model/version_comment.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/song/screens/widgets/comments_panel.dart';
 import 'package:band_space/song/screens/widgets/version_comment_input.dart';
@@ -21,9 +22,12 @@ class VersionView extends StatefulWidget {
 class _VersionViewState extends State<VersionView> {
   final _audioPlayer = sl<AudioPlayerService>();
   late final _currentVersion = context.read<SongVersionModel>();
+  late final _commentsStream = context.read<VersionRepository>().getComments();
 
   final _commentFocusNode = FocusNode();
   final _keyboardFocusNode = FocusNode();
+
+  VersionComment? _selectedComment;
 
   @override
   void initState() {
@@ -84,7 +88,9 @@ class _VersionViewState extends State<VersionView> {
                     child: SongPlayer(
                       audioPlayer: _audioPlayer,
                       duration: _currentVersion.file!.duration,
-                      markersStream: context.read<VersionRepository>().getMarkers(),
+                      commentsStream: _commentsStream,
+                      selectedComment: _selectedComment,
+                      onSelectedCommentChange: _onSelectedCommentChange,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -100,15 +106,21 @@ class _VersionViewState extends State<VersionView> {
             ),
             const SizedBox(width: 24),
             CommentsPanel(
-              onCommentSelected: (comment) {
-                if (comment.start_position != null) {
-                  _audioPlayer.seek(comment.start_position!);
-                }
-              },
+              commentsStream: _commentsStream,
+              onSelectedCommentChange: _onSelectedCommentChange,
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _onSelectedCommentChange(VersionComment? comment) {
+    if (comment?.start_position != null) {
+      _audioPlayer.seek(comment!.start_position!);
+    }
+    setState(() {
+      _selectedComment = comment;
+    });
   }
 }

@@ -4,37 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/widgets/song_timeline.dart';
-
-class TimelineMarker extends Equatable {
-  const TimelineMarker({
-    required this.name,
-    required this.startPosition,
-    required this.endPosition,
-    this.rect = Rect.zero,
-  });
-
-  final String name;
-  final double startPosition;
-  final double? endPosition;
-  final Rect rect;
-
-  factory TimelineMarker.fromMarker(Marker marker, Duration songDuration) {
-    return TimelineMarker(
-      name: marker.name,
-      startPosition: marker.start_position.inMilliseconds / songDuration.inMilliseconds,
-      endPosition:
-          marker.end_position != null ? marker.end_position!.inMilliseconds / songDuration.inMilliseconds : null,
-    );
-  }
-
-  TimelineMarker copyWithRect(Rect newRect) =>
-      TimelineMarker(name: name, startPosition: startPosition, endPosition: endPosition, rect: newRect);
-
-  @override
-  List<Object?> get props => [name, startPosition, endPosition, rect];
-}
 
 // ignore: must_be_immutable
 class TimelineState extends Equatable with ChangeNotifier {
@@ -43,13 +13,10 @@ class TimelineState extends Equatable with ChangeNotifier {
   final Stream<Duration> songPositionStream;
   final Stream<Duration> songBufferStream;
   final Duration songDuration;
-  final Stream<List<Marker>> markersStream;
   final void Function(Duration position) onPositionChanged;
-  final void Function(Marker marker) onMarkerTap;
 
   StreamSubscription<double>? _positionStreamSubscription;
   StreamSubscription<double>? _bufferStreamSubscription;
-  StreamSubscription<List<Marker>>? _markersStreamSubscription;
 
   TimelineState({
     required this.width,
@@ -57,11 +24,8 @@ class TimelineState extends Equatable with ChangeNotifier {
     required this.songPositionStream,
     required this.songBufferStream,
     required this.songDuration,
-    required this.markersStream,
     required this.onPositionChanged,
-    required this.onMarkerTap,
   }) {
-    print('TimelineState()');
     _positionStreamSubscription =
         songPositionStream.map((position) => position.inMilliseconds / songDuration.inMilliseconds).listen((position) {
       if (!isHandleDragging) {
@@ -75,18 +39,11 @@ class TimelineState extends Equatable with ChangeNotifier {
         songBufferStream.map((position) => position.inMilliseconds / songDuration.inMilliseconds).listen((position) {
       bufferPosition = position;
     });
-
-    _markersStreamSubscription = markersStream.listen((markers) {
-      _originalMarkers = markers;
-      this.markers = markers.map((marker) => TimelineMarker.fromMarker(marker, songDuration)).toList();
-
-      notifyListeners();
-    });
   }
 
   @override
   List<Object> get props {
-    return [currentPosition, isHandleDragging, showHoverCursor, markers];
+    return [currentPosition, isHandleDragging, showHoverCursor];
   }
 
   @override
@@ -94,7 +51,6 @@ class TimelineState extends Equatable with ChangeNotifier {
     print('timeline state dispose');
     _positionStreamSubscription?.cancel();
     _bufferStreamSubscription?.cancel();
-    _markersStreamSubscription?.cancel();
 
     super.dispose();
   }
@@ -105,8 +61,6 @@ class TimelineState extends Equatable with ChangeNotifier {
   var bufferPosition = 0.0;
   var showHoverCursor = false;
   var isHandleDragging = false;
-  var _originalMarkers = <Marker>[];
-  var markers = <TimelineMarker>[];
 
   double get currentPositionInPixels => currentPosition * width;
   double get bufferPositionInPixels => bufferPosition * width;
@@ -122,13 +76,6 @@ class TimelineState extends Equatable with ChangeNotifier {
 
     // jezeli hover wykryty, to nie szukamy dalej
     if (showHoverCursor) return;
-
-    for (final marker in markers) {
-      _detectMarkerHover(marker, position);
-
-      // jezeli hover wykryty, to nie szukamy dalej
-      if (showHoverCursor) break;
-    }
   }
 
   void onTapDown(Offset tapPosition) {
@@ -145,16 +92,6 @@ class TimelineState extends Equatable with ChangeNotifier {
         isHandleDragging = true;
 
         notifyListeners();
-      }
-    } else {
-      for (var i = 0; i < markers.length; ++i) {
-        final marker = markers[i];
-
-        if (marker.rect.contains(tapPosition)) {
-          onMarkerTap(_originalMarkers[i]);
-
-          break;
-        }
       }
     }
   }
@@ -206,33 +143,11 @@ class TimelineState extends Equatable with ChangeNotifier {
     }
   }
 
-  void updateMarkerRect(TimelineMarker marker, Rect rect) {
-    final index = markers.indexOf(marker);
-
-    if (index >= 0) {
-      markers[index] = marker.copyWithRect(rect);
-    }
-  }
-
   void _detectHandleHover(Offset hoverPosition) {
     final isInX = (hoverPosition.dx - currentPositionInPixels).abs() <= TimelinePainter.handleDraggingRadius;
     final isInY = (hoverPosition.dy - height / 2).abs() <= TimelinePainter.handleDraggingRadius;
 
     if (isInX && isInY) {
-      if (!showHoverCursor) {
-        showHoverCursor = true;
-
-        notifyListeners();
-      }
-    } else if (showHoverCursor) {
-      showHoverCursor = false;
-
-      notifyListeners();
-    }
-  }
-
-  void _detectMarkerHover(TimelineMarker marker, Offset hoverPosition) {
-    if (marker.rect.contains(hoverPosition)) {
       if (!showHoverCursor) {
         showHoverCursor = true;
 
