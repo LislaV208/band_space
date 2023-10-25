@@ -26,6 +26,7 @@ class CommentTile extends StatelessWidget {
     const animationCurve = Curves.fastOutSlowIn;
 
     return HoverWidget(
+      showCursor: comment.start_position != null,
       builder: (context, isHovered) {
         return GestureDetector(
           onTap: () => context.read<VersionCubit>().onCommentTap(comment),

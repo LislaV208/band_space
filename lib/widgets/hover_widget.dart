@@ -4,9 +4,11 @@ class HoverWidget extends StatefulWidget {
   const HoverWidget({
     super.key,
     required this.builder,
+    this.showCursor = true,
   });
 
   final Widget Function(BuildContext context, bool isHovered) builder;
+  final bool showCursor;
 
   @override
   State<HoverWidget> createState() => _HoverWidgetState();
@@ -18,7 +20,7 @@ class _HoverWidgetState extends State<HoverWidget> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      cursor: _isHovered ? SystemMouseCursors.click : MouseCursor.defer,
+      cursor: widget.showCursor && _isHovered ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: (event) => setState(() {
         _isHovered = true;
       }),

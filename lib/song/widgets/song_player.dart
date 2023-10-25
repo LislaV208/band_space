@@ -76,13 +76,7 @@ class SongPlayer extends StatelessWidget {
                             backgroundColor: Theme.of(context).colorScheme.secondary,
                           ),
                           iconSize: 40,
-                          onPressed: () {
-                            if (audioPlayer.isPlaying) {
-                              audioPlayer.pause();
-                            } else {
-                              audioPlayer.play();
-                            }
-                          },
+                          onPressed: () => context.read<VersionCubit>().onSongPlayPause(),
                           tooltip: (isPlaying ? 'Pauza' : 'Odtwórz') + (kIsWeb ? ' [Spacja]' : ''),
                         );
                       },

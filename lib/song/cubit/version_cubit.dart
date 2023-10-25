@@ -36,7 +36,7 @@ class VersionCubit extends Cubit<VersionState> {
       commentFocusNode.unfocus();
     } else if (event.isKeyPressed(LogicalKeyboardKey.space)) {
       if (!commentFocusNode.hasFocus) {
-        audioPlayer.isPlaying ? audioPlayer.pause() : audioPlayer.play();
+        onSongPlayPause();
       }
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
       if (!commentFocusNode.hasFocus) {
@@ -49,10 +49,23 @@ class VersionCubit extends Cubit<VersionState> {
     }
   }
 
+  void onSongPlayPause() {
+    if (audioPlayer.isPlaying) {
+      audioPlayer.pause();
+    } else {
+      audioPlayer.play();
+
+      emit(const VersionState(selectedComment: null));
+    }
+  }
+
   void onCommentTap(VersionComment comment) {
+    if (comment.start_position == null) return;
+
     final newSelectedComment = comment == state.selectedComment ? null : comment;
 
     if (newSelectedComment?.start_position != null) {
+      audioPlayer.pause();
       audioPlayer.seek(newSelectedComment!.start_position!);
     }
 
