@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 
-import 'package:animated_list_plus/animated_list_plus.dart';
-import 'package:animated_list_plus/transitions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/widgets/comment_tile.dart';
 import 'package:band_space/widgets/app_stream_builder.dart';
 
-class CommentsPanel extends StatelessWidget {
+class CommentsPanel extends StatefulWidget {
   const CommentsPanel({super.key});
+
+  @override
+  State<CommentsPanel> createState() => _CommentsPanelState();
+}
+
+class _CommentsPanelState extends State<CommentsPanel> {
+  final listKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +48,17 @@ class CommentsPanel extends StatelessWidget {
           ],
         ),
         builder: (context, comments) {
-          return ImplicitlyAnimatedList(
-            items: comments,
-            areItemsTheSame: (oldItem, newItem) => oldItem == newItem,
-            itemBuilder: (context, animation, comment, index) {
-              return SizeFadeTransition(
-                sizeFraction: 0.7,
-                curve: Curves.easeInOut,
-                animation: animation,
-                child: CommentTile(comment: comment),
+          // TODO: make list animated again!
+          return ScrollablePositionedList.builder(
+            physics: const ClampingScrollPhysics(),
+            itemScrollController: context.read<VersionCubit>().commentsListScrollController,
+            itemPositionsListener: context.read<VersionCubit>().commentsListPositionsListener,
+            itemCount: comments.length,
+            itemBuilder: (context, index) {
+              return CommentTile(
+                key: ValueKey(comments[index].id),
+                index: index,
+                comment: comments[index],
               );
             },
           );

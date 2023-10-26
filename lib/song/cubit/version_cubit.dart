@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/song/cubit/version_state.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_comment.dart';
 import 'package:band_space/song/repository/version_repository.dart';
+
+enum CommentTapSource {
+  marker,
+  listItem,
+}
 
 class VersionCubit extends Cubit<VersionState> {
   VersionCubit(
@@ -28,6 +35,9 @@ class VersionCubit extends Cubit<VersionState> {
   final SongVersionModel currentVersion;
   final VersionRepository versionRepository;
   final AudioPlayerService audioPlayer;
+
+  final ItemScrollController commentsListScrollController = ItemScrollController();
+  final ItemPositionsListener commentsListPositionsListener = ItemPositionsListener.create();
 
   void onKeyPressed(RawKeyEvent event, FocusNode commentFocusNode) {
     if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
@@ -59,7 +69,7 @@ class VersionCubit extends Cubit<VersionState> {
     }
   }
 
-  void onCommentTap(VersionComment comment) {
+  void onCommentTap(CommentTapSource tapSource, int index, VersionComment comment) {
     if (comment.start_position == null) return;
 
     final newSelectedComment = comment == state.selectedComment ? null : comment;
@@ -70,6 +80,35 @@ class VersionCubit extends Cubit<VersionState> {
     }
 
     emit(VersionState(selectedComment: newSelectedComment));
+
+    if (newSelectedComment == null) return;
+
+    if (tapSource == CommentTapSource.marker) {
+      commentsListScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.fastOutSlowIn,
+      );
+    } else if (tapSource == CommentTapSource.listItem) {
+      final itemPosition = commentsListPositionsListener.itemPositions.value.firstWhereOrNull(
+        (ItemPosition position) => position.index == index,
+      );
+
+      if (itemPosition != null) {
+        // Check if the item is fully visible
+        if (itemPosition.itemLeadingEdge >= 0 && itemPosition.itemTrailingEdge <= 1) {
+          // The item is fully visible
+          return;
+        }
+      }
+
+      commentsListScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.fastOutSlowIn,
+        alignment: 0.5,
+      );
+    }
   }
 
   void addComment(

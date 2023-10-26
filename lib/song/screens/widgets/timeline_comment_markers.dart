@@ -36,11 +36,14 @@ class TimelineCommentMarkers extends StatelessWidget {
                 if (position == null) return const SizedBox();
 
                 return Padding(
+                  key: ValueKey(comment.id),
                   padding: EdgeInsets.only(left: position.inMilliseconds / songDuration.inMilliseconds * maxWidth),
                   child: HoverWidget(
                     builder: (context, isHovered) {
                       return GestureDetector(
-                        onTap: () => context.read<VersionCubit>().onCommentTap(comment),
+                        onTap: () => context
+                            .read<VersionCubit>()
+                            .onCommentTap(CommentTapSource.marker, comments.indexOf(comment), comment),
                         child: BlocSelector<VersionCubit, VersionState, bool>(
                           selector: (state) => state.selectedComment == comment,
                           builder: (context, isSelected) {

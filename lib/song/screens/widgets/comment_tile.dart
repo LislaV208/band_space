@@ -15,9 +15,11 @@ import 'package:band_space/widgets/hover_widget.dart';
 class CommentTile extends StatelessWidget {
   const CommentTile({
     super.key,
+    required this.index,
     required this.comment,
   });
 
+  final int index;
   final VersionComment comment;
 
   @override
@@ -29,7 +31,7 @@ class CommentTile extends StatelessWidget {
       showCursor: comment.start_position != null,
       builder: (context, isHovered) {
         return GestureDetector(
-          onTap: () => context.read<VersionCubit>().onCommentTap(comment),
+          onTap: () => context.read<VersionCubit>().onCommentTap(CommentTapSource.listItem, index, comment),
           child: BlocSelector<VersionCubit, VersionState, bool>(
             selector: (state) => state.selectedComment == comment,
             builder: (context, isSelected) {
