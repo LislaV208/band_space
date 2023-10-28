@@ -135,10 +135,11 @@ class CommentTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (comment.start_position != null)
                           Padding(
-                            padding: const EdgeInsets.only(right: 6.0),
+                            padding: const EdgeInsets.only(right: 10.0),
                             child: Text(
                               comment.start_position!.format(),
                               style: TextStyle(
@@ -148,9 +149,11 @@ class CommentTile extends StatelessWidget {
                             ),
                           ),
                         Flexible(
-                          child: Text(
-                            comment.text,
-                          ),
+                          child: comment.start_position == null
+                              ? SelectableText(comment.text)
+                              : Text(
+                                  comment.text,
+                                ),
                         ),
                       ],
                     ),
