@@ -31,7 +31,7 @@ class CommentTile extends StatelessWidget {
       showCursor: comment.start_position != null,
       builder: (context, isHovered) {
         return GestureDetector(
-          onTap: () => context.read<VersionCubit>().onCommentTap(CommentTapSource.listItem, index, comment),
+          onTap: () => context.read<VersionCubit>().onCommentTap(CommentTapSource.listItem, comment),
           child: BlocSelector<VersionCubit, VersionState, bool>(
             selector: (state) => state.selectedComment == comment,
             builder: (context, isSelected) {
@@ -134,29 +134,23 @@ class CommentTile extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (comment.start_position != null)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10.0),
-                            child: Text(
-                              comment.start_position!.format(),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.inversePrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    comment.start_position == null
+                        ? SelectableText(comment.text)
+                        : RichText(
+                            text: TextSpan(
+                              style: DefaultTextStyle.of(context).style,
+                              children: <TextSpan>[
+                                TextSpan(
+                                  text: '${comment.start_position!.format()}  ',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.inversePrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextSpan(text: comment.text),
+                              ],
                             ),
                           ),
-                        Flexible(
-                          child: comment.start_position == null
-                              ? SelectableText(comment.text)
-                              : Text(
-                                  comment.text,
-                                ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               );

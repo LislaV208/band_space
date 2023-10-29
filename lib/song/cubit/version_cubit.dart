@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,12 +19,11 @@ enum CommentTapSource {
 }
 
 class VersionCubit extends Cubit<VersionState> {
-  VersionCubit(
-    super.initialState, {
+  VersionCubit({
     required this.currentVersion,
     required this.versionRepository,
     required this.audioPlayer,
-  }) {
+  }) : super(const VersionState()) {
     if (currentVersion.file != null) {
       audioPlayer.setUrl(currentVersion.file!.download_url);
     }
@@ -30,6 +31,21 @@ class VersionCubit extends Cubit<VersionState> {
     stream.listen((event) {
       print(event);
     });
+
+    _commentsSub = versionRepository.getComments().listen((comments) {
+      comments.sort(
+        (a, b) {
+          final aPos = a.start_position != null ? a.start_position!.inMilliseconds : -1;
+          final bPos = b.start_position != null ? b.start_position!.inMilliseconds : -1;
+
+          return aPos - bPos;
+        },
+      );
+      emit(state.setComments(comments));
+    })
+      ..onError((e) {
+        emit(state.setError(e));
+      });
   }
 
   final SongVersionModel currentVersion;
@@ -38,6 +54,8 @@ class VersionCubit extends Cubit<VersionState> {
 
   final ItemScrollController commentsListScrollController = ItemScrollController();
   final ItemPositionsListener commentsListPositionsListener = ItemPositionsListener.create();
+
+  StreamSubscription<List<VersionComment>>? _commentsSub;
 
   void onKeyPressed(RawKeyEvent event, FocusNode commentFocusNode) {
     if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
@@ -65,11 +83,11 @@ class VersionCubit extends Cubit<VersionState> {
     } else {
       audioPlayer.play();
 
-      emit(const VersionState(selectedComment: null));
+      emit(state.setSelectedComment(null));
     }
   }
 
-  void onCommentTap(CommentTapSource tapSource, int index, VersionComment comment) {
+  void onCommentTap(CommentTapSource tapSource, VersionComment comment) {
     if (comment.start_position == null) return;
 
     final newSelectedComment = comment == state.selectedComment ? null : comment;
@@ -79,9 +97,12 @@ class VersionCubit extends Cubit<VersionState> {
       audioPlayer.seek(newSelectedComment!.start_position!);
     }
 
-    emit(VersionState(selectedComment: newSelectedComment));
+    emit(state.setSelectedComment(newSelectedComment));
 
     if (newSelectedComment == null) return;
+
+    final index = state.comments?.indexOf(newSelectedComment) ?? -1;
+    if (index < 0) return;
 
     if (tapSource == CommentTapSource.marker) {
       commentsListScrollController.scrollTo(
@@ -115,8 +136,19 @@ class VersionCubit extends Cubit<VersionState> {
     String text, {
     required Duration? startPosition,
     required Duration? endPosition,
-  }) {
-    versionRepository.addComment(text, startPosition, endPosition);
+  }) async {
+    final newComment = await versionRepository.addComment(text, startPosition, endPosition);
+
+    final index = state.comments?.indexOf(newComment) ?? -1;
+
+    if (index >= 0) {
+      commentsListScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.fastOutSlowIn,
+        alignment: 0.5,
+      );
+    }
   }
 
   void editComment() {}
@@ -126,6 +158,8 @@ class VersionCubit extends Cubit<VersionState> {
   }
 
   void dispose() {
+    _commentsSub?.cancel();
+
     audioPlayer.dispose();
   }
 }

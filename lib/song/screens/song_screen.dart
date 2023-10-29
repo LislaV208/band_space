@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/song/cubit/version_cubit.dart';
-import 'package:band_space/song/cubit/version_state.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
 import 'package:band_space/song/screens/delete_song/delete_song_dialog.dart';
@@ -77,7 +76,6 @@ class SongScreen extends StatelessWidget {
                   builder: (context, currentVersion) {
                     return Provider(
                       create: (context) => VersionCubit(
-                        const VersionState(selectedComment: null),
                         currentVersion: currentVersion,
                         versionRepository: sl<VersionRepository>(param1: currentVersion.id),
                         audioPlayer: sl<AudioPlayerService>(),
