@@ -16,7 +16,6 @@ class VersionView extends StatefulWidget {
 
 class _VersionViewState extends State<VersionView> {
   final _commentFocusNode = FocusNode();
-  final _keyboardFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -30,14 +29,13 @@ class _VersionViewState extends State<VersionView> {
     _commentFocusNode.removeListener(_commentFocusNodeListener);
 
     _commentFocusNode.dispose();
-    _keyboardFocusNode.dispose();
 
     super.dispose();
   }
 
   void _commentFocusNodeListener() {
     if (!_commentFocusNode.hasFocus) {
-      _keyboardFocusNode.requestFocus();
+      context.read<VersionCubit>().keyboardFocusNode.requestFocus();
     }
   }
 
@@ -45,7 +43,7 @@ class _VersionViewState extends State<VersionView> {
   Widget build(BuildContext context) {
     return RawKeyboardListener(
       autofocus: true,
-      focusNode: _keyboardFocusNode,
+      focusNode: context.read<VersionCubit>().keyboardFocusNode,
       onKey: (event) => context.read<VersionCubit>().onKeyPressed(event, _commentFocusNode),
       child: Padding(
         padding: const EdgeInsets.all(20.0),

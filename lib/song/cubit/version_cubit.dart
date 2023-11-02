@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
 import 'package:band_space/song/cubit/version_state.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_comment.dart';
@@ -19,7 +20,17 @@ enum CommentTapSource {
 }
 
 class VersionCubit extends Cubit<VersionState> {
+  final SongVersionModel currentVersion;
+  final VersionRepository versionRepository;
+  final AudioPlayerService audioPlayer;
+  final EditCommentCubit editCommentCubit;
+
+  final commentsListScrollController = ItemScrollController();
+  final commentsListPositionsListener = ItemPositionsListener.create();
+  final keyboardFocusNode = FocusNode();
+
   VersionCubit({
+    required this.editCommentCubit,
     required this.currentVersion,
     required this.versionRepository,
     required this.audioPlayer,
@@ -48,16 +59,29 @@ class VersionCubit extends Cubit<VersionState> {
       });
   }
 
-  final SongVersionModel currentVersion;
-  final VersionRepository versionRepository;
-  final AudioPlayerService audioPlayer;
-
-  final ItemScrollController commentsListScrollController = ItemScrollController();
-  final ItemPositionsListener commentsListPositionsListener = ItemPositionsListener.create();
-
   StreamSubscription<List<VersionComment>>? _commentsSub;
 
   void onKeyPressed(RawKeyEvent event, FocusNode commentFocusNode) {
+    if (editCommentCubit.state.comment != null) {
+      if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+        editComment();
+      } else if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+        editCommentCubit.cancelEditing();
+      }
+
+      return;
+    }
+
+    if (!commentFocusNode.hasFocus && state.selectedComment != null) {
+      if (event.isKeyPressed(LogicalKeyboardKey.keyE)) {
+        if (editCommentCubit.state.comment != null) {
+          editCommentCubit.focusNode.requestFocus();
+        } else {
+          editCommentCubit.startEditing(state.selectedComment!);
+        }
+      }
+    }
+
     if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
       commentFocusNode.requestFocus();
     } else if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
@@ -80,6 +104,8 @@ class VersionCubit extends Cubit<VersionState> {
   void onSongPlayPause() {
     if (audioPlayer.isPlaying) {
       audioPlayer.pause();
+
+      editCommentCubit.onPositionChange(audioPlayer.currentPosition);
     } else {
       audioPlayer.play();
 
@@ -88,7 +114,7 @@ class VersionCubit extends Cubit<VersionState> {
   }
 
   void onCommentTap(CommentTapSource tapSource, VersionComment comment) {
-    if (comment.start_position == null) return;
+    if (comment.start_position == null && editCommentCubit.state.comment == null) return;
 
     final newSelectedComment = comment == state.selectedComment ? null : comment;
 
@@ -151,7 +177,23 @@ class VersionCubit extends Cubit<VersionState> {
     }
   }
 
-  void editComment() {}
+  void editComment() async {
+    final text = editCommentCubit.textEditingController.text;
+    final editState = editCommentCubit.state;
+
+    editCommentCubit.cancelEditing();
+
+    // nic nie robimy jezeli nic sie nie zmienilo
+    if (text == editState.comment?.text &&
+        (editState.comment?.start_position != null) == editState.usePosition &&
+        editState.position == editState.comment?.start_position) {
+      return;
+    }
+
+    final editedComment = await versionRepository.editComment(
+        editState.comment!.id, text, editState.usePosition ? editState.position : null, null);
+    emit(state.setSelectedComment(editedComment));
+  }
 
   void deleteComment(VersionComment comment) {
     versionRepository.deleteComment(comment.id);
@@ -161,5 +203,6 @@ class VersionCubit extends Cubit<VersionState> {
     _commentsSub?.cancel();
 
     audioPlayer.dispose();
+    keyboardFocusNode.dispose();
   }
 }

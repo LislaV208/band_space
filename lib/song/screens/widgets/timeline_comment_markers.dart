@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
+import 'package:band_space/song/cubit/edit_comment_state.dart';
 import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/cubit/version_state.dart';
 import 'package:band_space/song/model/version_comment.dart';
@@ -29,61 +31,73 @@ class _TimelineCommentMarkersState extends State<TimelineCommentMarkers> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(paddingValue, 4, paddingValue, 0),
-      child: BlocBuilder<VersionCubit, VersionState>(
-        builder: (context, state) {
-          if (state.comments == null) {
-            return const SizedBox();
-          }
+      child: BlocSelector<EditCommentCubit, EditCommentState, VersionComment?>(
+        selector: (state) => state.comment,
+        builder: (context, commentInEdit) {
+          return BlocBuilder<VersionCubit, VersionState>(
+            builder: (context, state) {
+              if (state.comments == null) {
+                return const SizedBox();
+              }
 
-          final comments = state.comments!;
+              final comments = state.comments!;
+              final selectedComment = state.selectedComment ?? commentInEdit;
 
-          final selectedOrHoveredComment = _hoveredComment ?? state.selectedComment;
+              final selectedOrHoveredComment = _hoveredComment ?? selectedComment;
 
-          // jezeli komentarz jest zaznaczony, to usuwamy go z listy i dodajemy, aby znalazł się
-          // na końcu listy, aby został wyrenderowany jako ostatni
-          // w przeciwnym razie zostawiamy listę taka jaka jest
-          final positionedComments = selectedOrHoveredComment == null
-              ? comments
-              : ([...comments]
-                ..remove(selectedOrHoveredComment)
-                ..add(selectedOrHoveredComment));
+              // jezeli komentarz jest zaznaczony, to usuwamy go z listy i dodajemy, aby znalazł się
+              // na końcu listy, aby został wyrenderowany jako ostatni
+              // w przeciwnym razie zostawiamy listę taka jaka jest
+              final positionedComments = selectedOrHoveredComment == null
+                  ? comments
+                  : ([...comments]
+                    ..removeWhere((comment) => comment.id == selectedOrHoveredComment.id)
+                    ..add(selectedOrHoveredComment));
 
-          return Stack(
-            children: positionedComments.map(
-              (comment) {
-                final position = comment.start_position;
-                if (position == null) return const SizedBox();
+              // final positionedComments = comments;
 
-                return Padding(
-                  key: ValueKey(comment.id),
-                  padding:
-                      EdgeInsets.only(left: position.inMilliseconds / songDuration.inMilliseconds * widget.maxWidth),
-                  child: HoverWidget(
-                    onHoverEnter: () {
-                      setState(() {
-                        _hoveredComment = comment;
-                      });
-                    },
-                    onHoverExit: () {
-                      setState(() {
-                        _hoveredComment = null;
-                      });
-                    },
-                    builder: (context, _) {
-                      final selectedComment = state.selectedComment;
+              return Stack(
+                children: positionedComments.map(
+                  // children: comments.map(
+                  (comment) {
+                    final position = comment.start_position;
+                    if (position == null) return const SizedBox();
 
-                      return GestureDetector(
-                        onTap: () => context.read<VersionCubit>().onCommentTap(CommentTapSource.marker, comment),
-                        child: _CommentMarker(
-                          author: comment.author,
-                          isSelected: _hoveredComment == comment || selectedComment == comment,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ).toList(),
+                    return Padding(
+                      key: ValueKey(comment.id),
+                      padding: EdgeInsets.only(
+                          left: position.inMilliseconds / songDuration.inMilliseconds * widget.maxWidth),
+                      child: HoverWidget(
+                        onHoverEnter: () {
+                          setState(() {
+                            _hoveredComment = comment;
+                          });
+                        },
+                        onHoverExit: () {
+                          setState(() {
+                            _hoveredComment = null;
+                          });
+                        },
+                        builder: (context, _) {
+                          return GestureDetector(
+                            onTap: () {
+                              if (comment != context.read<EditCommentCubit>().state.comment) {
+                                context.read<VersionCubit>().onCommentTap(CommentTapSource.marker, comment);
+                                context.read<EditCommentCubit>().cancelEditing();
+                              }
+                            },
+                            child: _CommentMarker(
+                              author: comment.author,
+                              isSelected: _hoveredComment == comment || selectedComment == comment,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ).toList(),
+              );
+            },
           );
         },
       ),

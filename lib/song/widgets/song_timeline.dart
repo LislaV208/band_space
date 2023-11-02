@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
 import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/timeline_state.dart';
 import 'package:band_space/song/screens/widgets/timeline_comment_markers.dart';
@@ -34,6 +35,7 @@ class _SongTimelineState extends State<SongTimeline> {
             songPositionStream: context.read<VersionCubit>().audioPlayer.positionStream,
             songBufferStream: context.read<VersionCubit>().audioPlayer.bufferStream,
             songDuration: context.read<VersionCubit>().currentVersion.file!.duration,
+            editCommentCubit: context.read<EditCommentCubit>(),
             onPositionChanged: (position) {
               context.read<VersionCubit>().audioPlayer.seek(position);
             },
@@ -72,7 +74,13 @@ class _Timeline extends StatelessWidget {
       listenable: state,
       builder: (context, child) {
         return MouseRegion(
-          cursor: state.showHoverCursor ? SystemMouseCursors.click : MouseCursor.defer,
+          cursor: state.showHoverCursor
+              ? state.isCommentEditing
+                  ? state.isHandleDragging
+                      ? SystemMouseCursors.grabbing
+                      : SystemMouseCursors.grab
+                  : SystemMouseCursors.click
+              : MouseCursor.defer,
           onHover: (event) => state.onHover(event.localPosition),
           child: GestureDetector(
             onTapDown: (details) => state.onTapDown(details.localPosition),
@@ -151,7 +159,7 @@ class TimelinePainter extends CustomPainter {
     // position line
     canvas.drawLine(startingLinePoint, endingForegroundLinePoint, foregroundLinePaint);
 
-    final handlePaint = Paint()..color = Colors.white;
+    final handlePaint = Paint()..color = state.usePosition ? Colors.blue : Colors.white;
 
     final handleOffset = Offset(state.currentPositionInPixels.clamp(0.0, size.width), size.height / 2);
     final handleRadius = state.isHandleDragging ? handleDraggingRadius : handleDefaultRadius;

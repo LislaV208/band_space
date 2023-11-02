@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
 import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/repository/song_repository.dart';
 import 'package:band_space/song/repository/version_repository.dart';
@@ -74,13 +75,24 @@ class SongScreen extends StatelessWidget {
               : AppStreamBuilder(
                   stream: sl<VersionRepository>(param1: song.current_version_id).get(),
                   builder: (context, currentVersion) {
-                    return Provider(
-                      create: (context) => VersionCubit(
-                        currentVersion: currentVersion,
-                        versionRepository: sl<VersionRepository>(param1: currentVersion.id),
-                        audioPlayer: sl<AudioPlayerService>(),
-                      ),
-                      dispose: (context, cubit) => cubit.dispose(),
+                    return MultiProvider(
+                      providers: [
+                        Provider(
+                          create: (context) => EditCommentCubit(
+                            versionRepository: sl<VersionRepository>(param1: currentVersion.id),
+                          ),
+                          dispose: (context, cubit) => cubit.dispose(),
+                        ),
+                        Provider(
+                          create: (context) => VersionCubit(
+                            editCommentCubit: context.read<EditCommentCubit>(),
+                            currentVersion: currentVersion,
+                            versionRepository: sl<VersionRepository>(param1: currentVersion.id),
+                            audioPlayer: sl<AudioPlayerService>(),
+                          ),
+                          dispose: (context, cubit) => cubit.dispose(),
+                        ),
+                      ],
                       child: const VersionView(),
                     );
                   },

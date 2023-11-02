@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:equatable/equatable.dart';
 
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
+import 'package:band_space/song/cubit/edit_comment_state.dart';
 import 'package:band_space/song/widgets/song_timeline.dart';
 
 // ignore: must_be_immutable
@@ -14,9 +16,11 @@ class TimelineState extends Equatable with ChangeNotifier {
   final Stream<Duration> songBufferStream;
   final Duration songDuration;
   final void Function(Duration position) onPositionChanged;
+  final EditCommentCubit editCommentCubit;
 
   StreamSubscription<double>? _positionStreamSubscription;
   StreamSubscription<double>? _bufferStreamSubscription;
+  StreamSubscription<EditCommentState>? _editCommentStreamSub;
 
   TimelineState({
     required this.width,
@@ -25,6 +29,7 @@ class TimelineState extends Equatable with ChangeNotifier {
     required this.songBufferStream,
     required this.songDuration,
     required this.onPositionChanged,
+    required this.editCommentCubit,
   }) {
     _positionStreamSubscription =
         songPositionStream.map((position) => position.inMilliseconds / songDuration.inMilliseconds).listen((position) {
@@ -39,6 +44,21 @@ class TimelineState extends Equatable with ChangeNotifier {
         songBufferStream.map((position) => position.inMilliseconds / songDuration.inMilliseconds).listen((position) {
       bufferPosition = position;
     });
+
+    _editCommentStreamSub = editCommentCubit.stream.listen((event) {
+      print(event);
+
+      final isEditing = event.comment != null;
+      if (isEditing != isCommentEditing) {
+        isCommentEditing = isEditing;
+        notifyListeners();
+      }
+
+      if (event.usePosition != usePosition) {
+        usePosition = event.usePosition;
+        notifyListeners();
+      }
+    });
   }
 
   @override
@@ -48,9 +68,9 @@ class TimelineState extends Equatable with ChangeNotifier {
 
   @override
   void dispose() {
-    print('timeline state dispose');
     _positionStreamSubscription?.cancel();
     _bufferStreamSubscription?.cancel();
+    _editCommentStreamSub?.cancel();
 
     super.dispose();
   }
@@ -61,6 +81,10 @@ class TimelineState extends Equatable with ChangeNotifier {
   var bufferPosition = 0.0;
   var showHoverCursor = false;
   var isHandleDragging = false;
+
+  // edycja
+  var isCommentEditing = false;
+  var usePosition = false;
 
   double get currentPositionInPixels => currentPosition * width;
   double get bufferPositionInPixels => bufferPosition * width;
@@ -84,6 +108,8 @@ class TimelineState extends Equatable with ChangeNotifier {
       final newPosition = _pixelToLogicalPosition(tapPosition.dx);
       if (newPosition != currentPosition) {
         currentPosition = newPosition;
+
+        editCommentCubit.onPositionChange(_logicalToDurationPosition(currentPosition));
 
         notifyListeners();
       }
@@ -127,6 +153,8 @@ class TimelineState extends Equatable with ChangeNotifier {
       final newPosition = _pixelToLogicalPosition(newPixelPosition.toDouble());
       if (newPosition != currentPosition) {
         currentPosition = newPosition;
+
+        editCommentCubit.onPositionChange(_logicalToDurationPosition(currentPosition));
 
         notifyListeners();
       }

@@ -64,6 +64,29 @@ class VersionRepository extends FirestoreRepository {
     );
   }
 
+  Future<VersionComment> editComment(String id, String text, Duration? startPosition, Duration? endPosition) async {
+    final commentRef = _versionRef.collection(FirestoreCollectionNames.comments).doc(id);
+    await commentRef.update({
+      'text': text,
+      'start_position': startPosition?.inMilliseconds,
+    });
+
+    final userRef = db.collection('users').doc(userId);
+    final userDoc = await userRef.get();
+    final userData = userDoc.data();
+
+    final snapshot = await commentRef.get();
+    final data = snapshot.data();
+
+    return VersionComment(
+      id: commentRef.id,
+      created_at: data?['created_at'] != null ? (data!['created_at'] as Timestamp).toDate() : null,
+      author: userData?['email'] ?? '',
+      text: data?['text'] ?? '',
+      start_position: data?['start_position'] != null ? Duration(milliseconds: data!['start_position']) : null,
+    );
+  }
+
   Stream<List<VersionComment>> getComments() {
     return _versionRef
         .collection(FirestoreCollectionNames.comments)

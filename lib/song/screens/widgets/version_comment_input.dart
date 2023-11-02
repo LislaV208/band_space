@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:band_space/song/cubit/edit_comment_cubit.dart';
+import 'package:band_space/song/cubit/edit_comment_state.dart';
 import 'package:band_space/song/cubit/version_cubit.dart';
 import 'package:band_space/song/screens/widgets/comment_position_switch.dart';
 
@@ -55,61 +56,72 @@ class _VersionCommentInputState extends State<VersionCommentInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints.loose(const Size(800, 110)),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 10, 10, 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CommentPositionSwitch(
-            position: _currentPosition,
-            onChanged: (isChecked) {
-              _sendPosition = isChecked;
-            },
+    return BlocSelector<EditCommentCubit, EditCommentState, bool>(
+      selector: (state) {
+        return state.comment != null;
+      },
+      builder: (context, isCommentEdit) {
+        return Container(
+          constraints: BoxConstraints.loose(const Size(800, 110)),
+          decoration: BoxDecoration(
+            color: Colors.blueGrey[900],
+            borderRadius: BorderRadius.circular(16),
           ),
-          Row(
+          padding: const EdgeInsets.fromLTRB(20, 10, 10, 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _textController,
-                  focusNode: widget.focusNode,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: kIsWeb && !(widget.focusNode?.hasFocus ?? false)
-                        ? 'Wciśnij Enter, aby rozpocząć dodawanie komentarza'
-                        : 'Wpisz treść komentarza${kIsWeb ? '. Wciśnij ESC, aby anulować' : ''}',
-                  ),
-                  onSubmitted: (value) {
-                    final text = value.trim();
-
-                    if (text.isNotEmpty) {
-                      _submit(text);
-                    }
-                  },
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                ),
+              CommentPositionSwitch(
+                enabled: !isCommentEdit,
+                position: _currentPosition,
+                onChanged: (isChecked) {
+                  _sendPosition = isChecked;
+                },
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: _textController.text.trim().isNotEmpty
-                    ? () {
-                        _submit(_textController.text);
-                      }
-                    : null,
-                icon: const Icon(Icons.send),
-                tooltip: 'Wyślij [Enter]',
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      enabled: !isCommentEdit,
+                      controller: _textController,
+                      focusNode: widget.focusNode,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: isCommentEdit
+                            ? 'Wciśnij Enter, aby zatwierdzić edycję'
+                            : !(widget.focusNode?.hasFocus ?? false)
+                                ? 'Wciśnij Enter, aby rozpocząć dodawanie komentarza'
+                                : 'Wpisz treść komentarza. Wciśnij ESC, aby anulować',
+                      ),
+                      onSubmitted: (value) {
+                        final text = value.trim();
+
+                        if (text.isNotEmpty) {
+                          _submit(text);
+                        }
+                      },
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _textController.text.trim().isNotEmpty
+                        ? () {
+                            _submit(_textController.text);
+                          }
+                        : null,
+                    icon: const Icon(Icons.send),
+                    tooltip: 'Wyślij [Enter]',
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
