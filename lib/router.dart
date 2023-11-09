@@ -1,4 +1,3 @@
-import 'package:band_space/project/repository/project_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -6,9 +5,10 @@ import 'package:band_space/app_shell.dart';
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
 import 'package:band_space/auth/screens/register_screen.dart';
-import 'package:band_space/comments/repository/song_comments_repository.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/profile/profile_screen.dart';
+import 'package:band_space/project/cubit/project_cubit.dart';
+import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/screens/confirm_invitation_screen.dart';
 import 'package:band_space/project/screens/project_details_screen.dart';
 import 'package:band_space/project/screens/projects_screen.dart';
@@ -42,8 +42,18 @@ final router = GoRouter(
               builder: (context, state) {
                 final projectId = state.pathParameters['project_id']!;
 
-                return Provider(
-                  create: (context) => sl<ProjectRepository>(param1: projectId),
+                return MultiProvider(
+                  providers: [
+                    Provider(
+                      create: (context) => sl<ProjectRepository>(param1: projectId),
+                    ),
+                    Provider(
+                      create: (context) => ProjectCubit(
+                        projectRepository: sl<ProjectRepository>(param1: projectId),
+                      ),
+                      dispose: (context, cubit) => cubit.dispose(),
+                    ),
+                  ],
                   child: const ProjectDetailsScreen(),
                 );
               },
@@ -58,9 +68,6 @@ final router = GoRouter(
                       providers: [
                         Provider(
                           create: (context) => sl<SongRepository>(param1: songId),
-                        ),
-                        Provider(
-                          create: (context) => sl<SongCommentsRepository>(param1: songId),
                         ),
                       ],
                       child: const SongScreen(),

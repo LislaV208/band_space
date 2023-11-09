@@ -10,6 +10,7 @@ class FirebaseSongModel extends SongModel {
     required super.created_at,
     required super.title,
     required super.current_version_id,
+    required super.upload_in_progress,
   });
 
   factory FirebaseSongModel.create(DocumentSnapshot doc) {
@@ -20,6 +21,7 @@ class FirebaseSongModel extends SongModel {
       created_at: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
       title: data['title'] ?? '',
       current_version_id: (data['current_version'] as DocumentReference).id,
+      upload_in_progress: data['upload_in_progress'] ?? false,
     );
   }
 }

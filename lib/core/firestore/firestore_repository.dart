@@ -39,7 +39,6 @@ abstract class FirestoreRepository {
   }
 
   Future<List<String>> deleteSong(Transaction transaction, DocumentReference songRef) async {
-    await deleteComments(transaction, songRef);
     final pathsOfFilesToRemove = await deleteAllVersions(transaction, songRef);
 
     transaction.delete(songRef);
@@ -81,44 +80,13 @@ abstract class FirestoreRepository {
       pathsOfFilesToRemove.add(path);
     }
 
-    await deleteMarkers(transaction, versionDoc.reference);
+    final commentsResult = await versionDoc.reference.collection('comments').get();
+    for (final commentDoc in commentsResult.docs) {
+      transaction.delete(commentDoc.reference);
+    }
 
     transaction.delete(versionDoc.reference);
 
     return pathsOfFilesToRemove;
-  }
-
-  Future<void> deleteMarkers(Transaction transaction, DocumentReference versionRef) async {
-    final markersResult = await db
-        .collection('markers')
-        .where(
-          'version',
-          isEqualTo: versionRef,
-        )
-        .get();
-
-    for (final markerDoc in markersResult.docs) {
-      await deleteMarker(transaction, markerDoc);
-    }
-  }
-
-  Future<void> deleteMarker(Transaction transaction, DocumentSnapshot markerDoc) async {
-    await deleteComments(transaction, markerDoc.reference);
-
-    transaction.delete(markerDoc.reference);
-  }
-
-  Future<void> deleteComments(Transaction transaction, DocumentReference parentRef) async {
-    final commentsResult = await db
-        .collection(FirestoreCollectionNames.comments)
-        .where(
-          'parent',
-          isEqualTo: parentRef,
-        )
-        .get();
-
-    for (final commentDoc in commentsResult.docs) {
-      transaction.delete(commentDoc.reference);
-    }
   }
 }

@@ -6,9 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:band_space/audio/audio_player_service.dart';
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/cubit/auth_cubit.dart';
-import 'package:band_space/comments/repository/marker_comments_repository.dart';
-import 'package:band_space/comments/repository/song_comments_repository.dart';
-import 'package:band_space/markers/marker_repository.dart';
+import 'package:band_space/file_storage/remote_song_file_storage.dart';
+import 'package:band_space/file_storage/upload_task_manager.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/repository/user_projects_repository.dart';
 import 'package:band_space/song/repository/song_repository.dart';
@@ -31,12 +30,18 @@ void setupServiceLocator() {
     () => UserProjectsRepository(userId: _getUserId(), db: FirebaseFirestore.instance),
   );
 
+  sl.registerSingleton<UploadTaskManager>(UploadTaskManager());
+  sl.registerSingleton<RemoteSongFileStorage>(
+    RemoteSongFileStorage(storage: FirebaseStorage.instance, uploadTaskManager: sl()),
+  );
+
   sl.registerFactoryParam<ProjectRepository, String, void>(
     (projectId, _) => ProjectRepository(
       projectId: projectId,
       userId: _getUserId(),
       db: FirebaseFirestore.instance,
       storage: FirebaseStorage.instance,
+      remoteSongFileStorage: sl(),
     ),
   );
 
@@ -54,29 +59,6 @@ void setupServiceLocator() {
       userId: _getUserId(),
       db: FirebaseFirestore.instance,
       storage: FirebaseStorage.instance,
-    ),
-  );
-
-  sl.registerFactoryParam<MarkerRepository, String, void>(
-    (markerId, _) => MarkerRepository(
-      markerId: markerId,
-      db: FirebaseFirestore.instance,
-    ),
-  );
-
-  sl.registerFactoryParam<SongCommentsRepository, String, void>(
-    (songId, userId) => SongCommentsRepository(
-      songId: songId,
-      userId: _getUserId(),
-      db: FirebaseFirestore.instance,
-    ),
-  );
-
-  sl.registerFactoryParam<MarkerCommentsRepository, String, void>(
-    (markerId, userId) => MarkerCommentsRepository(
-      markerId: markerId,
-      userId: _getUserId(),
-      db: FirebaseFirestore.instance,
     ),
   );
 

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/file_storage/upload_task_manager.dart';
+import 'package:band_space/project/cubit/project_cubit.dart';
+import 'package:band_space/project/cubit/project_state.dart';
 import 'package:band_space/project/repository/project_repository.dart';
 import 'package:band_space/project/screens/delete_project/delete_project_dialog.dart';
 import 'package:band_space/project/screens/project_members/project_members_screen.dart';
-import 'package:band_space/song/screens/add_song/add_song_screen.dart';
-import 'package:band_space/song/screens/add_song/add_song_state.dart';
+import 'package:band_space/project/widgets/uploading_song_list_tile.dart';
 import 'package:band_space/widgets/app_editable_text.dart';
 import 'package:band_space/widgets/app_popup_menu_button.dart';
-import 'package:band_space/widgets/app_stream_builder.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key});
@@ -19,6 +22,7 @@ class ProjectDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
+      //TODO:  usunąć wykorzystanie repository bezpośrednio w UI
       stream: context.read<ProjectRepository>().get(),
       builder: (context, snapshot) {
         final project = snapshot.data;
@@ -28,6 +32,7 @@ class ProjectDetailsScreen extends StatelessWidget {
             title: AppEditableText(
               project?.name ?? '',
               onEdited: (value) {
+                //TODO:  usunąć wykorzystanie repository bezpośrednio w UI
                 context.read<ProjectRepository>().changeName(value);
               },
             ),
@@ -75,12 +80,35 @@ class ProjectDetailsScreen extends StatelessWidget {
                   ]
                 : null,
           ),
-          body: AppStreamBuilder(
-            stream: context.read<ProjectRepository>().getSongs(),
-            builder: (context, songs) {
+          body: BlocBuilder<ProjectCubit, ProjectState>(
+            builder: (context, state) {
+              if (state.isInitial) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              final songs = state.songs;
+
+              if (songs.isEmpty) {
+                return const Center(
+                  child: Text('Brak utworów'),
+                );
+              }
+
               return Column(
                 children: songs.map(
                   (song) {
+                    final uploadManager = sl<UploadTaskManager>();
+                    final uploadTask = uploadManager.getUploadTask(song.current_version_id);
+
+                    if (uploadTask != null) {
+                      return UploadingSongListTile(song: song, uploadTask: uploadTask);
+                    } else if (song.upload_in_progress) {
+                      // utwór nie został zuploadowany, ale nie mamy dostępu do danych uploadu - pomijamy
+                      return const SizedBox();
+                    }
+
                     return ListTile(
                       onTap: () async {
                         context.goNamed(
@@ -104,26 +132,11 @@ class ProjectDetailsScreen extends StatelessWidget {
                 ).toList(),
               );
             },
-            noDataText: 'Brak utworów',
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () async {
-              showModalBottomSheet(
-                isScrollControlled: true,
-                useSafeArea: true,
-                context: context,
-                builder: (_) {
-                  return ChangeNotifierProvider(
-                    create: (_) => AddSongState(
-                      context.read<ProjectRepository>(),
-                    ),
-                    child: const AddSongScreen(),
-                  );
-                },
-              );
-            },
+            onPressed: () => context.read<ProjectCubit>().addSong(),
             label: const Text('Dodaj utwór'),
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.upload_file_rounded),
           ),
         );
       },

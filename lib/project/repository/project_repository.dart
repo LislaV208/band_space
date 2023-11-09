@@ -1,11 +1,10 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'package:band_space/core/firestore/firestore_collection_names.dart';
 import 'package:band_space/core/firestore/firestore_repository.dart';
+import 'package:band_space/file_storage/remote_song_file_storage.dart';
 import 'package:band_space/project/exceptions/project_exceptions.dart';
 import 'package:band_space/project/model/firebase_project_model.dart';
 import 'package:band_space/project/model/project_model.dart';
@@ -20,12 +19,14 @@ class ProjectRepository extends FirestoreRepository {
   final String userId;
 
   final FirebaseStorage storage;
+  final RemoteSongFileStorage remoteSongFileStorage;
 
   const ProjectRepository({
     required super.db,
     required this.projectId,
     required this.userId,
     required this.storage,
+    required this.remoteSongFileStorage,
   });
 
   DocumentReference get _userRef => db.collection(FirestoreCollectionNames.users).doc(userId);
@@ -109,47 +110,27 @@ class ProjectRepository extends FirestoreRepository {
     SongUploadData uploadData,
   ) async {
     final timestamp = Timestamp.now();
+    DocumentReference<Map<String, dynamic>>? versionRef;
+    final newSongRef = db.collection(FirestoreCollectionNames.songs).doc();
 
     try {
-      final newSongRef = db.collection(FirestoreCollectionNames.songs).doc();
-
       await db.runTransaction((transaction) async {
-        DocumentReference? versionRef;
+        versionRef = db.collection('versions').doc();
+        final file = uploadData.file;
 
-        if (uploadData.file != null) {
-          versionRef = db.collection('versions').doc();
-          final file = uploadData.file!;
-          final storageRef = storage.ref('audio').child(versionRef.id);
-          final uploadSnapshot = await storageRef.putData(
-            file.data,
-            SettableMetadata(
-              contentType: file.mimeType,
-            ),
-          );
-          final downloadUrl = await uploadSnapshot.ref.getDownloadURL();
-
-          //TODO: refactor
-          final duration = (await AudioPlayer().setUrl(downloadUrl))?.inMilliseconds;
-
-          log('song duration: ${duration}s');
-
-          //TODO: zrobić klasę z toMap()
-          transaction.set(
-            versionRef,
-            {
-              'song': newSongRef,
-              'timestamp': timestamp,
-              'file': {
-                'name': file.name,
-                'storage_path': storageRef.fullPath,
-                'size': file.size,
-                'duration': duration,
-                'mime_type': file.mimeType,
-                'download_url': downloadUrl,
-              }
-            },
-          );
-        }
+        //TODO: zrobić klasę z toMap()
+        transaction.set(
+          versionRef!,
+          {
+            'song': newSongRef,
+            'timestamp': timestamp,
+            'file': {
+              'name': file.name,
+              'size': file.size,
+              'mime_type': file.mimeType,
+            }
+          },
+        );
 
         //TODO: zrobić klasę z toMap()
         transaction.set(newSongRef, {
@@ -157,15 +138,41 @@ class ProjectRepository extends FirestoreRepository {
           'project': _projectRef,
           'title': uploadData.title,
           'current_version': versionRef,
+          'upload_in_progress': true,
         });
       });
-
-      return newSongRef.id;
     } catch (e) {
       print("Error occurred: $e");
 
+      //TODO: obsłuzyc lepiej
       throw Exception("Failed to add song: $e");
     }
+
+    if (versionRef != null) {
+      remoteSongFileStorage.upload(
+        name: versionRef!.id,
+        file: uploadData.file,
+        onComplete: (snapshot) async {
+          final downloadUrl = await snapshot.ref.getDownloadURL();
+          final duration = (await AudioPlayer().setUrl(downloadUrl))?.inMilliseconds;
+
+          final docSnapshot = await versionRef!.get();
+          final data = docSnapshot.data();
+          if (data != null) {
+            final file = data['file'] as Map<String, dynamic>;
+            file['storage_path'] = snapshot.ref.fullPath;
+            file['duration'] = duration;
+            file['download_url'] = downloadUrl;
+
+            await versionRef!.update({'file': file});
+
+            newSongRef.update({'upload_in_progress': FieldValue.delete()});
+          }
+        },
+      );
+    }
+
+    return newSongRef.id;
   }
 
   Future<List<UserModel>> _fetchMembers(

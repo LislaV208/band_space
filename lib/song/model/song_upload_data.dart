@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 class SongUploadData {
   final String title;
-  final SongUploadFile? file;
+  final SongUploadFile file;
 
   const SongUploadData({
     required this.title,

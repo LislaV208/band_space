@@ -7,12 +7,14 @@ class SongModel extends Equatable {
   final DateTime? created_at;
   final String title;
   final String current_version_id;
+  final bool upload_in_progress;
 
   const SongModel({
     required this.id,
     required this.created_at,
     required this.title,
     required this.current_version_id,
+    required this.upload_in_progress,
   });
 
   @override

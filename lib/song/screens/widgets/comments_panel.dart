@@ -44,23 +44,25 @@ class _CommentsPanelState extends State<CommentsPanel> {
           final comments = state.comments!;
 
           if (comments.isEmpty) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.message_outlined,
-                  size: 70,
-                  color: Colors.grey[300],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                  child: Text(
-                    'Rozpocznij dyskuję na temat utworu dodając komentarz',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[300]),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.message_outlined,
+                    size: 70,
+                    color: Colors.grey[300],
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                    child: Text(
+                      'Rozpocznij dyskuję na temat utworu dodając komentarz',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[300]),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
