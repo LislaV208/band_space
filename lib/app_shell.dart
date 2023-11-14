@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:band_space/app_config.dart';
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/utils/context_extensions.dart';
@@ -106,8 +107,10 @@ class _AppShellState extends State<AppShell> {
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) return const SizedBox();
 
+                            final env = config.env == 'prod' ? '' : config.env;
+
                             return Text(
-                              'v${snapshot.data!.version}',
+                              'v${snapshot.data!.version} $env',
                               style: const TextStyle(color: Colors.grey),
                             );
                           }),

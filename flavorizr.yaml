@@ -1,0 +1,35 @@
+flavors:
+  dev:
+    app:
+      name: "BandSpace"
+    android:
+      applicationId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/dev/google-services.json"
+    ios:
+      bundleId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/dev/ios/GoogleService-Info.plist"
+    macos:
+      bundleId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/dev/macos/GoogleService-Info.plist"
+
+  prod:
+    app:
+      name: "BandSpace"
+    android:
+      applicationId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/prod/google-services.json"
+    ios:
+      bundleId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/prod/ios/GoogleService-Info.plist"
+    macos:
+      bundleId: "lislav.bandspace" 
+      firebase:
+        config: ".firebase/prod/macos/GoogleService-Info.plist"
+
+instructions:
+  - google:firebase

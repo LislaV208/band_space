@@ -1,5 +1,20 @@
 {
   "projects": {
-    "default": "band-space-317b6"
-  }
+    "default": "band-space-317b6",
+    "dev": "band-space-317b6",
+    "prod": "band-space-prod"
+  },
+  "targets": {
+    "band-space-prod": {
+      "hosting": {
+        "prod": [
+          "band-space-prod"
+        ],
+        "dev": [
+          "band-space-317b6"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

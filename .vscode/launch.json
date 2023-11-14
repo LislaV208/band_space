@@ -5,21 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "band_space",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "band_space (profile mode)",
+            "name": "dev",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "program": "lib/main_dev.dart",
         },
         {
-            "name": "band_space (release mode)",
+            "name": "prod",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
-        }
+            "program": "lib/main_prod.dart",
+            // "flutterMode": "release"
+        },
     ]
 }

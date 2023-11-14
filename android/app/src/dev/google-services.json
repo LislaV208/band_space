@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:712649351484:android:bdc34f947009ee6896fe39",
         "android_client_info": {
-          "package_name": "lislav.bandspace"
+          "package_name": "com.example.band_space"
         }
       },
       "oauth_client": [
@@ -29,6 +29,13 @@
             {
               "client_id": "712649351484-85soighno0bv6dianj1gdrmd4c9i2hp6.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "712649351484-4vvo9fvm6t2vpakkqc3k55frunuoi1ar.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bandSpace.RunnerTests"
+              }
             }
           ]
         }
