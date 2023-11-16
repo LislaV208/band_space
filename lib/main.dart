@@ -7,7 +7,7 @@ import 'package:band_space/auth/cubit/auth_cubit.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/router.dart';
 
-void main() async {
+Future<void> main() async {
   setupServiceLocator();
 
   usePathUrlStrategy();

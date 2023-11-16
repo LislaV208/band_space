@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:band_space/app_config.dart';
 import 'package:band_space/auth/auth_service.dart';
+import 'package:band_space/core/logger.dart';
 import 'package:band_space/core/service_locator.dart';
 import 'package:band_space/utils/context_extensions.dart';
 
@@ -37,6 +38,16 @@ class _AppShellState extends State<AppShell> {
       label: 'Profil',
     ),
   };
+
+  @override
+  void initState() {
+    super.initState();
+
+    final user = sl.get<AuthService>().user;
+    if (user != null) {
+      Logger.setUser(user.id, user.email);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
