@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:band_space/song/model/song_model.dart';
+import 'package:band_space/utils/file_size.dart';
 
 class UploadingSongListTile extends StatelessWidget {
   const UploadingSongListTile({
@@ -21,36 +22,53 @@ class UploadingSongListTile extends StatelessWidget {
       stream: uploadTask.snapshotEvents,
       builder: (context, snapshot) {
         final task = snapshot.data;
-        final bytesTransfered = task?.bytesTransferred ?? 0;
-        final totalBytes = task?.totalBytes ?? -1;
+        final bytesTransfered = FileSize.bytes(task?.bytesTransferred ?? 0);
+        final totalBytes = FileSize.bytes(task?.totalBytes ?? 0);
 
-        final progressValue = bytesTransfered / totalBytes;
+        final progressValue = bytesTransfered.bytes / totalBytes.bytes;
         final progressPercentage = (progressValue * 100).toInt();
 
-        return ListTile(
-          leading: Stack(
-            alignment: Alignment.center,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 7.5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
-                value: progressValue,
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progressValue,
+                  ),
+                  Text(
+                    '$progressPercentage%',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w100,
+                      fontSize: 11.0,
+                    ),
+                  ),
+                ],
               ),
-              Text('$progressPercentage%'),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    song.title,
+                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  ),
+                  Text(
+                    'Przesłano ${bytesTransfered.megabytes.toStringAsFixed(2)} z ${totalBytes.megabytes.toStringAsFixed(2)} MB',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 12.0,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
-          title: Text(
-            song.title,
-          ),
-          subtitle: Text(
-            'Przesłano ${_bytesToMegabytesString(bytesTransfered)} z ${_bytesToMegabytesString(totalBytes)}',
           ),
         );
       },
     );
-  }
-
-  String _bytesToMegabytesString(int bytes) {
-    final megabytes = bytes / 1024 / 1024;
-
-    return '${megabytes.toStringAsFixed(2)} MB';
   }
 }

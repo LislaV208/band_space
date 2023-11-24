@@ -95,14 +95,10 @@ class ProjectRepository extends FirestoreRepository {
         .orderBy('created_at', descending: true)
         .snapshots();
 
-    return queryStream.map(
-      (query) {
-        return query.docs
-            .map(
-              (doc) => FirebaseSongModel.create(doc),
-            )
-            .toList();
-      },
+    return queryStream.asyncMap(
+      (query) async => await Future.wait(
+        query.docs.map((doc) async => await FirebaseSongModel.fromFirestore(db, doc)).toList(),
+      ),
     );
   }
 
@@ -124,6 +120,7 @@ class ProjectRepository extends FirestoreRepository {
           {
             'song': newSongRef,
             'timestamp': timestamp,
+            'uploader': _userRef,
             'file': {
               'name': file.name,
               'size': file.size,

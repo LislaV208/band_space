@@ -25,7 +25,7 @@ class SongRepository extends FirestoreRepository {
     required this.storage,
   });
 
-  DocumentReference get _songRef => db.collection(FirestoreCollectionNames.songs).doc(songId);
+  DocumentReference<Map<String, dynamic>> get _songRef => db.collection(FirestoreCollectionNames.songs).doc(songId);
   Query<Map<String, dynamic>> get _versionsQuery => db
       .collection(
         FirestoreCollectionNames.versions,
@@ -38,7 +38,7 @@ class SongRepository extends FirestoreRepository {
   Stream<SongModel> get() {
     final docSnapshot = _songRef.snapshots();
 
-    return docSnapshot.map((doc) {
+    return docSnapshot.asyncMap((doc) async {
       log('SONG DOC CHANGE: ${doc.id}');
 
       if (!doc.exists) {
@@ -46,7 +46,7 @@ class SongRepository extends FirestoreRepository {
         throw SongNotFoundException();
       }
 
-      return FirebaseSongModel.create(doc);
+      return await FirebaseSongModel.fromFirestore(db, doc);
     });
   }
 
