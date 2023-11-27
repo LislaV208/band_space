@@ -1,18 +1,20 @@
-import 'package:band_space/auth/auth_service.dart';
-import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/utils/context_extensions.dart';
-import 'package:band_space/widgets/app_button_secondary.dart';
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+
+import 'package:band_space/auth/auth_service.dart';
+import 'package:band_space/core/service_locator.dart';
+import 'package:band_space/user/user_provider.dart';
+import 'package:band_space/utils/context_extensions.dart';
+import 'package:band_space/widgets/app_button_secondary.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = sl.get<AuthService>().user;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil'),
@@ -33,9 +35,11 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      user?.email ?? '',
-                      style: Theme.of(context).textTheme.labelLarge,
+                    Consumer<UserProvider>(
+                      builder: (context, provider, child) => Text(
+                        provider.user.fullName,
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                     ),
                   ],
                 ),

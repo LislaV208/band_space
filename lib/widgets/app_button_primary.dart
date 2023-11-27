@@ -7,10 +7,12 @@ class AppButtonPrimary extends StatefulWidget {
     super.key,
     required this.onPressed,
     required this.text,
+    this.expanded = true,
   });
 
   final FutureOr<void> Function()? onPressed;
   final String text;
+  final bool expanded;
 
   @override
   State<AppButtonPrimary> createState() => _AppButtonPrimaryState();
@@ -22,7 +24,7 @@ class _AppButtonPrimaryState extends State<AppButtonPrimary> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity,
+      width: widget.expanded ? double.infinity : null,
       height: 40,
       child: FilledButton(
         onPressed: _isLoading

@@ -23,7 +23,7 @@ void setupServiceLocator() {
   sl.registerSingleton<UserRepository>(UserRepository(FirebaseFirestore.instance));
 
   // services
-  sl.registerSingleton<AuthService>(AuthService(FirebaseAuth.instance, sl()));
+  sl.registerSingleton<AuthService>(AuthService(FirebaseAuth.instance));
 
   // repositories
   sl.registerFactory<UserProjectsRepository>(
@@ -63,16 +63,16 @@ void setupServiceLocator() {
   );
 
   // cubits
-  sl.registerFactory<AuthCubit>(() => AuthCubit(sl()));
+  sl.registerFactory<AuthCubit>(() => AuthCubit(sl(), sl()));
 }
 
 String _getUserId() {
   final auth = sl<AuthService>();
-  final user = auth.user;
+  final userId = auth.userId;
 
-  if (user == null) {
+  if (userId == null) {
     throw Exception('User not authenticated');
   }
 
-  return user.id;
+  return userId;
 }

@@ -110,7 +110,7 @@ class _SongsListState extends State<SongsList> {
               ),
               _buildRowElement(
                 index: index,
-                content: song.uploader != null ? song.uploader!.email : '-',
+                content: song.uploader != null ? song.uploader!.displayName : '-',
                 disable: uploadTask != null,
               ),
             ],

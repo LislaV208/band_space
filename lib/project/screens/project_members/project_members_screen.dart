@@ -22,11 +22,15 @@ class ProjectMembersScreen extends StatelessWidget {
               future: context.read<ProjectRepository>().fetchMembers(),
               builder: (context, members) {
                 return ListView(
-                  children: members
-                      .map((member) => ListTile(
-                            title: Text(member.email),
-                          ))
-                      .toList(),
+                  children: members.map((member) {
+                    final fullName = member.personal_data?.fullName;
+                    final email = member.email;
+
+                    return ListTile(
+                      title: Text(fullName ?? email),
+                      subtitle: fullName != null ? Text(email) : null,
+                    );
+                  }).toList(),
                 );
               },
             ),

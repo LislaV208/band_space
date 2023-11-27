@@ -2,10 +2,12 @@
 
 import 'package:equatable/equatable.dart';
 
+import 'package:band_space/user/model/user_model.dart';
+
 class VersionComment extends Equatable {
   final String id;
   final DateTime? created_at;
-  final String author;
+  final UserModel? author;
   final String text;
   final Duration? start_position;
 

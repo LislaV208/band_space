@@ -1,39 +1,30 @@
-import 'package:flutter/material.dart';
+part of 'app_shell.dart';
 
-import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
-import 'package:band_space/app_config.dart';
-import 'package:band_space/auth/auth_service.dart';
-import 'package:band_space/core/logger.dart';
-import 'package:band_space/core/service_locator.dart';
-import 'package:band_space/utils/context_extensions.dart';
-
-class NavItem {
+class _NavItem {
   final Icon icon;
   final String label;
 
-  const NavItem({required this.icon, required this.label});
+  const _NavItem({required this.icon, required this.label});
 }
 
-class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.child});
+class _AppShellView extends StatefulWidget {
+  const _AppShellView({required this.child});
 
   final Widget child;
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  State<_AppShellView> createState() => __AppShellViewState();
 }
 
-class _AppShellState extends State<AppShell> {
+class __AppShellViewState extends State<_AppShellView> {
   late var _selectedIndex = _calculateSelectedIndex();
 
   final destinations = {
-    const NavItem(
+    const _NavItem(
       icon: Icon(Icons.folder_copy),
       label: 'Projekty',
     ),
-    const NavItem(
+    const _NavItem(
       icon: Icon(Icons.account_circle_outlined),
       label: 'Profil',
     ),
@@ -43,16 +34,25 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
 
-    final user = sl.get<AuthService>().user;
-    if (user != null) {
-      Logger.setUser(user.id, user.email);
+    final userProvider = context.read<UserProvider>();
+    final user = userProvider.user;
+
+    Logger.setUser(user.id, user.email);
+    if (user.personal_data == null) {
+      Future.delayed(Duration.zero, () {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => FillPersonalDataWiget(
+            userProvider: userProvider,
+          ),
+        );
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = sl.get<AuthService>().user;
-
     final useBottomNavigation = context.useBottomNavigation;
 
     return Scaffold(
@@ -76,24 +76,28 @@ class _AppShellState extends State<AppShell> {
             NavigationRail(
               leading: Padding(
                 padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'BandSpace',
-                      style: Theme.of(context).textTheme.displaySmall,
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      user?.email ?? '',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 8.0),
-                    SelectableText(
-                      user?.id ?? '',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
+                child: Builder(builder: (context) {
+                  final user = context.watch<UserProvider>().user;
+
+                  return Column(
+                    children: [
+                      Text(
+                        'BandSpace',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 8.0),
+                      Text(
+                        user.fullName,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      // const SizedBox(height: 8.0),
+                      // SelectableText(
+                      //   user.id,
+                      //   style: Theme.of(context).textTheme.bodySmall,
+                      // ),
+                    ],
+                  );
+                }),
               ),
               trailing: Expanded(
                 child: Padding(

@@ -67,7 +67,7 @@ class ProjectRepository extends FirestoreRepository {
   Future<List<UserModel>> fetchMembers() async {
     final projectDoc = await _projectRef.get();
     List<UserModel> members = await _fetchMembers(
-      List<DocumentReference>.from(projectDoc['owners']),
+      List<DocumentReference<Map<String, dynamic>>>.from(projectDoc['owners']),
     );
 
     return members;
@@ -173,7 +173,7 @@ class ProjectRepository extends FirestoreRepository {
   }
 
   Future<List<UserModel>> _fetchMembers(
-    List<DocumentReference> ownerRefs,
+    List<DocumentReference<Map<String, dynamic>>> ownerRefs,
   ) async {
     final owners = await Future.wait(
       ownerRefs.map(

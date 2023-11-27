@@ -76,11 +76,11 @@ class CommentTile extends StatelessWidget {
                               children: [
                                 CircleAvatar(
                                   radius: 15,
-                                  child: Text(comment.author.characters.first.toUpperCase()),
+                                  child: Text(comment.author?.displayName.characters.first.toUpperCase() ?? '?'),
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  comment.author,
+                                  comment.author?.displayName ?? 'Usunięty użytkownik',
                                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -218,11 +218,11 @@ class _CommentInEditTileState extends State<_CommentInEditTile> {
                 children: [
                   CircleAvatar(
                     radius: 15,
-                    child: Text(comment.author.characters.first.toUpperCase()),
+                    child: Text(comment.author?.displayName.characters.first.toUpperCase() ?? '?'),
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    comment.author,
+                    comment.author?.displayName ?? 'Usunięty użytkownik',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

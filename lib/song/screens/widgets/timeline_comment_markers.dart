@@ -87,7 +87,7 @@ class _TimelineCommentMarkersState extends State<TimelineCommentMarkers> {
                               }
                             },
                             child: _CommentMarker(
-                              author: comment.author,
+                              author: comment.author?.displayName ?? '?',
                               isSelected: _hoveredComment == comment || selectedComment == comment,
                             ),
                           );

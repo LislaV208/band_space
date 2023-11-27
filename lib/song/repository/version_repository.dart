@@ -8,6 +8,7 @@ import 'package:band_space/song/model/marker.dart';
 import 'package:band_space/song/model/marker_dto.dart';
 import 'package:band_space/song/model/song_version_model.dart';
 import 'package:band_space/song/model/version_comment.dart';
+import 'package:band_space/user/model/firebase_user_model.dart';
 
 class VersionRepository extends FirestoreRepository {
   final String versionId;
@@ -53,12 +54,11 @@ class VersionRepository extends FirestoreRepository {
     });
 
     final userDoc = await userRef.get();
-    final userData = userDoc.data();
 
     return VersionComment(
       id: commentRef.id,
       created_at: timestamp.toDate(),
-      author: userData?['email'] ?? '',
+      author: FirebaseUserModel.fromDocument(userDoc),
       text: text,
       start_position: startPosition,
     );
@@ -73,7 +73,6 @@ class VersionRepository extends FirestoreRepository {
 
     final userRef = db.collection('users').doc(userId);
     final userDoc = await userRef.get();
-    final userData = userDoc.data();
 
     final snapshot = await commentRef.get();
     final data = snapshot.data();
@@ -81,7 +80,7 @@ class VersionRepository extends FirestoreRepository {
     return VersionComment(
       id: commentRef.id,
       created_at: data?['created_at'] != null ? (data!['created_at'] as Timestamp).toDate() : null,
-      author: userData?['email'] ?? '',
+      author: FirebaseUserModel.fromDocument(userDoc),
       text: data?['text'] ?? '',
       start_position: data?['start_position'] != null ? Duration(milliseconds: data!['start_position']) : null,
     );
@@ -98,12 +97,11 @@ class VersionRepository extends FirestoreRepository {
         final userRef = data['author'] as DocumentReference<Map<String, dynamic>>;
 
         final userDoc = await userRef.get();
-        final userData = userDoc.data();
 
         return VersionComment(
           id: doc.id,
           created_at: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
-          author: userData?['email'] ?? '',
+          author: FirebaseUserModel.fromDocument(userDoc),
           text: data['text'] ?? '',
           start_position: data['start_position'] != null ? Duration(milliseconds: data['start_position']) : null,
         );

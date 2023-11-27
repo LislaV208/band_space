@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:band_space/app_shell.dart';
+import 'package:band_space/app_shell/app_shell.dart';
 import 'package:band_space/auth/auth_service.dart';
 import 'package:band_space/auth/screens/login_screen.dart';
 import 'package:band_space/auth/screens/register_screen.dart';
@@ -18,6 +18,21 @@ import 'package:band_space/song/screens/song_screen.dart';
 final router = GoRouter(
   debugLogDiagnostics: true,
   initialLocation: '/projects',
+  redirect: (context, state) async {
+    final isLoggedIn = sl.get<AuthService>().isUserAuthenticated;
+
+    if (!isLoggedIn) {
+      final allowedRoutes = ['/login', '/register', '/invite'];
+
+      if (allowedRoutes.contains(state.location)) {
+        return null;
+      }
+
+      return '/login';
+    }
+
+    return null;
+  },
   routes: [
     ShellRoute(
       builder: (context, state, child) {
@@ -28,13 +43,6 @@ final router = GoRouter(
           path: '/projects',
           name: 'projects',
           builder: (context, state) => const ProjectsScreen(),
-          redirect: (context, state) async {
-            final isLoggedIn = sl.get<AuthService>().isUserAuthenticated;
-
-            if (!isLoggedIn) return '/login';
-
-            return null;
-          },
           routes: [
             GoRoute(
               path: ':project_id',
